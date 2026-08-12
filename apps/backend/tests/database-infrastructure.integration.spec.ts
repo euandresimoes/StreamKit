@@ -154,7 +154,7 @@ describe('SQLite infrastructure', () => {
           destructive: true,
           name: 'destructive_test',
           sql: 'CREATE TABLE destructive_test (id TEXT);',
-          version: 2,
+          version: 99,
         },
       ],
     })

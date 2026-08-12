@@ -1,0 +1,209 @@
+import { randomUUID } from 'node:crypto'
+import { Inject, Injectable } from '@nestjs/common'
+import {
+  type CreateGiveawayRequest,
+  type Giveaway,
+  type GiveawayDetail,
+  GiveawayDetailSchema,
+  type GiveawayHistory,
+  GiveawayHistorySchema,
+  GiveawayListSchema,
+  type GiveawayRound,
+  GiveawayRoundSchema,
+  GiveawaySchema,
+  type ParsedParticipant,
+} from '@streamkit/contracts'
+import { asc, desc, eq } from 'drizzle-orm'
+import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
+import {
+  giveawayParticipants,
+  giveawayRoundEntries,
+  giveawayRounds,
+  giveaways,
+} from '../../infrastructure/database/schema'
+import type { SqliteDatabase } from '../../infrastructure/database/sqlite-database'
+import { selectWinner } from './domain/draw-winner'
+
+@Injectable()
+export class GiveawayRepository {
+  public constructor(@Inject(SQLITE_DATABASE) private readonly database: SqliteDatabase) {}
+  public async create(input: CreateGiveawayRequest): Promise<Giveaway> {
+    const now = new Date().toISOString()
+    const row = {
+      ...input,
+      createdAt: now,
+      id: randomUUID(),
+      source: 'manual' as const,
+      status: 'draft' as const,
+      updatedAt: now,
+    }
+    await this.database.orm.insert(giveaways).values(row)
+    return GiveawaySchema.parse(row)
+  }
+  public async list() {
+    return GiveawayListSchema.parse({
+      items: await this.database.orm.select().from(giveaways).orderBy(desc(giveaways.createdAt)),
+    })
+  }
+  public async detail(id: string): Promise<GiveawayDetail | null> {
+    const [giveaway] = await this.database.orm.select().from(giveaways).where(eq(giveaways.id, id))
+    if (!giveaway) return null
+    const participants = await this.database.orm
+      .select()
+      .from(giveawayParticipants)
+      .where(eq(giveawayParticipants.giveawayId, id))
+      .orderBy(asc(giveawayParticipants.createdAt))
+    const activeRound = await this.activeRound(id)
+    return GiveawayDetailSchema.parse({ giveaway, participants, activeRound })
+  }
+  public async replaceParticipants(
+    id: string,
+    entries: ParsedParticipant[],
+  ): Promise<GiveawayDetail | null> {
+    const [giveaway] = await this.database.orm.select().from(giveaways).where(eq(giveaways.id, id))
+    if (!giveaway || giveaway.status !== 'draft') return null
+    this.database.transaction(() => {
+      this.database.orm
+        .delete(giveawayParticipants)
+        .where(eq(giveawayParticipants.giveawayId, id))
+        .run()
+      const createdAt = new Date().toISOString()
+      if (entries.length)
+        this.database.orm
+          .insert(giveawayParticipants)
+          .values(
+            entries.map((entry) => ({
+              ...entry,
+              createdAt,
+              externalRef: null,
+              giveawayId: id,
+              id: randomUUID(),
+            })),
+          )
+          .run()
+      this.database.orm
+        .update(giveaways)
+        .set({ updatedAt: createdAt })
+        .where(eq(giveaways.id, id))
+        .run()
+    })
+    return this.detail(id)
+  }
+  public async transition(id: string, from: string[], status: string): Promise<Giveaway | null> {
+    const [current] = await this.database.orm.select().from(giveaways).where(eq(giveaways.id, id))
+    if (!current || !from.includes(current.status)) return null
+    const updatedAt = new Date().toISOString()
+    await this.database.orm.update(giveaways).set({ status, updatedAt }).where(eq(giveaways.id, id))
+    return GiveawaySchema.parse({ ...current, status, updatedAt })
+  }
+  public async draw(id: string): Promise<GiveawayRound | null> {
+    const detail = await this.detail(id)
+    if (!detail || detail.giveaway.status !== 'ready' || detail.participants.length === 0)
+      return null
+    const entries = detail.participants.map((participant) => ({
+      displayName: participant.displayName,
+      participantId: participant.id,
+      ticketCount: participant.ticketCount,
+    }))
+    const selection = selectWinner(entries)
+    const roundId = randomUUID()
+    const startedAt = new Date().toISOString()
+    this.database.transaction(() => {
+      this.database.orm
+        .insert(giveawayRounds)
+        .values({
+          completedAt: null,
+          giveawayId: id,
+          id: roundId,
+          mode: detail.giveaway.mode,
+          randomProof: selection.randomProof,
+          snapshotHash: selection.snapshotHash,
+          startedAt,
+          status: 'drawing',
+          ticketCount: selection.ticketCount,
+          winnerParticipantId: selection.winnerParticipantId,
+        })
+        .run()
+      this.database.orm
+        .insert(giveawayRoundEntries)
+        .values(
+          entries.map((entry, position) => ({
+            id: randomUUID(),
+            participantId: entry.participantId,
+            position,
+            roundId,
+            ticketCount: entry.ticketCount,
+          })),
+        )
+        .run()
+      this.database.orm
+        .update(giveaways)
+        .set({ status: 'drawing', updatedAt: startedAt })
+        .where(eq(giveaways.id, id))
+        .run()
+    })
+    return GiveawayRoundSchema.parse({
+      ...selection,
+      completedAt: null,
+      entries,
+      giveawayId: id,
+      id: roundId,
+      mode: detail.giveaway.mode,
+      startedAt,
+      status: 'drawing',
+    })
+  }
+  public async complete(id: string, roundId: string): Promise<GiveawayRound | null> {
+    const active = await this.activeRound(id)
+    if (!active || active.id !== roundId) return null
+    const completedAt = new Date().toISOString()
+    this.database.transaction(() => {
+      this.database.orm
+        .update(giveawayRounds)
+        .set({ completedAt, status: 'completed' })
+        .where(eq(giveawayRounds.id, roundId))
+        .run()
+      this.database.orm
+        .update(giveaways)
+        .set({ status: 'completed', updatedAt: completedAt })
+        .where(eq(giveaways.id, id))
+        .run()
+    })
+    return GiveawayRoundSchema.parse({ ...active, completedAt, status: 'completed' })
+  }
+  public async history(id: string): Promise<GiveawayHistory> {
+    const rounds = await this.database.orm
+      .select()
+      .from(giveawayRounds)
+      .where(eq(giveawayRounds.giveawayId, id))
+      .orderBy(desc(giveawayRounds.startedAt))
+    return GiveawayHistorySchema.parse({
+      items: await Promise.all(rounds.map((round) => this.hydrateRound(round))),
+    })
+  }
+  private async activeRound(id: string): Promise<GiveawayRound | null> {
+    const [round] = await this.database.orm
+      .select()
+      .from(giveawayRounds)
+      .where(eq(giveawayRounds.giveawayId, id))
+      .orderBy(desc(giveawayRounds.startedAt))
+      .limit(1)
+    return round ? this.hydrateRound(round) : null
+  }
+  private async hydrateRound(round: typeof giveawayRounds.$inferSelect): Promise<GiveawayRound> {
+    const rows = await this.database.orm
+      .select({
+        displayName: giveawayParticipants.displayName,
+        participantId: giveawayRoundEntries.participantId,
+        ticketCount: giveawayRoundEntries.ticketCount,
+      })
+      .from(giveawayRoundEntries)
+      .innerJoin(
+        giveawayParticipants,
+        eq(giveawayParticipants.id, giveawayRoundEntries.participantId),
+      )
+      .where(eq(giveawayRoundEntries.roundId, round.id))
+      .orderBy(asc(giveawayRoundEntries.position))
+    return GiveawayRoundSchema.parse({ ...round, entries: rows })
+  }
+}

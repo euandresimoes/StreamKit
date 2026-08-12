@@ -47,3 +47,50 @@ export const appSettings = sqliteTable('app_settings', {
   updatedAt: text('updated_at').notNull(),
   valueJson: text('value_json').notNull(),
 })
+
+export const giveaways = sqliteTable('giveaways', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  mode: text('mode').notNull(),
+  source: text('source').notNull(),
+  status: text('status').notNull(),
+  duplicatePolicy: text('duplicate_policy').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+export const giveawayParticipants = sqliteTable('giveaway_participants', {
+  id: text('id').primaryKey(),
+  giveawayId: text('giveaway_id')
+    .notNull()
+    .references(() => giveaways.id, { onDelete: 'cascade' }),
+  displayName: text('display_name').notNull(),
+  normalizedName: text('normalized_name').notNull(),
+  ticketCount: integer('ticket_count').notNull(),
+  externalRef: text('external_ref'),
+  createdAt: text('created_at').notNull(),
+})
+export const giveawayRounds = sqliteTable('giveaway_rounds', {
+  id: text('id').primaryKey(),
+  giveawayId: text('giveaway_id')
+    .notNull()
+    .references(() => giveaways.id, { onDelete: 'cascade' }),
+  status: text('status').notNull(),
+  winnerParticipantId: text('winner_participant_id').references(() => giveawayParticipants.id),
+  randomProof: text('random_proof'),
+  snapshotHash: text('snapshot_hash'),
+  mode: text('mode'),
+  ticketCount: integer('ticket_count'),
+  startedAt: text('started_at').notNull(),
+  completedAt: text('completed_at'),
+})
+export const giveawayRoundEntries = sqliteTable('giveaway_round_entries', {
+  id: text('id').primaryKey(),
+  roundId: text('round_id')
+    .notNull()
+    .references(() => giveawayRounds.id, { onDelete: 'cascade' }),
+  participantId: text('participant_id')
+    .notNull()
+    .references(() => giveawayParticipants.id),
+  ticketCount: integer('ticket_count').notNull(),
+  position: integer('position'),
+})

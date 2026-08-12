@@ -3,6 +3,9 @@ import { type DynamicModule, Module } from '@nestjs/common'
 import { SQLITE_DATABASE } from '../infrastructure/database/database.tokens'
 import type { SqliteDatabase } from '../infrastructure/database/sqlite-database'
 import { HealthController } from '../modules/health/health.controller'
+import { GiveawayController } from '../modules/giveaway/giveaway.controller'
+import { GiveawayRepository } from '../modules/giveaway/giveaway.repository'
+import { GiveawayService } from '../modules/giveaway/giveaway.service'
 import { DatabaseStatusController } from '../modules/system/controllers/database-status.controller'
 import { WorkspaceController } from '../modules/todo/controllers/workspace.controller'
 import { SqliteWorkspaceRepository } from '../modules/todo/repositories/sqlite-workspace.repository'
@@ -15,7 +18,12 @@ import { ManageTodoService } from '../modules/todo/services/manage-todo.service'
 export class AppModule {
   public static register(database: SqliteDatabase): DynamicModule {
     return {
-      controllers: [DatabaseStatusController, HealthController, WorkspaceController],
+      controllers: [
+        DatabaseStatusController,
+        GiveawayController,
+        HealthController,
+        WorkspaceController,
+      ],
       module: AppModule,
       providers: [
         { provide: SQLITE_DATABASE, useValue: database },
@@ -23,6 +31,8 @@ export class AppModule {
         CreateWorkspaceService,
         ListWorkspacesService,
         ManageTodoService,
+        GiveawayRepository,
+        GiveawayService,
       ],
     }
   }

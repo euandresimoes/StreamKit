@@ -90,4 +90,15 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
       );
     `,
   },
+  {
+    destructive: false,
+    name: 'giveaway_round_audit_fields',
+    version: 2,
+    sql: `
+      ALTER TABLE giveaway_rounds ADD COLUMN snapshot_hash TEXT;
+      ALTER TABLE giveaway_rounds ADD COLUMN mode TEXT;
+      ALTER TABLE giveaway_rounds ADD COLUMN ticket_count INTEGER;
+      ALTER TABLE giveaway_round_entries ADD COLUMN position INTEGER;
+    `,
+  },
 ]

@@ -159,23 +159,23 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 7.1–7.4, 7.6, 7.8, 11.4 (Giveaways), 12.3 (Giveaways), 17.2 e 22 (Fase 2).
 
-- [ ] Modelar `ParticipantSource` sem dependência direta de LivePix.
-- [ ] Implementar estados `draft`, `ready`, `drawing`, `completed`, `cancelled` e `archived`.
-- [ ] Implementar parser de vírgulas/quebras de linha, trim, remoção de vazios e preservação Unicode.
-- [ ] Implementar preview e contagem de entradas válidas antes da confirmação.
-- [ ] Implementar políticas remover duplicatas, manter ocorrências e agrupar tickets.
-- [ ] Comparar nomes ignorando caixa/espaços externos e preservar exibição original.
-- [ ] Implementar criação, preparação, importação, histórico e arquivamento de giveaway.
-- [ ] Congelar entradas e selecionar vencedor com `crypto` antes da animação.
-- [ ] Persistir rodada, snapshot de entradas, vencedor, data, modo, quantidade e prova possível.
-- [ ] Impedir alteração da lista durante `drawing`.
-- [ ] Permitir cancelamento antes da seleção e impedir troca silenciosa após seleção.
-- [ ] Implementar recuperação determinística de rodada interrompida.
-- [ ] Implementar endpoints, Zod, códigos de erro e documentação Scalar.
-- [ ] Criar testes unitários de parser, Unicode, duplicatas, tickets e seleção segura.
-- [ ] Criar integração de transações, snapshot, interrupção e recuperação com SQLite.
-- [ ] Validar estatisticamente somente sanidade da distribuição sem usar o teste como prova criptográfica.
-- [ ] Executar gate de backend/integração e build.
+- [x] Modelar `ParticipantSource` sem dependência direta de LivePix.
+- [x] Implementar estados `draft`, `ready`, `drawing`, `completed`, `cancelled` e `archived`.
+- [x] Implementar parser de vírgulas/quebras de linha, trim, remoção de vazios e preservação Unicode.
+- [x] Implementar preview e contagem de entradas válidas antes da confirmação.
+- [x] Implementar políticas remover duplicatas, manter ocorrências e agrupar tickets.
+- [x] Comparar nomes ignorando caixa/espaços externos e preservar exibição original.
+- [x] Implementar criação, preparação, importação, histórico e arquivamento de giveaway.
+- [x] Congelar entradas e selecionar vencedor com `crypto` antes da animação.
+- [x] Persistir rodada, snapshot de entradas, vencedor, data, modo, quantidade e prova possível.
+- [x] Impedir alteração da lista durante `drawing`.
+- [x] Permitir cancelamento antes da seleção e impedir troca silenciosa após seleção.
+- [x] Implementar recuperação determinística de rodada interrompida.
+- [x] Implementar endpoints, Zod, códigos de erro e documentação Scalar.
+- [x] Criar testes unitários de parser, Unicode, duplicatas, tickets e seleção segura.
+- [x] Criar integração de transações, snapshot, interrupção e recuperação com SQLite.
+- [x] Validar estatisticamente somente sanidade da distribuição sem usar o teste como prova criptográfica.
+- [x] Executar gate de backend/integração e build.
 - [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 7 — Giveaway: roleta, case opening e histórico visual
