@@ -1,1 +1,1 @@
-export { BackendDescriptor } from './modules/system/entities/backend-descriptor.entity'
+export { startLocalBackend, type LocalBackendHandle } from './server/start-local-backend'

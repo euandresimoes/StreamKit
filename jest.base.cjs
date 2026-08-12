@@ -9,6 +9,7 @@ module.exports = {
     '^@streamkit/config$': '<rootDir>/../../packages/config/src/index.ts',
     '^@streamkit/contracts$': '<rootDir>/../../packages/contracts/src/index.ts',
     '^@streamkit/test-utils$': '<rootDir>/../../packages/test-utils/src/index.ts',
+    '^@streamkit/backend$': '<rootDir>/../../apps/backend/src/main.ts',
   },
   testEnvironment: 'node',
   testMatch: ['<rootDir>/tests/**/*.spec.ts'],

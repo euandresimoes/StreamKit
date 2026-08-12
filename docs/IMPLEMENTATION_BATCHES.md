@@ -65,23 +65,23 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 4, 9, 12, 19, 22 (Fase 0), 23 e 24.
 
-- [ ] Criar processo principal Electron, preload mínimo tipado e renderer Vue.
-- [ ] Habilitar `contextIsolation`, desabilitar `nodeIntegration` e aplicar sandbox quando compatível.
-- [ ] Configurar CSP, bloqueio de navegação inesperada, criação arbitrária de janelas e links externos inseguros.
-- [ ] Integrar Renderizer para janela principal e janela de Settings com hot reload.
-- [ ] Impedir Settings duplicada e focar a janela existente.
-- [ ] Preservar tamanho/posição e fechar Settings sem encerrar o app.
-- [ ] Subir backend local em `127.0.0.1`, porta dinâmica e proteção definida no ADR.
-- [ ] Restringir IPC a capacidades nativas e validar seus payloads com Zod.
-- [ ] Criar endpoint `/api/v1/health` e documentação OpenAPI/Scalar em debug/desenvolvimento.
-- [ ] Criar formato de erro estável com `code`, `message`, `details` e `requestId`.
-- [ ] Implementar o vertical slice de criação/listagem de workspace ponta a ponta.
-- [ ] Validar Zod, service, repository SQLite, resposta tipada e atualização Pinia no slice.
-- [ ] Reabrir o app e comprovar persistência do workspace.
-- [ ] Criar E2E do vertical slice incluindo reinício.
-- [ ] Testar regressão entre janela principal e Settings.
-- [ ] Executar gate completo, incluindo E2E e build Electron.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Criar processo principal Electron, preload mínimo tipado e renderer Vue.
+- [x] Habilitar `contextIsolation`, desabilitar `nodeIntegration` e aplicar sandbox quando compatível.
+- [x] Configurar CSP, bloqueio de navegação inesperada, criação arbitrária de janelas e links externos inseguros.
+- [x] Integrar Renderizer para janela principal e janela de Settings com hot reload.
+- [x] Impedir Settings duplicada e focar a janela existente.
+- [x] Preservar tamanho/posição e fechar Settings sem encerrar o app.
+- [x] Subir backend local em `127.0.0.1`, porta dinâmica e proteção definida no ADR.
+- [x] Restringir IPC a capacidades nativas e validar seus payloads com Zod.
+- [x] Criar endpoint `/api/v1/health` e documentação OpenAPI/Scalar em debug/desenvolvimento.
+- [x] Criar formato de erro estável com `code`, `message`, `details` e `requestId`.
+- [x] Implementar o vertical slice de criação/listagem de workspace ponta a ponta.
+- [x] Validar Zod, service, repository SQLite, resposta tipada e atualização Pinia no slice.
+- [x] Reabrir o app e comprovar persistência do workspace.
+- [x] Criar E2E do vertical slice incluindo reinício.
+- [x] Testar regressão entre janela principal e Settings.
+- [x] Executar gate completo, incluindo E2E e build Electron.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 3 — Design system, temas e shell da aplicação
 

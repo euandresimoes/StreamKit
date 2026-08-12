@@ -1,0 +1,1 @@
+export const SQLITE_DATABASE = Symbol('SQLITE_DATABASE')
