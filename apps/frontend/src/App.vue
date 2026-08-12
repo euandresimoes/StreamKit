@@ -3,10 +3,11 @@ import { RenderWindow } from '@renderizer/vue'
 import { computed, onMounted, ref } from 'vue'
 
 import { showSettingsWindow } from './app/settings-window'
-import { BaseButton, BaseInput, BaseSelect, BaseToggle } from './components/base'
+import { BaseButton, BaseSelect, BaseToggle } from './components/base'
 import PrimitiveShowcase from './components/showcase/PrimitiveShowcase.vue'
 import AppSidebar, { type AppModule } from './components/shell/AppSidebar.vue'
 import NotificationCenter from './components/shell/NotificationCenter.vue'
+import TodoKanban from './components/todo/TodoKanban.vue'
 import { useNotificationStore } from './stores/notification.store'
 import { useSettingsStore } from './stores/settings.store'
 import { useTodoStore } from './stores/todo.store'
@@ -14,7 +15,6 @@ import { useTodoStore } from './stores/todo.store'
 const todoStore = useTodoStore()
 const settings = useSettingsStore()
 const notifications = useNotificationStore()
-const workspaceName = ref('')
 const settingsOpen = ref(false)
 const activeModule = ref<AppModule>('todo')
 const showShowcase = ref(import.meta.env.DEV)
@@ -27,18 +27,6 @@ const themeOptions = [
 const activeTitle = computed(
   () => ({ todo: 'TODO', games: 'Games', giveaway: 'Giveaway' })[activeModule.value],
 )
-
-async function createWorkspace(): Promise<void> {
-  const name = workspaceName.value.trim()
-  if (!name) return
-  try {
-    await todoStore.createWorkspace({ name })
-    workspaceName.value = ''
-    notifications.notify('Workspace salvo.', 'success')
-  } catch {
-    notifications.notify(todoStore.error ?? 'Não foi possível salvar o workspace.', 'error')
-  }
-}
 
 function openSettings(): void {
   showSettingsWindow(settingsOpen)
@@ -74,55 +62,8 @@ onMounted(async () => {
         </div>
       </header>
 
-      <section
-        v-if="activeModule === 'todo'"
-        class="workspace__content"
-        aria-labelledby="todo-title"
-      >
-        <div class="panel-heading">
-          <div>
-            <h2 id="todo-title">Workspaces</h2>
-            <span>{{ todoStore.workspaces.length }} itens</span>
-          </div>
-          <form class="workspace-form" @submit.prevent="createWorkspace">
-            <BaseInput
-              id="workspace-name"
-              v-model="workspaceName"
-              label="Novo workspace"
-              :maxlength="120"
-              placeholder="Nome"
-            />
-            <BaseButton
-              type="submit"
-              variant="primary"
-              :disabled="!workspaceName.trim()"
-              :loading="todoStore.loading"
-            >
-              Criar
-            </BaseButton>
-          </form>
-        </div>
-
-        <div v-if="todoStore.loading" class="standard-state" role="status">
-          <span class="standard-state__icon" aria-hidden="true">◌</span>
-          <h3>Carregando</h3>
-        </div>
-        <div v-else-if="todoStore.error" class="standard-state standard-state--error" role="alert">
-          <span class="standard-state__icon" aria-hidden="true">!</span>
-          <h3>Erro ao carregar</h3>
-          <p>{{ todoStore.error }}</p>
-        </div>
-        <div v-else-if="todoStore.workspaces.length === 0" class="standard-state">
-          <span class="standard-state__icon" aria-hidden="true">＋</span>
-          <h3>Nenhum workspace</h3>
-          <p>Crie o primeiro para organizar sua live.</p>
-        </div>
-        <ul v-else class="workspace-list">
-          <li v-for="workspaceItem in todoStore.workspaces" :key="workspaceItem.id">
-            <span aria-hidden="true">▦</span><strong>{{ workspaceItem.name }}</strong
-            ><small>Persistido</small>
-          </li>
-        </ul>
+      <section v-if="activeModule === 'todo'" class="workspace__content">
+        <TodoKanban />
         <PrimitiveShowcase v-if="showShowcase" />
       </section>
 

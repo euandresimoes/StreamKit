@@ -133,26 +133,26 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 5, 11.4 (TODO), 12.3 (TODO), 13.1–13.2, 17.2 e 22 (Fase 1).
 
-- [ ] Implementar entidades e invariantes de workspace, coluna e card.
-- [ ] Implementar criar, listar, selecionar, renomear, descrever e excluir workspace.
-- [ ] Persistir e restaurar o último workspace selecionado.
-- [ ] Implementar criar, renomear, colorir, reordenar e excluir coluna.
-- [ ] Ao excluir coluna com cards, exigir escolha entre mover e apagar.
-- [ ] Implementar criar, editar título/descrição/notas e excluir card.
-- [ ] Registrar `created_at` e `updated_at` corretamente.
-- [ ] Implementar mover card entre colunas e reordenar na mesma coluna em transação única.
-- [ ] Persistir posições explicitamente e evitar colisões/duplicações.
-- [ ] Implementar endpoints, schemas Zod, erros estáveis e documentação Scalar do TODO.
-- [ ] Implementar `useTodoStore` sem torná-la fonte persistente de verdade.
-- [ ] Implementar UI Kanban compondo primitives de `components/base`.
-- [ ] Implementar drag and drop com feedback, atualização otimista e rollback.
-- [ ] Implementar alternativa por teclado/botões para todas as movimentações.
-- [ ] Cobrir vazio, loading, sucesso, erro, inválido e confirmações destrutivas.
-- [ ] Testar exclusão em cascata e decisão explícita de coluna com cards.
-- [ ] Criar unitários de invariantes/reordenação e integração transacional com SQLite.
-- [ ] Criar E2E de workspace/colunas/cards, movimento e persistência após reinício.
-- [ ] Validar UX, temas, acessibilidade e ausência de regressão na janela Settings.
-- [ ] Executar gate completo e verificar o critério de saída da Fase 1.
+- [x] Implementar entidades e invariantes de workspace, coluna e card.
+- [x] Implementar criar, listar, selecionar, renomear, descrever e excluir workspace.
+- [x] Persistir e restaurar o último workspace selecionado.
+- [x] Implementar criar, renomear, colorir, reordenar e excluir coluna.
+- [x] Ao excluir coluna com cards, exigir escolha entre mover e apagar.
+- [x] Implementar criar, editar título/descrição/notas e excluir card.
+- [x] Registrar `created_at` e `updated_at` corretamente.
+- [x] Implementar mover card entre colunas e reordenar na mesma coluna em transação única.
+- [x] Persistir posições explicitamente e evitar colisões/duplicações.
+- [x] Implementar endpoints, schemas Zod, erros estáveis e documentação Scalar do TODO.
+- [x] Implementar `useTodoStore` sem torná-la fonte persistente de verdade.
+- [x] Implementar UI Kanban compondo primitives de `components/base`.
+- [x] Implementar drag and drop com feedback, atualização otimista e rollback.
+- [x] Implementar alternativa por teclado/botões para todas as movimentações.
+- [x] Cobrir vazio, loading, sucesso, erro, inválido e confirmações destrutivas.
+- [x] Testar exclusão em cascata e decisão explícita de coluna com cards.
+- [x] Criar unitários de invariantes/reordenação e integração transacional com SQLite.
+- [x] Criar E2E de workspace/colunas/cards, movimento e persistência após reinício.
+- [x] Validar UX, temas, acessibilidade e ausência de regressão na janela Settings.
+- [x] Executar gate completo e verificar o critério de saída da Fase 1.
 - [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 6 — Giveaway: domínio, importação e integridade

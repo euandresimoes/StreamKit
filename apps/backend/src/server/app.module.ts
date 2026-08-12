@@ -9,6 +9,7 @@ import { SqliteWorkspaceRepository } from '../modules/todo/repositories/sqlite-w
 import { WORKSPACE_REPOSITORY } from '../modules/todo/repositories/workspace.repository'
 import { CreateWorkspaceService } from '../modules/todo/services/create-workspace.service'
 import { ListWorkspacesService } from '../modules/todo/services/list-workspaces.service'
+import { ManageTodoService } from '../modules/todo/services/manage-todo.service'
 
 @Module({})
 export class AppModule {
@@ -21,6 +22,7 @@ export class AppModule {
         { provide: WORKSPACE_REPOSITORY, useClass: SqliteWorkspaceRepository },
         CreateWorkspaceService,
         ListWorkspacesService,
+        ManageTodoService,
       ],
     }
   }

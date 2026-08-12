@@ -1,9 +1,27 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { WorkspaceSchema } from '@streamkit/contracts'
-import { asc, max } from 'drizzle-orm'
+import {
+  type DeleteColumnRequest,
+  type MoveCardRequest,
+  type TodoBoard,
+  TodoBoardSchema,
+  type TodoCard,
+  TodoCardSchema,
+  type TodoColumn,
+  TodoColumnSchema,
+  type UpdateCardRequest,
+  type UpdateColumnRequest,
+  type UpdateWorkspaceRequest,
+  WorkspaceSchema,
+} from '@streamkit/contracts'
+import { and, asc, eq, max, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../../infrastructure/database/database.tokens'
-import { todoWorkspaces } from '../../../infrastructure/database/schema'
+import {
+  appSettings,
+  todoCards,
+  todoColumns,
+  todoWorkspaces,
+} from '../../../infrastructure/database/schema'
 import type { SqliteDatabase } from '../../../infrastructure/database/sqlite-database'
 import { WorkspaceEntity } from '../entities/workspace.entity'
 import { WorkspaceRepository } from './workspace.repository'
@@ -44,5 +62,324 @@ export class SqliteWorkspaceRepository extends WorkspaceRepository {
       .from(todoWorkspaces)
 
     return (result?.highestPosition ?? -1) + 1
+  }
+
+  public async selectedId(): Promise<string | null> {
+    const [row] = await this.database.orm
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, 'todo.selectedWorkspaceId'))
+    return row ? (JSON.parse(row.valueJson) as string | null) : null
+  }
+
+  public async select(id: string | null): Promise<void> {
+    const now = new Date().toISOString()
+    await this.database.orm
+      .insert(appSettings)
+      .values({ key: 'todo.selectedWorkspaceId', valueJson: JSON.stringify(id), updatedAt: now })
+      .onConflictDoUpdate({
+        target: appSettings.key,
+        set: { valueJson: JSON.stringify(id), updatedAt: now },
+      })
+  }
+
+  public async findBoard(id: string): Promise<TodoBoard | null> {
+    const [workspace] = await this.database.orm
+      .select()
+      .from(todoWorkspaces)
+      .where(eq(todoWorkspaces.id, id))
+    if (!workspace) return null
+    const columns = await this.database.orm
+      .select()
+      .from(todoColumns)
+      .where(eq(todoColumns.workspaceId, id))
+      .orderBy(asc(todoColumns.position))
+    const cards =
+      columns.length === 0
+        ? []
+        : await this.database.orm
+            .select()
+            .from(todoCards)
+            .where(
+              sql`${todoCards.columnId} IN (${sql.join(
+                columns.map((column) => sql`${column.id}`),
+                sql`, `,
+              )})`,
+            )
+            .orderBy(asc(todoCards.position))
+    return TodoBoardSchema.parse({ workspace, columns, cards })
+  }
+
+  public async update(id: string, input: UpdateWorkspaceRequest): Promise<WorkspaceEntity | null> {
+    await this.database.orm
+      .update(todoWorkspaces)
+      .set({ ...input, updatedAt: new Date().toISOString() })
+      .where(eq(todoWorkspaces.id, id))
+    const board = await this.findBoard(id)
+    return board
+      ? new WorkspaceEntity(
+          board.workspace.id,
+          board.workspace.name,
+          board.workspace.description,
+          board.workspace.position,
+          board.workspace.createdAt,
+          board.workspace.updatedAt,
+        )
+      : null
+  }
+
+  public async delete(id: string): Promise<boolean> {
+    return (
+      this.database.orm.delete(todoWorkspaces).where(eq(todoWorkspaces.id, id)).run().changes > 0
+    )
+  }
+
+  public async createColumn(
+    workspaceId: string,
+    name: string,
+    color: string | null,
+  ): Promise<TodoColumn | null> {
+    const [workspace] = await this.database.orm
+      .select({ id: todoWorkspaces.id })
+      .from(todoWorkspaces)
+      .where(eq(todoWorkspaces.id, workspaceId))
+    if (!workspace) return null
+    const [highest] = await this.database.orm
+      .select({ value: max(todoColumns.position) })
+      .from(todoColumns)
+      .where(eq(todoColumns.workspaceId, workspaceId))
+    const now = new Date().toISOString()
+    const row = {
+      color,
+      createdAt: now,
+      id: crypto.randomUUID(),
+      name,
+      position: (highest?.value ?? -1) + 1,
+      updatedAt: now,
+      workspaceId,
+    }
+    await this.database.orm.insert(todoColumns).values(row)
+    return TodoColumnSchema.parse(row)
+  }
+
+  public async updateColumn(id: string, input: UpdateColumnRequest): Promise<TodoColumn | null> {
+    const [current] = await this.database.orm
+      .select()
+      .from(todoColumns)
+      .where(eq(todoColumns.id, id))
+    if (!current) return null
+    return this.database.transaction(() => {
+      if (input.position !== undefined && input.position !== current.position) {
+        const ordered = this.database.orm
+          .select()
+          .from(todoColumns)
+          .where(eq(todoColumns.workspaceId, current.workspaceId))
+          .orderBy(asc(todoColumns.position))
+          .all()
+          .filter((column) => column.id !== id)
+        ordered.splice(Math.min(input.position, ordered.length), 0, current)
+        ordered.forEach((column, index) =>
+          this.database.orm
+            .update(todoColumns)
+            .set({ position: -1000 - index })
+            .where(eq(todoColumns.id, column.id))
+            .run(),
+        )
+        ordered.forEach((column, position) =>
+          this.database.orm
+            .update(todoColumns)
+            .set({ position })
+            .where(eq(todoColumns.id, column.id))
+            .run(),
+        )
+      }
+      this.database.orm
+        .update(todoColumns)
+        .set({ ...input, updatedAt: new Date().toISOString() })
+        .where(eq(todoColumns.id, id))
+        .run()
+      return TodoColumnSchema.parse({ ...current, ...input, updatedAt: new Date().toISOString() })
+    })
+  }
+
+  public async deleteColumn(id: string, input: DeleteColumnRequest): Promise<boolean> {
+    return this.database.transaction(() => {
+      const [column] = this.database.orm
+        .select()
+        .from(todoColumns)
+        .where(eq(todoColumns.id, id))
+        .all()
+      if (!column) return false
+      if (input.strategy === 'move') {
+        const [target] = this.database.orm
+          .select()
+          .from(todoColumns)
+          .where(
+            and(
+              eq(todoColumns.id, input.targetColumnId),
+              eq(todoColumns.workspaceId, column.workspaceId),
+            ),
+          )
+          .all()
+        if (!target) return false
+        const [highest] = this.database.orm
+          .select({ value: max(todoCards.position) })
+          .from(todoCards)
+          .where(eq(todoCards.columnId, target.id))
+          .all()
+        const moving = this.database.orm
+          .select()
+          .from(todoCards)
+          .where(eq(todoCards.columnId, id))
+          .orderBy(asc(todoCards.position))
+          .all()
+        moving.forEach((card, index) =>
+          this.database.orm
+            .update(todoCards)
+            .set({
+              columnId: target.id,
+              position: (highest?.value ?? -1) + 1 + index,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(todoCards.id, card.id))
+            .run(),
+        )
+      }
+      this.database.orm.delete(todoColumns).where(eq(todoColumns.id, id)).run()
+      this.normalizeColumns(column.workspaceId)
+      return true
+    })
+  }
+
+  public async createCard(
+    columnId: string,
+    title: string,
+    description: string | null,
+    notes: string | null,
+  ): Promise<TodoCard | null> {
+    const [column] = await this.database.orm
+      .select({ id: todoColumns.id })
+      .from(todoColumns)
+      .where(eq(todoColumns.id, columnId))
+    if (!column) return null
+    const [highest] = await this.database.orm
+      .select({ value: max(todoCards.position) })
+      .from(todoCards)
+      .where(eq(todoCards.columnId, columnId))
+    const now = new Date().toISOString()
+    const row = {
+      columnId,
+      createdAt: now,
+      description,
+      id: crypto.randomUUID(),
+      notes,
+      position: (highest?.value ?? -1) + 1,
+      title,
+      updatedAt: now,
+    }
+    await this.database.orm.insert(todoCards).values(row)
+    return TodoCardSchema.parse(row)
+  }
+  public async updateCard(id: string, input: UpdateCardRequest): Promise<TodoCard | null> {
+    await this.database.orm
+      .update(todoCards)
+      .set({ ...input, updatedAt: new Date().toISOString() })
+      .where(eq(todoCards.id, id))
+    const [row] = await this.database.orm.select().from(todoCards).where(eq(todoCards.id, id))
+    return row ? TodoCardSchema.parse(row) : null
+  }
+  public async deleteCard(id: string): Promise<boolean> {
+    const [card] = await this.database.orm.select().from(todoCards).where(eq(todoCards.id, id))
+    if (!card) return false
+    return this.database.transaction(() => {
+      this.database.orm.delete(todoCards).where(eq(todoCards.id, id)).run()
+      this.normalizeCards(card.columnId)
+      return true
+    })
+  }
+  public async moveCard(id: string, input: MoveCardRequest): Promise<TodoCard | null> {
+    return this.database.transaction(() => {
+      const [card] = this.database.orm.select().from(todoCards).where(eq(todoCards.id, id)).all()
+      const [target] = this.database.orm
+        .select()
+        .from(todoColumns)
+        .where(eq(todoColumns.id, input.columnId))
+        .all()
+      if (!card || !target) return null
+      const sourceCards = this.database.orm
+        .select()
+        .from(todoCards)
+        .where(eq(todoCards.columnId, card.columnId))
+        .orderBy(asc(todoCards.position))
+        .all()
+        .filter((item) => item.id !== id)
+      const targetCards =
+        card.columnId === input.columnId
+          ? sourceCards
+          : this.database.orm
+              .select()
+              .from(todoCards)
+              .where(eq(todoCards.columnId, input.columnId))
+              .orderBy(asc(todoCards.position))
+              .all()
+      const position = Math.min(input.position, targetCards.length)
+      targetCards.splice(position, 0, card)
+      const affected =
+        card.columnId === input.columnId ? targetCards : [...sourceCards, ...targetCards]
+      affected.forEach((item, index) =>
+        this.database.orm
+          .update(todoCards)
+          .set({ position: -100000 - index })
+          .where(eq(todoCards.id, item.id))
+          .run(),
+      )
+      sourceCards.forEach((item, index) =>
+        this.database.orm
+          .update(todoCards)
+          .set({ columnId: card.columnId, position: index })
+          .where(eq(todoCards.id, item.id))
+          .run(),
+      )
+      targetCards.forEach((item, index) =>
+        this.database.orm
+          .update(todoCards)
+          .set({ columnId: input.columnId, position: index })
+          .where(eq(todoCards.id, item.id))
+          .run(),
+      )
+      const updatedAt = new Date().toISOString()
+      this.database.orm.update(todoCards).set({ updatedAt }).where(eq(todoCards.id, id)).run()
+      return TodoCardSchema.parse({ ...card, columnId: input.columnId, position, updatedAt })
+    })
+  }
+  private normalizeCards(columnId: string): void {
+    this.database.orm
+      .select()
+      .from(todoCards)
+      .where(eq(todoCards.columnId, columnId))
+      .orderBy(asc(todoCards.position))
+      .all()
+      .forEach((card, position) =>
+        this.database.orm
+          .update(todoCards)
+          .set({ position })
+          .where(eq(todoCards.id, card.id))
+          .run(),
+      )
+  }
+  private normalizeColumns(workspaceId: string): void {
+    this.database.orm
+      .select()
+      .from(todoColumns)
+      .where(eq(todoColumns.workspaceId, workspaceId))
+      .orderBy(asc(todoColumns.position))
+      .all()
+      .forEach((column, position) =>
+        this.database.orm
+          .update(todoColumns)
+          .set({ position })
+          .where(eq(todoColumns.id, column.id))
+          .run(),
+      )
   }
 }

@@ -12,6 +12,7 @@
     "typecheck": "vue-tsc -p tsconfig.typecheck.json --noEmit"
   },
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "1.7.7",
     "@renderizer/vue": "1.0.0-beta.0",
     "@streamkit/config": "workspace:*",
     "@streamkit/contracts": "workspace:*",

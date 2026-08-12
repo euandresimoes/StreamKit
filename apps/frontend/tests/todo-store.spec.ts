@@ -28,7 +28,7 @@ describe('useTodoStore', () => {
 
   it('replaces cache with the persisted workspace list', async () => {
     jest.mocked(globalThis.fetch).mockResolvedValue({
-      json: async () => ({ items: [workspace] }),
+      json: async () => ({ items: [workspace], selectedId: null }),
       ok: true,
     } as Response)
     const store = useTodoStore()
@@ -40,10 +40,14 @@ describe('useTodoStore', () => {
   })
 
   it('adds a workspace only after the backend confirms it', async () => {
-    jest.mocked(globalThis.fetch).mockResolvedValue({
-      json: async () => workspace,
-      ok: true,
-    } as Response)
+    jest
+      .mocked(globalThis.fetch)
+      .mockResolvedValueOnce({ json: async () => workspace, ok: true } as Response)
+      .mockResolvedValueOnce({ json: async () => undefined, ok: true } as Response)
+      .mockResolvedValueOnce({
+        json: async () => ({ cards: [], columns: [], workspace }),
+        ok: true,
+      } as Response)
     const store = useTodoStore()
 
     await store.createWorkspace({ name: 'Filmes' })

@@ -1,5 +1,11 @@
 import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
-import { WorkspaceListResponseSchema, WorkspaceSchema } from '@streamkit/contracts'
+import {
+  TodoBoardSchema,
+  TodoCardSchema,
+  TodoColumnSchema,
+  WorkspaceListResponseSchema,
+  WorkspaceSchema,
+} from '@streamkit/contracts'
 import { type LocalBackendHandle, startLocalBackend } from '@streamkit/backend'
 
 const token = 'b'.repeat(64)
@@ -47,6 +53,50 @@ describe('desktop E2E harness', () => {
 
     expect(list.items).toEqual([created])
 
+    await backend.close()
+    await environment.cleanup()
+  })
+
+  it('restores columns, cards and their moved order after restart', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    let backend = await startLocalBackend({
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+    const call = (path: string, method = 'GET', body?: unknown) =>
+      fetch(`${backend.baseUrl}${path}`, {
+        method,
+        headers: headers(),
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      })
+    const workspace = WorkspaceSchema.parse(
+      await (await call('/api/v1/todo/workspaces', 'POST', { name: 'Kanban' })).json(),
+    )
+    const first = TodoColumnSchema.parse(
+      await (
+        await call(`/api/v1/todo/workspaces/${workspace.id}/columns`, 'POST', { name: 'A fazer' })
+      ).json(),
+    )
+    const second = TodoColumnSchema.parse(
+      await (
+        await call(`/api/v1/todo/workspaces/${workspace.id}/columns`, 'POST', { name: 'Feito' })
+      ).json(),
+    )
+    const card = TodoCardSchema.parse(
+      await (
+        await call(`/api/v1/todo/columns/${first.id}/cards`, 'POST', { title: 'Persistir' })
+      ).json(),
+    )
+    await call(`/api/v1/todo/cards/${card.id}/move`, 'POST', { columnId: second.id, position: 0 })
+    await backend.close()
+    backend = await startLocalBackend({
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+    const board = TodoBoardSchema.parse(
+      await (await call(`/api/v1/todo/workspaces/${workspace.id}`)).json(),
+    )
+    expect(board.cards[0]?.columnId).toBe(second.id)
     await backend.close()
     await environment.cleanup()
   })

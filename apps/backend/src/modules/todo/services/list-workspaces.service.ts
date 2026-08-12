@@ -13,6 +13,9 @@ export class ListWorkspacesService {
   ) {}
 
   public async execute(): Promise<WorkspaceListResponse> {
-    return { items: await this.workspaceRepository.list() }
+    return {
+      items: await this.workspaceRepository.list(),
+      selectedId: await this.workspaceRepository.selectedId(),
+    }
   }
 }
