@@ -26,4 +26,3 @@ Settings será uma superfície adicional do mesmo runtime Vue. Overlays, dropdow
 ## Validação e reversão
 
 E2E deve provar janela única, foco, sincronização, estilos, portals, hot reload e ausência de regressão. Se uma versão quebrar o contrato, manter a última versão validada enquanto o framework é corrigido.
-

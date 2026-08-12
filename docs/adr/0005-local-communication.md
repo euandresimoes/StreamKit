@@ -20,4 +20,3 @@ A API permanece documentável e testável. O token é efêmero, nunca persistido
 ## Validação e reversão
 
 Testar bind exclusivo em loopback, porta imprevisível, ausência/rejeição de token, origem inválida e encerramento. Contratos de caso de uso não dependem do transporte.
-

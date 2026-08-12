@@ -11,4 +11,3 @@ Este diretório registra decisões arquiteturais e de produto duradouras do Stre
 - Consequências, riscos e plano de reversão devem ser concretos.
 
 Copie [0000-template.md](./0000-template.md) para iniciar uma decisão.
-

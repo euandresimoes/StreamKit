@@ -23,4 +23,3 @@ Usar um único `streamkit.db` com `better-sqlite3`, Drizzle ORM como query/schem
 ## Validação e reversão
 
 Testar banco limpo, upgrades, rollback, WAL, backup/restauração e pacote Electron. O schema SQL versionado permite trocar o query builder sem alterar entidades e services.
-

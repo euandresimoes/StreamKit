@@ -19,4 +19,3 @@ Usar `@atlaskit/pragmatic-drag-and-drop`, integrado diretamente com Vue por comp
 ## Validação e reversão
 
 Testar reordenação, movimento entre listas, cancelamento, rollback, teclado e cada superfície Renderizer. A fronteira de comandos de movimento permite trocar a biblioteca sem mudar o domínio.
-

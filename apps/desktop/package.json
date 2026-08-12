@@ -1,0 +1,22 @@
+{
+  "name": "@streamkit/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "prod": "node dist/main/index.js",
+    "release": "node scripts/release-not-configured.mjs",
+    "test": "jest --config jest.config.cjs",
+    "test:e2e": "jest --config jest.e2e.config.cjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit"
+  },
+  "dependencies": {
+    "@streamkit/config": "workspace:*",
+    "@streamkit/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@streamkit/test-utils": "workspace:*"
+  }
+}

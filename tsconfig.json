@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/contracts" },
+    { "path": "packages/config" },
+    { "path": "packages/test-utils" },
+    { "path": "apps/backend" },
+    { "path": "apps/frontend" },
+    { "path": "apps/desktop" }
+  ]
+}

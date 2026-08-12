@@ -33,4 +33,3 @@ O StreamKit precisa de backend local estruturado em classes/casos de uso, API do
 ## Validação e reversão
 
 O vertical slice da Batch 2 deve provar health check, persistência, Scalar e pacote Electron. Uma troca exige novo ADR e contratos de domínio permanecem independentes do framework.
-

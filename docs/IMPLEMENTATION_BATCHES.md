@@ -44,22 +44,22 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 9, 10, 16, 17, 18, 22 (Fase 0) e 27.
 
-- [ ] Verificar repositório Git, remote e branch de destino configurados na Batch 0.
-- [ ] Criar workspaces para `apps/desktop`, `apps/frontend`, `apps/backend` e `packages/*`.
-- [ ] Criar `packages/contracts`, `packages/config` e `packages/test-utils`.
-- [ ] Configurar TypeScript estrito compartilhado e referências entre projetos.
-- [ ] Configurar package manager e lockfile determinístico.
-- [ ] Configurar formatter, ESLint e convenções de imports.
-- [ ] Configurar Jest e runners necessários para frontend, backend, integração e E2E.
-- [ ] Criar scripts raiz `dev`, `dev:*`, `debug`, `test`, `test:*`, `lint`, `typecheck`, `build`, `prod` e `release`.
-- [ ] Coordenar processos com `concurrently`, nomes/cores distintos e encerramento conjunto em falha crítica.
-- [ ] Garantir que testes usem diretórios e bancos isolados do usuário real.
-- [ ] Criar estrutura modular inicial de controllers, services, repositories, entities, schemas, errors e tests.
-- [ ] Configurar checagem de formatação, lint, tipos e testes no CI inicial.
-- [ ] Documentar setup local, requisitos e comandos no README.
-- [ ] Adicionar testes mínimos que provem a configuração de cada workspace.
-- [ ] Executar `format/check`, `lint`, `typecheck`, testes e build.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Verificar repositório Git, remote e branch de destino configurados na Batch 0.
+- [x] Criar workspaces para `apps/desktop`, `apps/frontend`, `apps/backend` e `packages/*`.
+- [x] Criar `packages/contracts`, `packages/config` e `packages/test-utils`.
+- [x] Configurar TypeScript estrito compartilhado e referências entre projetos.
+- [x] Configurar package manager e lockfile determinístico.
+- [x] Configurar formatter, ESLint e convenções de imports.
+- [x] Configurar Jest e runners necessários para frontend, backend, integração e E2E.
+- [x] Criar scripts raiz `dev`, `dev:*`, `debug`, `test`, `test:*`, `lint`, `typecheck`, `build`, `prod` e `release`.
+- [x] Coordenar processos com `concurrently`, nomes/cores distintos e encerramento conjunto em falha crítica.
+- [x] Garantir que testes usem diretórios e bancos isolados do usuário real.
+- [x] Criar estrutura modular inicial de controllers, services, repositories, entities, schemas, errors e tests.
+- [x] Configurar checagem de formatação, lint, tipos e testes no CI inicial.
+- [x] Documentar setup local, requisitos e comandos no README.
+- [x] Adicionar testes mínimos que provem a configuração de cada workspace.
+- [x] Executar `format/check`, `lint`, `typecheck`, testes e build.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 2 — Electron, Renderizer, backend local e vertical slice
 
@@ -370,34 +370,34 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 ## Matriz de cobertura da especificação
 
-| Seção | Assunto | Batches principais |
-| --- | --- | --- |
-| 1 | Visão do produto | 0, 14 |
-| 2 | Escopo do MVP | 0, 11, 13, 14 |
-| 3 | Personas e cenários | 0, 3 |
-| 4 | Navegação e experiência | 2, 3, 10 |
-| 5 | TODO | 5 |
-| 6 | Games/Tournament | 8, 9, 12 |
-| 7 | Giveaway | 6, 7, 12 |
-| 8 | Configurações globais | 3, 4, 10, 12 |
-| 9 | Arquitetura de alto nível | 1, 2, 13 |
-| 10 | Estrutura do repositório | 1, 4 |
-| 11 | SQLite | 4, 5, 6, 8, 9, 12 |
-| 12 | API e Scalar | 2, 4, 5, 6, 8, 9, 10 |
-| 13 | Estado do frontend | 3, 5, 7, 8 |
-| 14 | Auto update e releases | 11 |
-| 15 | Debug e observabilidade | 10 |
-| 16 | Scripts raiz | 1, 11 |
-| 17 | Estratégia de testes | todas as batches de implementação, 14 |
-| 18 | CI/CD | 1, 11, 14 |
-| 19 | Segurança do Electron | 2, 10, 14 |
-| 20 | Performance e confiabilidade | 3, 4, 7, 11, 13, 14 |
-| 21 | Arquitetura LivePix | 12 |
-| 22 | Roadmap | 0–13 |
-| 23 | Primeiro vertical slice | 2 |
-| 24 | Definition of Done | todas as batches |
-| 25 | Decisões pendentes | 0, 12, 13 |
-| 26 | Riscos e mitigação | 0, 14 |
-| 27 | Princípios de implementação | 0, 1 e todas as implementações |
-| 28 | Visão futura | 0, 13 |
-| 29 | Resumo executivo | 0, 14 |
+| Seção | Assunto                      | Batches principais                    |
+| ----- | ---------------------------- | ------------------------------------- |
+| 1     | Visão do produto             | 0, 14                                 |
+| 2     | Escopo do MVP                | 0, 11, 13, 14                         |
+| 3     | Personas e cenários          | 0, 3                                  |
+| 4     | Navegação e experiência      | 2, 3, 10                              |
+| 5     | TODO                         | 5                                     |
+| 6     | Games/Tournament             | 8, 9, 12                              |
+| 7     | Giveaway                     | 6, 7, 12                              |
+| 8     | Configurações globais        | 3, 4, 10, 12                          |
+| 9     | Arquitetura de alto nível    | 1, 2, 13                              |
+| 10    | Estrutura do repositório     | 1, 4                                  |
+| 11    | SQLite                       | 4, 5, 6, 8, 9, 12                     |
+| 12    | API e Scalar                 | 2, 4, 5, 6, 8, 9, 10                  |
+| 13    | Estado do frontend           | 3, 5, 7, 8                            |
+| 14    | Auto update e releases       | 11                                    |
+| 15    | Debug e observabilidade      | 10                                    |
+| 16    | Scripts raiz                 | 1, 11                                 |
+| 17    | Estratégia de testes         | todas as batches de implementação, 14 |
+| 18    | CI/CD                        | 1, 11, 14                             |
+| 19    | Segurança do Electron        | 2, 10, 14                             |
+| 20    | Performance e confiabilidade | 3, 4, 7, 11, 13, 14                   |
+| 21    | Arquitetura LivePix          | 12                                    |
+| 22    | Roadmap                      | 0–13                                  |
+| 23    | Primeiro vertical slice      | 2                                     |
+| 24    | Definition of Done           | todas as batches                      |
+| 25    | Decisões pendentes           | 0, 12, 13                             |
+| 26    | Riscos e mitigação           | 0, 14                                 |
+| 27    | Princípios de implementação  | 0, 1 e todas as implementações        |
+| 28    | Visão futura                 | 0, 13                                 |
+| 29    | Resumo executivo             | 0, 14                                 |

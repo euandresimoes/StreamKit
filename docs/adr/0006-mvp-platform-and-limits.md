@@ -21,4 +21,3 @@ Os limites reduzem risco do primeiro release e tornam testes reproduzíveis. Lis
 ## Validação e reversão
 
 Executar testes nos limites e smoke test no equipamento de referência. Limites poderão subir por configuração versionada após evidência.
-

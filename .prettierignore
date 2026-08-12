@@ -1,0 +1,7 @@
+.codex-tmp-*/
+LICENSE.md
+coverage/
+dist/
+node_modules/
+out/
+pnpm-lock.yaml

@@ -21,4 +21,3 @@ Uso, modificação e distribuição são permitidos somente para finalidades adm
 ## Validação e reversão
 
 CI verifica a presença de `LICENSE.md` nos artefatos. Mudança de licença exige análise de contribuições e novo ADR; licenças já concedidas não são retroativamente apagadas.
-

@@ -233,4 +233,3 @@ Uma feature só pode ser considerada pronta quando, conforme aplicável:
 - não há regressão conhecida entre as janelas Renderizer;
 - tasks foram marcadas somente após as evidências acima;
 - commit e push foram feitos e confirmados conforme o fluxo da batch.
-

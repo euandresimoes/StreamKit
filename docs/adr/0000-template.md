@@ -48,4 +48,3 @@ Registre a escolha e os motivos objetivos.
 ## Plano de reversão
 
 Descreva quando e como a decisão pode ser revista sem perda de dados.
-

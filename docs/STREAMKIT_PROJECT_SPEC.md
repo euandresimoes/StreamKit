@@ -5,7 +5,7 @@
 **Status:** planejamento inicial  
 **Tipo de produto:** aplicativo desktop local para streamers  
 **Plataformas-alvo iniciais:** Windows, com arquitetura preparada para macOS e Linux  
-**Stack principal:** Electron, Renderizer, Vue.js, Pinia, SCSS, Node.js, TypeScript, SQLite, Jest, Zod e Scalar API  
+**Stack principal:** Electron, Renderizer, Vue.js, Pinia, SCSS, Node.js, TypeScript, SQLite, Jest, Zod e Scalar API
 
 ---
 
@@ -596,13 +596,13 @@ Cada módulo deverá conter, quando aplicável:
 
 ### 9.2 Responsabilidades por camada
 
-| Camada | Responsabilidade | Não deve fazer |
-| --- | --- | --- |
-| Controller | Receber requisição, validar contrato e devolver resposta | SQL, regra de negócio ou lógica de UI |
-| Service | Executar um caso de uso e coordenar dependências | Conhecer detalhes de Electron ou componentes Vue |
-| Repository | Ler e gravar entidades | Decidir regras de negócio |
-| Entity | Proteger invariantes e representar comportamento do domínio | Fazer I/O ou acessar banco |
-| Schema | Validar formato e limites dos dados externos | Persistir ou executar caso de uso |
+| Camada     | Responsabilidade                                            | Não deve fazer                                   |
+| ---------- | ----------------------------------------------------------- | ------------------------------------------------ |
+| Controller | Receber requisição, validar contrato e devolver resposta    | SQL, regra de negócio ou lógica de UI            |
+| Service    | Executar um caso de uso e coordenar dependências            | Conhecer detalhes de Electron ou componentes Vue |
+| Repository | Ler e gravar entidades                                      | Decidir regras de negócio                        |
+| Entity     | Proteger invariantes e representar comportamento do domínio | Fazer I/O ou acessar banco                       |
+| Schema     | Validar formato e limites dos dados externos                | Persistir ou executar caso de uso                |
 
 ### 9.3 Single Responsibility Principle
 
@@ -748,39 +748,39 @@ Arquivos adicionais poderão existir para:
 
 #### TODO
 
-| Tabela | Campos principais |
-| --- | --- |
-| `todo_workspaces` | `id`, `name`, `description`, `position`, `created_at`, `updated_at` |
-| `todo_columns` | `id`, `workspace_id`, `name`, `color`, `position`, `created_at`, `updated_at` |
-| `todo_cards` | `id`, `column_id`, `title`, `description`, `notes`, `position`, `created_at`, `updated_at` |
+| Tabela            | Campos principais                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| `todo_workspaces` | `id`, `name`, `description`, `position`, `created_at`, `updated_at`                        |
+| `todo_columns`    | `id`, `workspace_id`, `name`, `color`, `position`, `created_at`, `updated_at`              |
+| `todo_cards`      | `id`, `column_id`, `title`, `description`, `notes`, `position`, `created_at`, `updated_at` |
 
 #### Tournaments
 
-| Tabela | Campos principais |
-| --- | --- |
-| `tournaments` | `id`, `name`, `description`, `mode`, `status`, `bracket_size`, `team_capacity`, `created_at`, `updated_at` |
-| `tournament_participants` | `id`, `tournament_id`, `display_name`, `source`, `external_ref`, `created_at` |
-| `tournament_teams` | `id`, `tournament_id`, `name`, `color`, `seed`, `capacity`, `created_at`, `updated_at` |
-| `tournament_team_members` | `id`, `team_id`, `participant_id`, `slot_position`, `created_at` |
-| `tournament_entries` | `id`, `tournament_id`, `participant_id` ou `team_id`, `seed`, `created_at` |
-| `tournament_matches` | `id`, `tournament_id`, `round_number`, `match_number`, `left_entry_id`, `right_entry_id`, `winner_entry_id`, `next_match_id`, `next_slot`, `status`, `updated_at` |
-| `tournament_audit_log` | `id`, `tournament_id`, `action`, `payload_json`, `created_at` |
+| Tabela                    | Campos principais                                                                                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tournaments`             | `id`, `name`, `description`, `mode`, `status`, `bracket_size`, `team_capacity`, `created_at`, `updated_at`                                                        |
+| `tournament_participants` | `id`, `tournament_id`, `display_name`, `source`, `external_ref`, `created_at`                                                                                     |
+| `tournament_teams`        | `id`, `tournament_id`, `name`, `color`, `seed`, `capacity`, `created_at`, `updated_at`                                                                            |
+| `tournament_team_members` | `id`, `team_id`, `participant_id`, `slot_position`, `created_at`                                                                                                  |
+| `tournament_entries`      | `id`, `tournament_id`, `participant_id` ou `team_id`, `seed`, `created_at`                                                                                        |
+| `tournament_matches`      | `id`, `tournament_id`, `round_number`, `match_number`, `left_entry_id`, `right_entry_id`, `winner_entry_id`, `next_match_id`, `next_slot`, `status`, `updated_at` |
+| `tournament_audit_log`    | `id`, `tournament_id`, `action`, `payload_json`, `created_at`                                                                                                     |
 
 #### Giveaways
 
-| Tabela | Campos principais |
-| --- | --- |
-| `giveaways` | `id`, `name`, `mode`, `source`, `status`, `duplicate_policy`, `created_at`, `updated_at` |
-| `giveaway_participants` | `id`, `giveaway_id`, `display_name`, `normalized_name`, `ticket_count`, `external_ref`, `created_at` |
-| `giveaway_rounds` | `id`, `giveaway_id`, `status`, `winner_participant_id`, `random_proof`, `started_at`, `completed_at` |
-| `giveaway_round_entries` | `id`, `round_id`, `participant_id`, `ticket_count` |
+| Tabela                   | Campos principais                                                                                    |
+| ------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `giveaways`              | `id`, `name`, `mode`, `source`, `status`, `duplicate_policy`, `created_at`, `updated_at`             |
+| `giveaway_participants`  | `id`, `giveaway_id`, `display_name`, `normalized_name`, `ticket_count`, `external_ref`, `created_at` |
+| `giveaway_rounds`        | `id`, `giveaway_id`, `status`, `winner_participant_id`, `random_proof`, `started_at`, `completed_at` |
+| `giveaway_round_entries` | `id`, `round_id`, `participant_id`, `ticket_count`                                                   |
 
 #### Configurações e infraestrutura
 
-| Tabela | Campos principais |
-| --- | --- |
-| `app_settings` | `key`, `value_json`, `updated_at` |
-| `schema_migrations` | `version`, `name`, `applied_at` |
+| Tabela               | Campos principais                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `app_settings`       | `key`, `value_json`, `updated_at`                                                                            |
+| `schema_migrations`  | `version`, `name`, `applied_at`                                                                              |
 | `integration_events` | `id`, `provider`, `external_event_id`, `event_type`, `status`, `payload_json`, `received_at`, `processed_at` |
 
 Credenciais não devem ser armazenadas em `app_settings`.
@@ -1265,10 +1265,10 @@ O domínio não deve depender diretamente do LivePix. Criar uma interface concei
 
 ```ts
 interface ContributionProvider {
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
-  validateCredentials(): Promise<boolean>;
-  subscribe(handler: ContributionHandler): Promise<Unsubscribe>;
+  connect(): Promise<void>
+  disconnect(): Promise<void>
+  validateCredentials(): Promise<boolean>
+  subscribe(handler: ContributionHandler): Promise<Unsubscribe>
 }
 ```
 
@@ -1276,14 +1276,14 @@ O adapter `LivePixContributionProvider` traduzirá dados externos para um contra
 
 ```ts
 type ContributionReceived = {
-  eventId: string;
-  provider: 'livepix';
-  donorDisplayName: string | null;
-  title: string | null;
-  amountInCents: number;
-  currency: string;
-  occurredAt: string;
-};
+  eventId: string
+  provider: 'livepix'
+  donorDisplayName: string | null
+  title: string | null
+  amountInCents: number
+  currency: string
+  occurredAt: string
+}
 ```
 
 ### 21.2 Pipeline de evento
@@ -1491,18 +1491,18 @@ As decisões acima foram fechadas em 12 de agosto de 2026 e registradas nos ADRs
 
 ## 26. Riscos e mitigação
 
-| Risco | Impacto | Mitigação |
-| --- | --- | --- |
-| Escopo grande demais para o MVP | atraso e abandono | separar manual, LivePix e OBS em fases |
-| Bracket complexo | bugs de progressão | começar com eliminação simples e tamanhos definidos |
-| Drag and drop inconsistente | perda/duplicação visual | operações atômicas, rollback e alternativa por botões |
-| Resultado parecer manipulado | perda de confiança | selecionar antes da animação e manter histórico |
-| Banco corrompido/migração falhar | perda de dados | WAL, transações e backup antes de migration |
-| Credencial exposta | incidente de segurança | cofre do sistema e isolamento do renderer |
-| Auto update comprometido | risco crítico | assinatura, checksums e releases protegidas |
-| API externa instável | automação indisponível | modo manual sempre funcional e adapter isolado |
-| Animação pesada | travamento durante live | profiling, virtualização e redução de efeitos |
-| Arquitetura excessiva cedo demais | baixa velocidade | casos de uso claros, interfaces apenas em fronteiras reais |
+| Risco                             | Impacto                 | Mitigação                                                  |
+| --------------------------------- | ----------------------- | ---------------------------------------------------------- |
+| Escopo grande demais para o MVP   | atraso e abandono       | separar manual, LivePix e OBS em fases                     |
+| Bracket complexo                  | bugs de progressão      | começar com eliminação simples e tamanhos definidos        |
+| Drag and drop inconsistente       | perda/duplicação visual | operações atômicas, rollback e alternativa por botões      |
+| Resultado parecer manipulado      | perda de confiança      | selecionar antes da animação e manter histórico            |
+| Banco corrompido/migração falhar  | perda de dados          | WAL, transações e backup antes de migration                |
+| Credencial exposta                | incidente de segurança  | cofre do sistema e isolamento do renderer                  |
+| Auto update comprometido          | risco crítico           | assinatura, checksums e releases protegidas                |
+| API externa instável              | automação indisponível  | modo manual sempre funcional e adapter isolado             |
+| Animação pesada                   | travamento durante live | profiling, virtualização e redução de efeitos              |
+| Arquitetura excessiva cedo demais | baixa velocidade        | casos de uso claros, interfaces apenas em fronteiras reais |
 
 ---
 

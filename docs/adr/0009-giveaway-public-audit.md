@@ -17,4 +17,3 @@ O público consegue correlacionar animação, resultado e histórico imutável. 
 ## Validação e reversão
 
 Testar que o snapshot e vencedor são persistidos antes da animação, que o hash muda com qualquer entrada e que dados sensíveis não entram no export.
-

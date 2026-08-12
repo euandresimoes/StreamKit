@@ -1,0 +1,24 @@
+{
+  "name": "@streamkit/frontend",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "test": "jest --config jest.config.cjs",
+    "test:coverage": "jest --config jest.config.cjs --coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit"
+  },
+  "dependencies": {
+    "@streamkit/config": "workspace:*",
+    "@streamkit/contracts": "workspace:*",
+    "pinia": "3.0.4",
+    "vue": "3.5.27"
+  },
+  "devDependencies": {
+    "@vue/test-utils": "2.4.6",
+    "sass": "1.97.3"
+  }
+}

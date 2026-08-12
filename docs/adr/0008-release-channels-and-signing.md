@@ -20,4 +20,3 @@ Assinatura reduz alertas e risco de supply chain, mas requer certificado e secre
 ## Validação e reversão
 
 Testar stable/beta, checksum inválido, assinatura inválida, versão pulada e rollback operacional por release corretiva de versão superior.
-
