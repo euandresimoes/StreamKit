@@ -153,7 +153,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Criar E2E de workspace/colunas/cards, movimento e persistência após reinício.
 - [x] Validar UX, temas, acessibilidade e ausência de regressão na janela Settings.
 - [x] Executar gate completo e verificar o critério de saída da Fase 1.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 6 — Giveaway: domínio, importação e integridade
 
