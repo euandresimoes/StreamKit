@@ -200,7 +200,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Criar E2E de encerramento/reabertura durante rodada e recuperação correta.
 - [x] Fazer profiling em volumes máximos definidos na Batch 0.
 - [x] Executar gate completo e verificar o critério de saída da Fase 2.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 8 — Games: torneio individual
 
