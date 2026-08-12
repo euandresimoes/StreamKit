@@ -176,7 +176,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Criar integração de transações, snapshot, interrupção e recuperação com SQLite.
 - [x] Validar estatisticamente somente sanidade da distribuição sem usar o teste como prova criptográfica.
 - [x] Executar gate de backend/integração e build.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 7 — Giveaway: roleta, case opening e histórico visual
 
