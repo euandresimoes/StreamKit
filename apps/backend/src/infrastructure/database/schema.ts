@@ -64,6 +64,7 @@ export const tournamentParticipants = sqliteTable('tournament_participants', {
   displayName: text('display_name').notNull(),
   externalRef: text('external_ref'),
   id: text('id').primaryKey(),
+  identityKey: text('identity_key'),
   source: text('source').notNull(),
   tournamentId: text('tournament_id')
     .notNull()
@@ -78,6 +79,29 @@ export const tournamentEntries = sqliteTable('tournament_entries', {
   tournamentId: text('tournament_id')
     .notNull()
     .references(() => tournaments.id, { onDelete: 'cascade' }),
+})
+export const tournamentTeams = sqliteTable('tournament_teams', {
+  capacity: integer('capacity').notNull(),
+  color: text('color'),
+  createdAt: text('created_at').notNull(),
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  seed: integer('seed'),
+  tournamentId: text('tournament_id')
+    .notNull()
+    .references(() => tournaments.id, { onDelete: 'cascade' }),
+  updatedAt: text('updated_at').notNull(),
+})
+export const tournamentTeamMembers = sqliteTable('tournament_team_members', {
+  createdAt: text('created_at').notNull(),
+  id: text('id').primaryKey(),
+  participantId: text('participant_id')
+    .notNull()
+    .references(() => tournamentParticipants.id, { onDelete: 'cascade' }),
+  slotPosition: integer('slot_position').notNull(),
+  teamId: text('team_id')
+    .notNull()
+    .references(() => tournamentTeams.id, { onDelete: 'cascade' }),
 })
 export const tournamentMatches = sqliteTable('tournament_matches', {
   id: text('id').primaryKey(),

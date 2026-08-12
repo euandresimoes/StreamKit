@@ -232,23 +232,23 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 6.2, 6.3, 6.8–6.9, 17.2 e 22 (Fase 3).
 
-- [ ] Modelar equipe, cor, capacidade, membro e posição de slot.
-- [ ] Implementar criar/renomear equipe e definir capacidade válida.
-- [ ] Mostrar slots vazios explicitamente.
-- [ ] Implementar adicionar membro diretamente a um slot.
-- [ ] Implementar mover membro dentro da equipe e entre equipes em transação única.
-- [ ] Impedir exceder capacidade ou duplicar pessoa no mesmo torneio.
-- [ ] Implementar drag and drop com rollback e alternativa por botões/teclado.
-- [ ] Implementar seeding e drag and drop de equipes antes do início.
-- [ ] Gerar bracket por equipe e registrar equipe vencedora.
-- [ ] Reutilizar progressão, campeão, invalidação e auditoria do domínio comum.
-- [ ] Implementar endpoints e contratos de equipes/movimentação.
-- [ ] Cobrir todos os estados de UI e conflitos de persistência.
-- [ ] Criar unitários de capacidade, slots, duplicidade e ordenação.
-- [ ] Criar integração de movimentação concorrente/transacional.
-- [ ] Criar E2E de times, movimento de integrantes, bracket e campeão.
-- [ ] Validar reinício, histórico, acessibilidade, temas e performance.
-- [ ] Executar gate completo e verificar o critério de saída da Fase 3.
+- [x] Modelar equipe, cor, capacidade, membro e posição de slot.
+- [x] Implementar criar/renomear equipe e definir capacidade válida.
+- [x] Mostrar slots vazios explicitamente.
+- [x] Implementar adicionar membro diretamente a um slot.
+- [x] Implementar mover membro dentro da equipe e entre equipes em transação única.
+- [x] Impedir exceder capacidade ou duplicar pessoa no mesmo torneio.
+- [x] Implementar drag and drop com rollback e alternativa por botões/teclado.
+- [x] Implementar seeding e drag and drop de equipes antes do início.
+- [x] Gerar bracket por equipe e registrar equipe vencedora.
+- [x] Reutilizar progressão, campeão, invalidação e auditoria do domínio comum.
+- [x] Implementar endpoints e contratos de equipes/movimentação.
+- [x] Cobrir todos os estados de UI e conflitos de persistência.
+- [x] Criar unitários de capacidade, slots, duplicidade e ordenação.
+- [x] Criar integração de movimentação concorrente/transacional.
+- [x] Criar E2E de times, movimento de integrantes, bracket e campeão.
+- [x] Validar reinício, histórico, acessibilidade, temas e performance.
+- [x] Executar gate completo e verificar o critério de saída da Fase 3.
 - [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 10 — Settings, credenciais seguras, debug e observabilidade

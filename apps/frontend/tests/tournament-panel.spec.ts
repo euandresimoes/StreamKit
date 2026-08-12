@@ -21,4 +21,11 @@ describe('TournamentPanel', () => {
     expect(source).toContain("status === 'in_progress'")
     expect(source).toContain("addEventListener('beforeunload'")
   })
+  it('keeps team slots visible with drag and accessible move rollback controls', () => {
+    expect(source).toContain('Slot vazio')
+    expect(source).toContain('@drop="dropMember(team.id, slot)"')
+    expect(source).toContain('Selecionar para mover')
+    expect(source).toContain('Mover para cá')
+    expect(source).toContain('store.moveTeamMember')
+  })
 })

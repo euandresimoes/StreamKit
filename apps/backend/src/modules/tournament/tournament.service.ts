@@ -22,6 +22,52 @@ export class TournamentService {
   public add(id: string, name: string) {
     return this.resolve(this.repository.addParticipant(id, name))
   }
+  public addTeam(id: string, name: string, color: string | null, capacity?: number) {
+    return this.resolve(
+      this.repository.addTeam(id, name, color, capacity),
+      undefined,
+      'TOURNAMENT_TEAM_NOT_FOUND',
+    )
+  }
+  public updateTeam(
+    id: string,
+    teamId: string,
+    name: string,
+    color: string | null,
+    capacity?: number,
+  ) {
+    return this.resolve(
+      this.repository.updateTeam(id, teamId, name, color, capacity),
+      teamId,
+      'TOURNAMENT_TEAM_NOT_FOUND',
+    )
+  }
+  public addTeamMember(id: string, teamId: string, displayName: string, slotPosition: number) {
+    return this.resolve(
+      this.repository.addTeamMember(id, teamId, displayName, slotPosition),
+      teamId,
+      'TOURNAMENT_TEAM_NOT_FOUND',
+    )
+  }
+  public moveTeamMember(
+    id: string,
+    memberId: string,
+    targetTeamId: string,
+    targetSlotPosition: number,
+  ) {
+    return this.resolve(
+      this.repository.moveTeamMember(id, memberId, targetTeamId, targetSlotPosition),
+      memberId,
+      'TOURNAMENT_TEAM_NOT_FOUND',
+    )
+  }
+  public reorderTeam(id: string, teamId: string, seed: number) {
+    return this.resolve(
+      this.repository.reorderTeam(id, teamId, seed),
+      teamId,
+      'TOURNAMENT_TEAM_NOT_FOUND',
+    )
+  }
   public rename(id: string, participantId: string, name: string) {
     return this.resolve(this.repository.renameParticipant(id, participantId, name), participantId)
   }
@@ -54,11 +100,14 @@ export class TournamentService {
     return this.resolve(this.repository.undo(id, matchId), matchId, 'TOURNAMENT_MATCH_NOT_FOUND')
   }
   private async resolve(
-    promise: Promise<TournamentDetail | 'full' | 'incomplete' | 'missing' | null>,
+    promise: Promise<
+      TournamentDetail | 'conflict' | 'duplicate' | 'full' | 'incomplete' | 'missing' | null
+    >,
     entityId?: string,
     missingCode:
       | 'TOURNAMENT_MATCH_NOT_FOUND'
-      | 'TOURNAMENT_PARTICIPANT_NOT_FOUND' = 'TOURNAMENT_PARTICIPANT_NOT_FOUND',
+      | 'TOURNAMENT_PARTICIPANT_NOT_FOUND'
+      | 'TOURNAMENT_TEAM_NOT_FOUND' = 'TOURNAMENT_PARTICIPANT_NOT_FOUND',
   ) {
     const value = await promise
     if (value === 'full')
@@ -75,6 +124,18 @@ export class TournamentService {
       )
     if (value === 'missing')
       throw new ApiApplicationError(missingCode, `Entity ${entityId ?? ''} not found`, 404)
+    if (value === 'conflict')
+      throw new ApiApplicationError(
+        'TOURNAMENT_SLOT_CONFLICT',
+        'Target slot or capacity is not available',
+        409,
+      )
+    if (value === 'duplicate')
+      throw new ApiApplicationError(
+        'TOURNAMENT_DUPLICATE_MEMBER',
+        'A person can only occupy one slot in a tournament',
+        409,
+      )
     return this.required(
       value,
       'TOURNAMENT_INVALID_STATE',

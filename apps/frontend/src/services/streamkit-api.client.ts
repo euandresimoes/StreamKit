@@ -63,6 +63,53 @@ export class StreamKitApiClient {
       method: 'POST',
     })
   }
+  public addTournamentTeam(
+    id: string,
+    input: { capacity?: number; color: string | null; name: string },
+  ) {
+    return this.json(`/api/v1/tournaments/${id}/teams`, TournamentDetailSchema, {
+      body: JSON.stringify(input),
+      method: 'POST',
+    })
+  }
+  public updateTournamentTeam(
+    id: string,
+    teamId: string,
+    input: { capacity?: number; color: string | null; name: string },
+  ) {
+    return this.json(`/api/v1/tournaments/${id}/teams/${teamId}`, TournamentDetailSchema, {
+      body: JSON.stringify(input),
+      method: 'PATCH',
+    })
+  }
+  public addTournamentTeamMember(
+    id: string,
+    teamId: string,
+    displayName: string,
+    slotPosition: number,
+  ) {
+    return this.json(`/api/v1/tournaments/${id}/teams/${teamId}/members`, TournamentDetailSchema, {
+      body: JSON.stringify({ displayName, slotPosition }),
+      method: 'POST',
+    })
+  }
+  public moveTournamentTeamMember(
+    id: string,
+    memberId: string,
+    targetTeamId: string,
+    targetSlotPosition: number,
+  ) {
+    return this.json(`/api/v1/tournaments/${id}/team-members/move`, TournamentDetailSchema, {
+      body: JSON.stringify({ memberId, targetSlotPosition, targetTeamId }),
+      method: 'POST',
+    })
+  }
+  public reorderTournamentTeam(id: string, teamId: string, seed: number) {
+    return this.json(`/api/v1/tournaments/${id}/teams/${teamId}/reorder`, TournamentDetailSchema, {
+      body: JSON.stringify({ seed }),
+      method: 'POST',
+    })
+  }
   public renameTournamentParticipant(id: string, participantId: string, displayName: string) {
     return this.json(
       `/api/v1/tournaments/${id}/participants/${participantId}`,

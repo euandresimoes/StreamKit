@@ -48,6 +48,27 @@ export const useTournamentStore = defineStore('tournament', {
     add(name: string) {
       return this.mutate((id) => streamKitApiClient.addTournamentParticipant(id, name))
     },
+    addTeam(name: string, color: string | null) {
+      return this.mutate((id) => streamKitApiClient.addTournamentTeam(id, { color, name }))
+    },
+    updateTeam(teamId: string, name: string, color: string | null, capacity: number) {
+      return this.mutate((id) =>
+        streamKitApiClient.updateTournamentTeam(id, teamId, { capacity, color, name }),
+      )
+    },
+    addTeamMember(teamId: string, displayName: string, slotPosition: number) {
+      return this.mutate((id) =>
+        streamKitApiClient.addTournamentTeamMember(id, teamId, displayName, slotPosition),
+      )
+    },
+    moveTeamMember(memberId: string, targetTeamId: string, targetSlotPosition: number) {
+      return this.mutate((id) =>
+        streamKitApiClient.moveTournamentTeamMember(id, memberId, targetTeamId, targetSlotPosition),
+      )
+    },
+    reorderTeam(teamId: string, seed: number) {
+      return this.mutate((id) => streamKitApiClient.reorderTournamentTeam(id, teamId, seed))
+    },
     rename(participantId: string, name: string) {
       return this.mutate((id) =>
         streamKitApiClient.renameTournamentParticipant(id, participantId, name),

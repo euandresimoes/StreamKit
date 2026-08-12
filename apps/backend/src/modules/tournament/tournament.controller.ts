@@ -1,10 +1,15 @@
 import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Post } from '@nestjs/common'
 import {
   AddTournamentParticipantRequestSchema,
+  AddTournamentTeamMemberRequestSchema,
   CreateTournamentRequestSchema,
+  CreateTournamentTeamRequestSchema,
   EntityIdSchema,
+  MoveTournamentTeamMemberRequestSchema,
   RenameTournamentParticipantRequestSchema,
+  RenameTournamentTeamRequestSchema,
   ReorderTournamentParticipantRequestSchema,
+  ReorderTournamentTeamRequestSchema,
   SetTournamentWinnerRequestSchema,
 } from '@streamkit/contracts'
 import { TournamentService } from './tournament.service'
@@ -25,6 +30,60 @@ export class TournamentController {
     return this.service.add(
       EntityIdSchema.parse(id),
       AddTournamentParticipantRequestSchema.parse(body).displayName,
+    )
+  }
+  @Post(':id/teams') public addTeam(@Param('id') id: unknown, @Body() body: unknown) {
+    const input = CreateTournamentTeamRequestSchema.parse(body)
+    return this.service.addTeam(EntityIdSchema.parse(id), input.name, input.color, input.capacity)
+  }
+  @Patch(':id/teams/:teamId') public updateTeam(
+    @Param('id') id: unknown,
+    @Param('teamId') teamId: unknown,
+    @Body() body: unknown,
+  ) {
+    const input = RenameTournamentTeamRequestSchema.parse(body)
+    return this.service.updateTeam(
+      EntityIdSchema.parse(id),
+      EntityIdSchema.parse(teamId),
+      input.name,
+      input.color,
+      input.capacity,
+    )
+  }
+  @Post(':id/teams/:teamId/members') public addTeamMember(
+    @Param('id') id: unknown,
+    @Param('teamId') teamId: unknown,
+    @Body() body: unknown,
+  ) {
+    const input = AddTournamentTeamMemberRequestSchema.parse(body)
+    return this.service.addTeamMember(
+      EntityIdSchema.parse(id),
+      EntityIdSchema.parse(teamId),
+      input.displayName,
+      input.slotPosition,
+    )
+  }
+  @Post(':id/team-members/move') public moveTeamMember(
+    @Param('id') id: unknown,
+    @Body() body: unknown,
+  ) {
+    const input = MoveTournamentTeamMemberRequestSchema.parse(body)
+    return this.service.moveTeamMember(
+      EntityIdSchema.parse(id),
+      input.memberId,
+      input.targetTeamId,
+      input.targetSlotPosition,
+    )
+  }
+  @Post(':id/teams/:teamId/reorder') public reorderTeam(
+    @Param('id') id: unknown,
+    @Param('teamId') teamId: unknown,
+    @Body() body: unknown,
+  ) {
+    return this.service.reorderTeam(
+      EntityIdSchema.parse(id),
+      EntityIdSchema.parse(teamId),
+      ReorderTournamentTeamRequestSchema.parse(body).seed,
     )
   }
   @Patch(':id/participants/:participantId') public rename(

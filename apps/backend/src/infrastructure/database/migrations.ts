@@ -107,4 +107,15 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
     version: 3,
     sql: `ALTER TABLE giveaway_participants ADD COLUMN active INTEGER NOT NULL DEFAULT 1;`,
   },
+  {
+    destructive: false,
+    name: 'team_member_identity',
+    version: 4,
+    sql: `
+      ALTER TABLE tournament_participants ADD COLUMN identity_key TEXT;
+      CREATE UNIQUE INDEX tournament_participants_identity_unique
+        ON tournament_participants(tournament_id, identity_key)
+        WHERE identity_key IS NOT NULL;
+    `,
+  },
 ]
