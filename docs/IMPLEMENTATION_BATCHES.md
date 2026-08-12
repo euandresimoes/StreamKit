@@ -127,7 +127,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Documentar procedimento de backup e restauração.
 - [x] Atualizar OpenAPI/Scalar com contratos de infraestrutura expostos.
 - [x] Executar gate completo, incluindo testes de migration sobre banco de versão anterior.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 5 — TODO/Kanban completo
 
