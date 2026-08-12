@@ -87,26 +87,26 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 3, 4, 8.1 (Aparência), 13, 20.1, 20.2 e 24.
 
-- [ ] Criar sidebar TODO/Games/Giveaway e acesso a Settings.
-- [ ] Criar layout central, notificações e indicador de debug.
-- [ ] Implementar arquitetura SCSS em `abstracts`, `base`, `tokens`, `themes`, `components` e `utilities`.
-- [ ] Definir tokens de fundação, semânticos e por componente.
-- [ ] Definir como tokens de tema background, foreground, borders, radius, shadow, outline, focus ring, spacing, typography, opacity, z-index e motion.
-- [ ] Implementar temas light, dark e system via CSS custom properties com fallbacks seguros.
-- [ ] Garantir que um tema novo possa ser criado sem alterar seletores dos componentes.
-- [ ] Criar `apps/frontend/src/components/base/`.
-- [ ] Implementar `BaseButton`, `BaseSelect`, `BaseToggle`, `BaseInput`, `BaseSlider` e `BaseDropdown`.
-- [ ] Criar primitives adicionais realmente reutilizados, como modal, tooltip, checkbox, textarea, spinner e icon button.
-- [ ] Cobrir estados default, hover, active, focus-visible, disabled, loading, readonly e invalid quando aplicáveis.
-- [ ] Garantir APIs tipadas, labels acessíveis, teclado, mensagens de erro e tooltips.
-- [ ] Criar fixtures/showcase visual dos primitives em todos os temas e estados.
-- [ ] Criar testes de componentes e testes de contraste/foco possíveis de automatizar.
-- [ ] Implementar redução de movimento e evitar dependência exclusiva de cor.
-- [ ] Implementar estados padrão de vazio, loading, sucesso, erro e confirmação destrutiva.
-- [ ] Verificar ausência de vazamento de estilos, valores mágicos repetidos e `!important` injustificado.
-- [ ] Validar visualmente no Windows, temas light/dark/system, zoom e redução de movimento.
-- [ ] Executar gate completo de frontend, acessibilidade, build e smoke test.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Criar sidebar TODO/Games/Giveaway e acesso a Settings.
+- [x] Criar layout central, notificações e indicador de debug.
+- [x] Implementar arquitetura SCSS em `abstracts`, `base`, `tokens`, `themes`, `components` e `utilities`.
+- [x] Definir tokens de fundação, semânticos e por componente.
+- [x] Definir como tokens de tema background, foreground, borders, radius, shadow, outline, focus ring, spacing, typography, opacity, z-index e motion.
+- [x] Implementar temas light, dark e system via CSS custom properties com fallbacks seguros.
+- [x] Garantir que um tema novo possa ser criado sem alterar seletores dos componentes.
+- [x] Criar `apps/frontend/src/components/base/`.
+- [x] Implementar `BaseButton`, `BaseSelect`, `BaseToggle`, `BaseInput`, `BaseSlider` e `BaseDropdown`.
+- [x] Criar primitives adicionais realmente reutilizados, como modal, tooltip, checkbox, textarea, spinner e icon button.
+- [x] Cobrir estados default, hover, active, focus-visible, disabled, loading, readonly e invalid quando aplicáveis.
+- [x] Garantir APIs tipadas, labels acessíveis, teclado, mensagens de erro e tooltips.
+- [x] Criar fixtures/showcase visual dos primitives em todos os temas e estados.
+- [x] Criar testes de componentes e testes de contraste/foco possíveis de automatizar.
+- [x] Implementar redução de movimento e evitar dependência exclusiva de cor.
+- [x] Implementar estados padrão de vazio, loading, sucesso, erro e confirmação destrutiva.
+- [x] Verificar ausência de vazamento de estilos, valores mágicos repetidos e `!important` injustificado.
+- [x] Validar visualmente no Windows, temas light/dark/system, zoom e redução de movimento.
+- [x] Executar gate completo de frontend, acessibilidade, build e smoke test.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 4 — SQLite, migrações, contratos e infraestrutura de dados
 

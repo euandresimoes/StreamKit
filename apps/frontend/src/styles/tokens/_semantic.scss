@@ -1,0 +1,33 @@
+:root {
+  --sk-bg-app: #f3f4f6;
+  --sk-bg-sidebar: #e7e9ed;
+  --sk-bg-panel: #ffffff;
+  --sk-bg-raised: #f7f8fa;
+  --sk-bg-sunken: #e9ebef;
+  --sk-bg-hover: #dfe3e9;
+  --sk-bg-selected: #d8e8ff;
+  --sk-background: var(--sk-bg-app, #f3f4f6);
+  --sk-fg-primary: #171a20;
+  --sk-fg-secondary: #4b5563;
+  --sk-fg-muted: #697386;
+  --sk-fg-on-accent: #ffffff;
+  --sk-foreground: var(--sk-fg-primary, #171a20);
+  --sk-border-subtle: #c7ccd4;
+  --sk-border-strong: #9ba3af;
+  --sk-accent: #1668c7;
+  --sk-accent-hover: #0f55a7;
+  --sk-accent-soft: #d8e8ff;
+  --sk-success: #18794e;
+  --sk-success-soft: #d7f4e5;
+  --sk-danger: #b42318;
+  --sk-danger-soft: #fee4e2;
+  --sk-warning: #8a5a00;
+  --sk-warning-soft: #fff0c2;
+  --sk-focus-color: #1668c7;
+  --sk-focus-width: var(--sk-outline-width, 2px);
+  --sk-focus-style: solid;
+  --sk-focus-offset: 2px;
+  --sk-shadow-panel: 0 0.25rem 1rem rgb(15 23 42 / 14%);
+  --sk-shadow-modal: 0 1rem 3rem rgb(15 23 42 / 28%);
+  color-scheme: light;
+}

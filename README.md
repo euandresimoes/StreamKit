@@ -52,6 +52,12 @@ packages/
 
 `pnpm release` existe como contrato raiz, mas a publicação permanece deliberadamente bloqueada até a Batch 11.
 
+## Design system
+
+O frontend usa tokens SCSS de fundação, semânticos e por componente, expostos como CSS custom properties. Os temas `light`, `dark` e `system` alteram somente tokens; componentes reutilizáveis ficam em `apps/frontend/src/components/base/`. Em desenvolvimento, o botão **Showcase** permite revisar primitives, estados, foco e temas sem incluí-los na experiência de produção.
+
+A preferência **Reduzir movimento** é compartilhada imediatamente entre a janela principal e Settings. O sistema também respeita `prefers-reduced-motion` do Windows.
+
 ## Segurança dos testes
 
 Testes que precisam de dados locais devem usar `@streamkit/test-utils`. O helper cria um diretório temporário com banco `streamkit.test.db` e oferece limpeza explícita. Nunca aponte testes para `app.getPath('userData')` real.

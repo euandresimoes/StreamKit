@@ -29,14 +29,25 @@ export default tseslint.config(
   {
     files: ['**/*.vue'],
     languageOptions: {
+      globals: {
+        document: 'readonly',
+        HTMLElement: 'readonly',
+        KeyboardEvent: 'readonly',
+        MouseEvent: 'readonly',
+        window: 'readonly',
+      },
       parserOptions: {
         parser: tseslint.parser,
       },
     },
     rules: {
+      'vue/html-closing-bracket-newline': 'off',
+      'vue/html-indent': 'off',
       'vue/html-self-closing': 'off',
       'vue/max-attributes-per-line': 'off',
       'vue/multi-word-component-names': 'off',
+      'vue/multiline-html-element-content-newline': 'off',
+      'vue/require-default-prop': 'off',
       'vue/singleline-html-element-content-newline': 'off',
     },
   },
