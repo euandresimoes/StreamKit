@@ -226,7 +226,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Criar integração transacional e E2E de torneio individual até campeão.
 - [x] Validar persistência após reinício, temas, teclado e volumes máximos.
 - [x] Executar gate completo.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 9 — Games: equipes, slots e torneio completo
 
