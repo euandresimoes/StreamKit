@@ -249,7 +249,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Criar E2E de times, movimento de integrantes, bracket e campeão.
 - [x] Validar reinício, histórico, acessibilidade, temas e performance.
 - [x] Executar gate completo e verificar o critério de saída da Fase 3.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 10 — Settings, credenciais seguras, debug e observabilidade
 
