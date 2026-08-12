@@ -1,5 +1,4 @@
 import { randomBytes } from 'node:crypto'
-import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { RenderWindowManager } from '@renderizer/vue/electron'
@@ -11,6 +10,7 @@ import { app, BrowserWindow, session, shell } from 'electron'
 import { registerNativeIpcHandlers, removeNativeIpcHandlers } from './ipc'
 import { createSecureWebPreferences, isAllowedExternalUrl } from './security-policy'
 import { WindowStateRepository } from './window-state.repository'
+import { ensureUserDataDirectories } from './user-data-directories'
 
 export const DESKTOP_RUNTIME = 'electron' as const
 
@@ -74,12 +74,12 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
 }
 
 async function bootstrap(): Promise<void> {
-  const dataPath = join(app.getPath('userData'), 'data')
-  await mkdir(dataPath, { recursive: true })
+  const directories = await ensureUserDataDirectories(app.getPath('userData'))
   const token = randomBytes(32).toString('hex')
   backend = await startLocalBackend({
     authenticationToken: token,
-    databasePath: join(dataPath, 'streamkit.db'),
+    backupDirectory: directories.backups,
+    databasePath: directories.database,
     enableDocumentation: !app.isPackaged || process.env.STREAMKIT_DEBUG === 'true',
   })
   const connection = BackendConnectionSchema.parse({ baseUrl: backend.baseUrl, token })

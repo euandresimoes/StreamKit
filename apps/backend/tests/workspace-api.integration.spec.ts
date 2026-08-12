@@ -2,6 +2,7 @@ import { access } from 'node:fs/promises'
 
 import {
   ApiErrorSchema,
+  DatabaseStatusSchema,
   HealthResponseSchema,
   WorkspaceListResponseSchema,
   WorkspaceSchema,
@@ -48,6 +49,25 @@ describe('workspace API vertical slice', () => {
     backend = undefined
     await environment.cleanup()
     await expect(access(environment.userDataPath)).rejects.toBeDefined()
+  })
+
+  it('exposes non-sensitive database infrastructure status', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    backend = await startLocalBackend({
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+    const response = await fetch(`${backend.baseUrl}/api/v1/system/database`, {
+      headers: authenticatedHeaders(),
+    })
+    expect(DatabaseStatusSchema.parse(await response.json())).toEqual({
+      foreignKeys: true,
+      journalMode: 'wal',
+      schemaVersion: 1,
+    })
+    await backend.close()
+    backend = undefined
+    await environment.cleanup()
   })
 
   it('creates, persists and lists a workspace after a backend restart', async () => {

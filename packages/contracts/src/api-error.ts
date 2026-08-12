@@ -1,8 +1,10 @@
 import { z } from 'zod'
 
+import { ErrorCodeSchema } from './error-code'
+
 export const ApiErrorSchema = z.object({
   error: z.object({
-    code: z.string().min(1),
+    code: ErrorCodeSchema,
     details: z.unknown().nullable(),
     message: z.string().min(1),
     requestId: z.string().min(1),

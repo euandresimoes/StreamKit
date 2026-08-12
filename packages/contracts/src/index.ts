@@ -1,4 +1,7 @@
 export * from './api-error'
 export * from './backend-connection'
+export * from './database-status'
+export * from './error-code'
+export * from './events'
 export * from './health'
 export * from './workspace'

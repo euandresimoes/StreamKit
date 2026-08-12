@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
+import { WorkspaceSchema } from '@streamkit/contracts'
 import { asc, max } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../../infrastructure/database/database.tokens'
@@ -24,17 +25,17 @@ export class SqliteWorkspaceRepository extends WorkspaceRepository {
       .from(todoWorkspaces)
       .orderBy(asc(todoWorkspaces.position))
 
-    return rows.map(
-      (row) =>
-        new WorkspaceEntity(
-          row.id,
-          row.name,
-          row.description,
-          row.position,
-          row.createdAt,
-          row.updatedAt,
-        ),
-    )
+    return rows.map((unvalidatedRow) => {
+      const row = WorkspaceSchema.parse(unvalidatedRow)
+      return new WorkspaceEntity(
+        row.id,
+        row.name,
+        row.description,
+        row.position,
+        row.createdAt,
+        row.updatedAt,
+      )
+    })
   }
 
   public async nextPosition(): Promise<number> {

@@ -1,4 +1,4 @@
-import type { ApiError } from '@streamkit/contracts'
+import { type ApiError, ErrorCodeSchema } from '@streamkit/contracts'
 import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException } from '@nestjs/common'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { ZodError } from 'zod'
@@ -50,10 +50,11 @@ export class ApiExceptionFilter implements ExceptionFilter {
     }
 
     if (exception instanceof HttpException) {
+      const parsedCode = ErrorCodeSchema.safeParse(`HTTP_${exception.getStatus()}`)
       return {
         body: {
           error: {
-            code: `HTTP_${exception.getStatus()}`,
+            code: parsedCode.success ? parsedCode.data : 'HTTP_500',
             details: null,
             message: exception.message,
             requestId,

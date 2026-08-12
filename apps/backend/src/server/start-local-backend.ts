@@ -12,6 +12,7 @@ import { AppModule } from './app.module'
 
 export type StartLocalBackendOptions = {
   authenticationToken: string
+  backupDirectory?: string
   databasePath: string
   enableDocumentation?: boolean
 }
@@ -24,7 +25,9 @@ export type LocalBackendHandle = {
 export async function startLocalBackend(
   options: StartLocalBackendOptions,
 ): Promise<LocalBackendHandle> {
-  const database = await SqliteDatabase.open(options.databasePath)
+  const database = await SqliteDatabase.open(options.databasePath, {
+    ...(options.backupDirectory ? { backupDirectory: options.backupDirectory } : {}),
+  })
   const adapter = new FastifyAdapter({
     genReqId: () => randomUUID(),
     logger: false,

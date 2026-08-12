@@ -112,21 +112,21 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 8.2, 10.1, 11, 12, 17.3, 20.3 e 24.
 
-- [ ] Resolver `userData` pelo Electron e criar diretórios `data`, `logs`, `backups` e `cache`.
-- [ ] Criar `streamkit.db` com foreign keys, WAL, busy timeout e timestamps UTC.
-- [ ] Implementar runner de migrations versionadas e tabela `schema_migrations`.
-- [ ] Criar backup automático antes de migrations destrutivas e política de retenção.
-- [ ] Implementar recuperação que nunca sobrescreva o único banco válido.
-- [ ] Criar migrations iniciais para TODO, tournaments, giveaways, settings e integration events.
-- [ ] Implementar repositories parametrizados, sem concatenação de entrada em SQL.
-- [ ] Criar transações para operações com múltiplas escritas.
-- [ ] Centralizar schemas Zod, tipos inferidos, eventos e códigos de erro compartilhados.
-- [ ] Validar payloads do banco quando houver risco de incompatibilidade de versão.
-- [ ] Implementar bancos temporários por suíte e diretório de usuário falso.
-- [ ] Testar migration limpa, upgrade, falha, rollback, WAL, concorrência básica e backup/restauração.
-- [ ] Documentar procedimento de backup e restauração.
-- [ ] Atualizar OpenAPI/Scalar com contratos de infraestrutura expostos.
-- [ ] Executar gate completo, incluindo testes de migration sobre banco de versão anterior.
+- [x] Resolver `userData` pelo Electron e criar diretórios `data`, `logs`, `backups` e `cache`.
+- [x] Criar `streamkit.db` com foreign keys, WAL, busy timeout e timestamps UTC.
+- [x] Implementar runner de migrations versionadas e tabela `schema_migrations`.
+- [x] Criar backup automático antes de migrations destrutivas e política de retenção.
+- [x] Implementar recuperação que nunca sobrescreva o único banco válido.
+- [x] Criar migrations iniciais para TODO, tournaments, giveaways, settings e integration events.
+- [x] Implementar repositories parametrizados, sem concatenação de entrada em SQL.
+- [x] Criar transações para operações com múltiplas escritas.
+- [x] Centralizar schemas Zod, tipos inferidos, eventos e códigos de erro compartilhados.
+- [x] Validar payloads do banco quando houver risco de incompatibilidade de versão.
+- [x] Implementar bancos temporários por suíte e diretório de usuário falso.
+- [x] Testar migration limpa, upgrade, falha, rollback, WAL, concorrência básica e backup/restauração.
+- [x] Documentar procedimento de backup e restauração.
+- [x] Atualizar OpenAPI/Scalar com contratos de infraestrutura expostos.
+- [x] Executar gate completo, incluindo testes de migration sobre banco de versão anterior.
 - [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 5 — TODO/Kanban completo
