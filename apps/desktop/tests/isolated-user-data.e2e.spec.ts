@@ -1,5 +1,8 @@
 import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
 import {
+  GiveawayDetailSchema,
+  GiveawayRoundSchema,
+  GiveawaySchema,
   TodoBoardSchema,
   TodoCardSchema,
   TodoColumnSchema,
@@ -66,7 +69,7 @@ describe('desktop E2E harness', () => {
     const call = (path: string, method = 'GET', body?: unknown) =>
       fetch(`${backend.baseUrl}${path}`, {
         method,
-        headers: headers(),
+        headers: body === undefined ? { authorization: `Bearer ${token}` } : headers(),
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       })
     const workspace = WorkspaceSchema.parse(
@@ -100,4 +103,46 @@ describe('desktop E2E harness', () => {
     await backend.close()
     await environment.cleanup()
   })
+  it.each(['wheel', 'case-opening'] as const)(
+    'persists a %s winner across restart',
+    async (mode) => {
+      const environment = await createIsolatedTestEnvironment()
+      let backend = await startLocalBackend({
+        authenticationToken: token,
+        databasePath: environment.databasePath,
+      })
+      const call = (path: string, method = 'GET', body?: unknown) =>
+        fetch(`${backend.baseUrl}${path}`, {
+          method,
+          headers: body === undefined ? { authorization: `Bearer ${token}` } : headers(),
+          ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        })
+      const giveaway = GiveawaySchema.parse(
+        await (
+          await call('/api/v1/giveaways', 'POST', { duplicatePolicy: 'remove', mode, name: mode })
+        ).json(),
+      )
+      const imported = await call(`/api/v1/giveaways/${giveaway.id}/participants/import`, 'POST', {
+        input: 'Ana,Bia',
+        policy: 'remove',
+      })
+      expect(imported.status).toBe(201)
+      const prepared = await call(`/api/v1/giveaways/${giveaway.id}/prepare`, 'POST')
+      expect(prepared.status).toBe(201)
+      const drawn = await call(`/api/v1/giveaways/${giveaway.id}/draw`, 'POST')
+      expect(drawn.status).toBe(201)
+      const round = GiveawayRoundSchema.parse(await drawn.json())
+      await backend.close()
+      backend = await startLocalBackend({
+        authenticationToken: token,
+        databasePath: environment.databasePath,
+      })
+      expect(
+        GiveawayDetailSchema.parse(await (await call(`/api/v1/giveaways/${giveaway.id}`)).json())
+          .activeRound,
+      ).toEqual(round)
+      await backend.close()
+      await environment.cleanup()
+    },
+  )
 })

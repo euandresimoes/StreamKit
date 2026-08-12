@@ -182,24 +182,24 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 7.5–7.8, 13, 17.2, 20.1–20.2 e 22 (Fase 2).
 
-- [ ] Implementar `useGiveawayStore` como estado de UI/cache confirmado pelo backend.
-- [ ] Criar fluxo de importação, preview, política de duplicatas e preparação.
-- [ ] Implementar roleta com ponteiro, aceleração, rotação, desaceleração e destaque.
-- [ ] Implementar opção de remover vencedor da rodada seguinte.
-- [ ] Implementar case opening horizontal com marcador central e celebração própria do StreamKit.
-- [ ] Garantir que ambos os modos representem exatamente o vencedor já persistido.
-- [ ] Tornar o destino final independente de FPS e duração.
-- [ ] Usar transformações adequadas à GPU e virtualizar/limitar itens visuais.
-- [ ] Implementar redução de movimento sem alterar resultado.
-- [ ] Desacoplar sons da lógica e usar somente identidade/assets próprios.
-- [ ] Implementar bloqueio de edição, feedback de rodada e confirmação de saída durante sorteio ativo.
-- [ ] Implementar histórico e recuperação visual de rodada interrompida.
-- [ ] Cobrir vazio, loading, sucesso, erro, inválido, cancelado e arquivado.
-- [ ] Testar componentes, animação determinística, acessibilidade e temas.
-- [ ] Criar E2E de importação + roleta e importação + case opening + vencedor salvo.
-- [ ] Criar E2E de encerramento/reabertura durante rodada e recuperação correta.
-- [ ] Fazer profiling em volumes máximos definidos na Batch 0.
-- [ ] Executar gate completo e verificar o critério de saída da Fase 2.
+- [x] Implementar `useGiveawayStore` como estado de UI/cache confirmado pelo backend.
+- [x] Criar fluxo de importação, preview, política de duplicatas e preparação.
+- [x] Implementar roleta com ponteiro, aceleração, rotação, desaceleração e destaque.
+- [x] Implementar opção de remover vencedor da rodada seguinte.
+- [x] Implementar case opening horizontal com marcador central e celebração própria do StreamKit.
+- [x] Garantir que ambos os modos representem exatamente o vencedor já persistido.
+- [x] Tornar o destino final independente de FPS e duração.
+- [x] Usar transformações adequadas à GPU e virtualizar/limitar itens visuais.
+- [x] Implementar redução de movimento sem alterar resultado.
+- [x] Desacoplar sons da lógica e usar somente identidade/assets próprios.
+- [x] Implementar bloqueio de edição, feedback de rodada e confirmação de saída durante sorteio ativo.
+- [x] Implementar histórico e recuperação visual de rodada interrompida.
+- [x] Cobrir vazio, loading, sucesso, erro, inválido, cancelado e arquivado.
+- [x] Testar componentes, animação determinística, acessibilidade e temas.
+- [x] Criar E2E de importação + roleta e importação + case opening + vencedor salvo.
+- [x] Criar E2E de encerramento/reabertura durante rodada e recuperação correta.
+- [x] Fazer profiling em volumes máximos definidos na Batch 0.
+- [x] Executar gate completo e verificar o critério de saída da Fase 2.
 - [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 8 — Games: torneio individual

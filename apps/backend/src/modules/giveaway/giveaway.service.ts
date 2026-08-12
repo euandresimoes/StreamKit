@@ -85,6 +85,13 @@ export class GiveawayService {
     await this.detail(id)
     return this.repository.history(id)
   }
+  public nextRound(id: string, removeWinner: boolean): Promise<GiveawayDetail> {
+    return this.repository
+      .nextRound(id, removeWinner)
+      .then((value) =>
+        this.required(value, 'GIVEAWAY_INVALID_STATE', 'A completed giveaway is required'),
+      )
+  }
   private required<T>(
     value: T | null,
     code: 'GIVEAWAY_INVALID_STATE' | 'GIVEAWAY_NOT_FOUND' | 'GIVEAWAY_ROUND_NOT_FOUND',

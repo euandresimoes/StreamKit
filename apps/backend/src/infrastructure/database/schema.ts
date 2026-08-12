@@ -59,6 +59,7 @@ export const giveaways = sqliteTable('giveaways', {
   updatedAt: text('updated_at').notNull(),
 })
 export const giveawayParticipants = sqliteTable('giveaway_participants', {
+  active: integer('active', { mode: 'boolean' }).notNull().default(true),
   id: text('id').primaryKey(),
   giveawayId: text('giveaway_id')
     .notNull()

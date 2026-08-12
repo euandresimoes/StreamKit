@@ -101,4 +101,10 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
       ALTER TABLE giveaway_round_entries ADD COLUMN position INTEGER;
     `,
   },
+  {
+    destructive: false,
+    name: 'giveaway_participant_eligibility',
+    version: 3,
+    sql: `ALTER TABLE giveaway_participants ADD COLUMN active INTEGER NOT NULL DEFAULT 1;`,
+  },
 ]

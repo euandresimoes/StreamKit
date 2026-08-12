@@ -3,6 +3,7 @@ import {
   CreateGiveawayRequestSchema,
   EntityIdSchema,
   ImportParticipantsRequestSchema,
+  NextGiveawayRoundRequestSchema,
   ParseParticipantsRequestSchema,
 } from '@streamkit/contracts'
 import { GiveawayService } from './giveaway.service'
@@ -47,5 +48,11 @@ export class GiveawayController {
   }
   @Get(':id/history') public history(@Param('id') id: unknown) {
     return this.service.history(EntityIdSchema.parse(id))
+  }
+  @Post(':id/next-round') public nextRound(@Param('id') id: unknown, @Body() body: unknown) {
+    return this.service.nextRound(
+      EntityIdSchema.parse(id),
+      NextGiveawayRoundRequestSchema.parse(body).removeWinner,
+    )
   }
 }

@@ -86,6 +86,23 @@ describe('Giveaway API integrity', () => {
       await (await call(`/api/v1/giveaways/${giveaway.id}/history`)).json(),
     )
     expect(history.items[0]).toEqual(completed)
+    const next = GiveawayDetailSchema.parse(
+      await (
+        await call(`/api/v1/giveaways/${giveaway.id}/next-round`, 'POST', { removeWinner: true })
+      ).json(),
+    )
+    expect(next.giveaway.status).toBe('ready')
+    expect(next.participants.some((item) => item.id === completed.winnerParticipantId)).toBe(false)
+    expect(
+      GiveawayHistorySchema.parse(
+        await (await call(`/api/v1/giveaways/${giveaway.id}/history`)).json(),
+      ).items[0],
+    ).toEqual(completed)
+    const secondRound = GiveawayRoundSchema.parse(
+      await (await call(`/api/v1/giveaways/${giveaway.id}/draw`, 'POST')).json(),
+    )
+    expect(secondRound.mode).toBe('wheel')
+    await call(`/api/v1/giveaways/${giveaway.id}/rounds/${secondRound.id}/complete`, 'POST')
     const archived = GiveawaySchema.parse(
       await (await call(`/api/v1/giveaways/${giveaway.id}/archive`, 'POST')).json(),
     )

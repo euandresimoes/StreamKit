@@ -13,7 +13,7 @@ import {
   GiveawaySchema,
   type ParsedParticipant,
 } from '@streamkit/contracts'
-import { asc, desc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {
   giveawayParticipants,
@@ -51,7 +51,7 @@ export class GiveawayRepository {
     const participants = await this.database.orm
       .select()
       .from(giveawayParticipants)
-      .where(eq(giveawayParticipants.giveawayId, id))
+      .where(and(eq(giveawayParticipants.giveawayId, id), eq(giveawayParticipants.active, true)))
       .orderBy(asc(giveawayParticipants.createdAt))
     const activeRound = await this.activeRound(id)
     return GiveawayDetailSchema.parse({ giveaway, participants, activeRound })
@@ -74,6 +74,7 @@ export class GiveawayRepository {
           .values(
             entries.map((entry) => ({
               ...entry,
+              active: true,
               createdAt,
               externalRef: null,
               giveawayId: id,
@@ -180,6 +181,24 @@ export class GiveawayRepository {
     return GiveawayHistorySchema.parse({
       items: await Promise.all(rounds.map((round) => this.hydrateRound(round))),
     })
+  }
+  public async nextRound(id: string, removeWinner: boolean): Promise<GiveawayDetail | null> {
+    const detail = await this.detail(id)
+    if (!detail || detail.giveaway.status !== 'completed' || !detail.activeRound) return null
+    this.database.transaction(() => {
+      if (removeWinner)
+        this.database.orm
+          .update(giveawayParticipants)
+          .set({ active: false })
+          .where(eq(giveawayParticipants.id, detail.activeRound!.winnerParticipantId))
+          .run()
+      this.database.orm
+        .update(giveaways)
+        .set({ status: 'ready', updatedAt: new Date().toISOString() })
+        .where(eq(giveaways.id, id))
+        .run()
+    })
+    return this.detail(id)
   }
   private async activeRound(id: string): Promise<GiveawayRound | null> {
     const [round] = await this.database.orm

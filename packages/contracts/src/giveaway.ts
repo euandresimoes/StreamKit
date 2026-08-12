@@ -52,6 +52,7 @@ export const GiveawayParticipantSchema = z.object({
   ticketCount: z.number().int().positive(),
 })
 export const ImportParticipantsRequestSchema = ParseParticipantsRequestSchema
+export const NextGiveawayRoundRequestSchema = z.object({ removeWinner: z.boolean() })
 export const GiveawayRoundEntrySchema = z.object({
   displayName: ParticipantNameSchema,
   participantId: z.uuid(),

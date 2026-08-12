@@ -19,6 +19,17 @@ describe('giveaway participant parser', () => {
   it('groups occurrences into ticket counts', () => {
     expect(parseParticipants('Ana, ana, ANA', 'group-tickets').entries[0]?.ticketCount).toBe(3)
   })
+  it('handles the MVP participant and ticket limits without expanding tickets', () => {
+    const input = Array.from(
+      { length: 10_000 },
+      (_, index) => `Pessoa ${index},Pessoa ${index}`,
+    ).join('\n')
+    const started = performance.now()
+    const result = parseParticipants(input, 'group-tickets')
+    expect(result.validCount).toBe(10_000)
+    expect(result.ticketCount).toBe(20_000)
+    expect(performance.now() - started).toBeLessThan(2000)
+  })
 })
 describe('secure winner selection', () => {
   const entries = [

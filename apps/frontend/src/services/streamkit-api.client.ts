@@ -5,12 +5,21 @@ import {
   CreateCardRequestSchema,
   type CreateColumnRequest,
   CreateColumnRequestSchema,
+  type CreateGiveawayRequest,
+  CreateGiveawayRequestSchema,
   type CreateWorkspaceRequest,
   CreateWorkspaceRequestSchema,
   type DeleteColumnRequest,
   DeleteColumnRequestSchema,
+  type DuplicatePolicy,
+  GiveawayDetailSchema,
+  GiveawayHistorySchema,
+  GiveawayListSchema,
+  GiveawayRoundSchema,
+  GiveawaySchema,
   type MoveCardRequest,
   MoveCardRequestSchema,
+  ParticipantPreviewSchema,
   SelectWorkspaceRequestSchema,
   type TodoBoard,
   TodoBoardSchema,
@@ -31,6 +40,50 @@ import {
 } from '@streamkit/contracts'
 
 export class StreamKitApiClient {
+  public listGiveaways() {
+    return this.json('/api/v1/giveaways', GiveawayListSchema)
+  }
+  public createGiveaway(input: CreateGiveawayRequest) {
+    return this.json('/api/v1/giveaways', GiveawaySchema, {
+      body: JSON.stringify(CreateGiveawayRequestSchema.parse(input)),
+      method: 'POST',
+    })
+  }
+  public giveaway(id: string) {
+    return this.json(`/api/v1/giveaways/${id}`, GiveawayDetailSchema)
+  }
+  public previewParticipants(input: string, policy: DuplicatePolicy) {
+    return this.json('/api/v1/giveaways/parse-participants', ParticipantPreviewSchema, {
+      body: JSON.stringify({ input, policy }),
+      method: 'POST',
+    })
+  }
+  public importParticipants(id: string, input: string, policy: DuplicatePolicy) {
+    return this.json(`/api/v1/giveaways/${id}/participants/import`, GiveawayDetailSchema, {
+      body: JSON.stringify({ input, policy }),
+      method: 'POST',
+    })
+  }
+  public prepareGiveaway(id: string) {
+    return this.json(`/api/v1/giveaways/${id}/prepare`, GiveawaySchema, { method: 'POST' })
+  }
+  public drawGiveaway(id: string) {
+    return this.json(`/api/v1/giveaways/${id}/draw`, GiveawayRoundSchema, { method: 'POST' })
+  }
+  public completeGiveaway(id: string, roundId: string) {
+    return this.json(`/api/v1/giveaways/${id}/rounds/${roundId}/complete`, GiveawayRoundSchema, {
+      method: 'POST',
+    })
+  }
+  public giveawayHistory(id: string) {
+    return this.json(`/api/v1/giveaways/${id}/history`, GiveawayHistorySchema)
+  }
+  public nextGiveawayRound(id: string, removeWinner: boolean) {
+    return this.json(`/api/v1/giveaways/${id}/next-round`, GiveawayDetailSchema, {
+      body: JSON.stringify({ removeWinner }),
+      method: 'POST',
+    })
+  }
   public createWorkspace(input: CreateWorkspaceRequest): Promise<Workspace> {
     return this.json('/api/v1/todo/workspaces', WorkspaceSchema, {
       body: JSON.stringify(CreateWorkspaceRequestSchema.parse(input)),

@@ -8,6 +8,7 @@ import PrimitiveShowcase from './components/showcase/PrimitiveShowcase.vue'
 import AppSidebar, { type AppModule } from './components/shell/AppSidebar.vue'
 import NotificationCenter from './components/shell/NotificationCenter.vue'
 import TodoKanban from './components/todo/TodoKanban.vue'
+import GiveawayPanel from './components/giveaway/GiveawayPanel.vue'
 import { useNotificationStore } from './stores/notification.store'
 import { useSettingsStore } from './stores/settings.store'
 import { useTodoStore } from './stores/todo.store'
@@ -65,6 +66,9 @@ onMounted(async () => {
       <section v-if="activeModule === 'todo'" class="workspace__content">
         <TodoKanban />
         <PrimitiveShowcase v-if="showShowcase" />
+      </section>
+      <section v-else-if="activeModule === 'giveaway'" class="workspace__content">
+        <GiveawayPanel />
       </section>
 
       <section v-else class="workspace__content standard-state" :aria-label="activeTitle">
