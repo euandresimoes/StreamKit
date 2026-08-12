@@ -7,6 +7,12 @@ import { GiveawayController } from '../modules/giveaway/giveaway.controller'
 import { GiveawayRepository } from '../modules/giveaway/giveaway.repository'
 import { GiveawayService } from '../modules/giveaway/giveaway.service'
 import { DatabaseStatusController } from '../modules/system/controllers/database-status.controller'
+import { DiagnosticsController } from '../modules/system/controllers/diagnostics.controller'
+import {
+  SilentStreamKitLogger,
+  STREAMKIT_LOGGER,
+  type StreamKitLogger,
+} from '../infrastructure/logging/streamkit-logger'
 import { WorkspaceController } from '../modules/todo/controllers/workspace.controller'
 import { SqliteWorkspaceRepository } from '../modules/todo/repositories/sqlite-workspace.repository'
 import { WORKSPACE_REPOSITORY } from '../modules/todo/repositories/workspace.repository'
@@ -16,21 +22,36 @@ import { ManageTodoService } from '../modules/todo/services/manage-todo.service'
 import { TournamentController } from '../modules/tournament/tournament.controller'
 import { TournamentRepository } from '../modules/tournament/tournament.repository'
 import { TournamentService } from '../modules/tournament/tournament.service'
+import { SettingsController } from '../modules/settings/settings.controller'
+import {
+  SECURE_CREDENTIAL_REPOSITORY,
+  type SecureCredentialRepository,
+  UnavailableSecureCredentialRepository,
+} from '../modules/settings/secure-credential.repository'
+import { SettingsRepository } from '../modules/settings/settings.repository'
+import { SettingsService } from '../modules/settings/settings.service'
 
 @Module({})
 export class AppModule {
-  public static register(database: SqliteDatabase): DynamicModule {
+  public static register(
+    database: SqliteDatabase,
+    secureCredentials: SecureCredentialRepository = new UnavailableSecureCredentialRepository(),
+    logger: StreamKitLogger = new SilentStreamKitLogger(),
+  ): DynamicModule {
     return {
       controllers: [
         DatabaseStatusController,
+        DiagnosticsController,
         GiveawayController,
         HealthController,
         WorkspaceController,
         TournamentController,
+        SettingsController,
       ],
       module: AppModule,
       providers: [
         { provide: SQLITE_DATABASE, useValue: database },
+        { provide: STREAMKIT_LOGGER, useValue: logger },
         { provide: WORKSPACE_REPOSITORY, useClass: SqliteWorkspaceRepository },
         CreateWorkspaceService,
         ListWorkspacesService,
@@ -39,6 +60,9 @@ export class AppModule {
         GiveawayService,
         TournamentRepository,
         TournamentService,
+        { provide: SECURE_CREDENTIAL_REPOSITORY, useValue: secureCredentials },
+        SettingsRepository,
+        SettingsService,
       ],
     }
   }

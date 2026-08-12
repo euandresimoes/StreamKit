@@ -1,5 +1,6 @@
 import {
   ApiErrorSchema,
+  AppSettingsSchema,
   BackendConnectionSchema,
   type CreateCardRequest,
   CreateCardRequestSchema,
@@ -11,8 +12,10 @@ import {
   CreateTournamentRequestSchema,
   type CreateWorkspaceRequest,
   CreateWorkspaceRequestSchema,
+  CredentialStatusSchema,
   type DeleteColumnRequest,
   DeleteColumnRequestSchema,
+  DiagnosticInfoSchema,
   type DuplicatePolicy,
   GiveawayDetailSchema,
   GiveawayHistorySchema,
@@ -32,6 +35,8 @@ import {
   TournamentDetailSchema,
   TournamentListSchema,
   TournamentSchema,
+  type UpdateAppSettingsRequest,
+  UpdateAppSettingsRequestSchema,
   type UpdateCardRequest,
   UpdateCardRequestSchema,
   type UpdateColumnRequest,
@@ -45,6 +50,32 @@ import {
 } from '@streamkit/contracts'
 
 export class StreamKitApiClient {
+  public settings() {
+    return this.json('/api/v1/settings', AppSettingsSchema)
+  }
+  public updateSettings(input: UpdateAppSettingsRequest) {
+    return this.json('/api/v1/settings', AppSettingsSchema, {
+      body: JSON.stringify(UpdateAppSettingsRequestSchema.parse(input)),
+      method: 'PUT',
+    })
+  }
+  public credentialStatus() {
+    return this.json('/api/v1/settings/credentials/livepix', CredentialStatusSchema)
+  }
+  public saveCredential(credential: string) {
+    return this.json('/api/v1/settings/credentials/livepix', CredentialStatusSchema, {
+      body: JSON.stringify({ credential }),
+      method: 'PUT',
+    })
+  }
+  public removeCredential() {
+    return this.json('/api/v1/settings/credentials/livepix', CredentialStatusSchema, {
+      method: 'DELETE',
+    })
+  }
+  public diagnostics() {
+    return this.json('/api/v1/system/diagnostics', DiagnosticInfoSchema)
+  }
   public listTournaments() {
     return this.json('/api/v1/tournaments', TournamentListSchema)
   }

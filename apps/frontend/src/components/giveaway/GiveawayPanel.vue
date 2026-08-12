@@ -68,7 +68,7 @@ async function finish() {
   await store.complete()
 }
 function beforeUnload(event: globalThis.BeforeUnloadEvent) {
-  if (store.detail?.giveaway.status === 'drawing') {
+  if (settings.confirmExitDuringActive && store.detail?.giveaway.status === 'drawing') {
     event.preventDefault()
     event.returnValue = ''
   }

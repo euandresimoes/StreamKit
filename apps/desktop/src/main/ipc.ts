@@ -1,4 +1,4 @@
-import type { BackendConnection } from '@streamkit/contracts'
+import { type BackendConnection, UpdateAppSettingsRequestSchema } from '@streamkit/contracts'
 import type { RenderWindowManager } from '@renderizer/vue/electron'
 import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { z } from 'zod'
@@ -10,7 +10,24 @@ const WindowActionSchema = z.enum(['minimize', 'toggle-maximize', 'close', 'focu
 export function registerNativeIpcHandlers(
   connection: BackendConnection,
   renderWindows: RenderWindowManager,
+  actions: {
+    applySettings: (settings: ReturnType<typeof UpdateAppSettingsRequestSchema.parse>) => void
+    openDevTools: () => void
+    openLogsDirectory: () => Promise<void>
+  },
 ): void {
+  ipcMain.handle('streamkit:apply-settings', (_event, input: unknown, ...rest: unknown[]) => {
+    EmptyArgumentsSchema.parse(rest)
+    actions.applySettings(UpdateAppSettingsRequestSchema.parse(input))
+  })
+  ipcMain.handle('streamkit:open-devtools', (_event, ...arguments_: unknown[]) => {
+    EmptyArgumentsSchema.parse(arguments_)
+    actions.openDevTools()
+  })
+  ipcMain.handle('streamkit:open-logs-directory', async (_event, ...arguments_: unknown[]) => {
+    EmptyArgumentsSchema.parse(arguments_)
+    await actions.openLogsDirectory()
+  })
   ipcMain.handle('streamkit:get-backend-connection', (_event, ...arguments_: unknown[]) => {
     EmptyArgumentsSchema.parse(arguments_)
     return connection
@@ -59,6 +76,9 @@ export function removeNativeIpcHandlers(): void {
   for (const channel of [
     'streamkit:get-backend-connection',
     'streamkit:get-platform',
+    'streamkit:apply-settings',
+    'streamkit:open-devtools',
+    'streamkit:open-logs-directory',
     'renderizer-window-ready',
     'renderizer-window-control',
     'renderizer-window-state',

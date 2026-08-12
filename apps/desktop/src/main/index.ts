@@ -4,19 +4,69 @@ import { join } from 'node:path'
 import { RenderWindowManager } from '@renderizer/vue/electron'
 import { type LocalBackendHandle, startLocalBackend } from '@streamkit/backend'
 import { STREAMKIT_APP_ID, STREAMKIT_APP_NAME } from '@streamkit/config'
-import { type BackendConnection, BackendConnectionSchema } from '@streamkit/contracts'
-import { app, BrowserWindow, session, shell } from 'electron'
+import {
+  type BackendConnection,
+  BackendConnectionSchema,
+  type UpdateAppSettingsRequest,
+} from '@streamkit/contracts'
+import { app, BrowserWindow, Menu, nativeImage, session, shell, Tray } from 'electron'
 
 import { registerNativeIpcHandlers, removeNativeIpcHandlers } from './ipc'
 import { createSecureWebPreferences, isAllowedExternalUrl } from './security-policy'
 import { WindowStateRepository } from './window-state.repository'
 import { ensureUserDataDirectories } from './user-data-directories'
+import { ElectronSecureCredentialRepository } from './electron-secure-credential.repository'
 
 export const DESKTOP_RUNTIME = 'electron' as const
 
 let backend: LocalBackendHandle | undefined
 let mainWindow: BrowserWindow | undefined
 let renderWindows: RenderWindowManager | undefined
+let tray: Tray | undefined
+let logsDirectory = ''
+let isQuitting = false
+let desktopSettings: UpdateAppSettingsRequest = {
+  confirmExitDuringActive: true,
+  debugEnabled: false,
+  minimizeToTray: false,
+  openAtLogin: false,
+  reduceMotion: false,
+  theme: 'system',
+  updatePreference: 'notify',
+}
+
+function applyDesktopSettings(settings: UpdateAppSettingsRequest): void {
+  desktopSettings = settings
+  app.setLoginItemSettings({ openAtLogin: settings.openAtLogin })
+  if (settings.minimizeToTray && !tray) {
+    const icon = nativeImage.createFromDataURL(
+      `data:image/svg+xml;base64,${Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16" rx="3" fill="#1668c7"/><path d="M4 5h8v2H7v2h5v2H4V9h3V7H4z" fill="white"/></svg>').toString('base64')}`,
+    )
+    tray = new Tray(icon)
+    tray.setToolTip(STREAMKIT_APP_NAME)
+    tray.setContextMenu(
+      Menu.buildFromTemplate([
+        {
+          label: 'Abrir StreamKit',
+          click: () => {
+            mainWindow?.show()
+            mainWindow?.focus()
+          },
+        },
+        {
+          label: 'Sair',
+          click: () => {
+            isQuitting = true
+            app.quit()
+          },
+        },
+      ]),
+    )
+  } else if (!settings.minimizeToTray) {
+    tray?.destroy()
+    tray = undefined
+  }
+}
 
 async function createMainWindow(connection: BackendConnection): Promise<void> {
   const preloadPath = join(__dirname, '../preload/index.js')
@@ -48,7 +98,13 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
     preloadPath,
   })
   renderWindows.attachTo(mainWindow)
-  registerNativeIpcHandlers(connection, renderWindows)
+  registerNativeIpcHandlers(connection, renderWindows, {
+    applySettings: applyDesktopSettings,
+    openDevTools: () => mainWindow?.webContents.openDevTools({ mode: 'detach' }),
+    openLogsDirectory: async () => {
+      await shell.openPath(logsDirectory)
+    },
+  })
 
   mainWindow.webContents.on('did-create-window', (window, details) => {
     if (details.frameName !== 'renderizer:settings') return
@@ -65,6 +121,12 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
   mainWindow.on('closed', () => {
     mainWindow = undefined
   })
+  mainWindow.on('close', (event) => {
+    if (!isQuitting && desktopSettings.minimizeToTray) {
+      event.preventDefault()
+      mainWindow?.hide()
+    }
+  })
 
   if (process.env.STREAMKIT_RENDERER_URL) {
     await mainWindow.loadURL(process.env.STREAMKIT_RENDERER_URL)
@@ -75,12 +137,18 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
 
 async function bootstrap(): Promise<void> {
   const directories = await ensureUserDataDirectories(app.getPath('userData'))
+  logsDirectory = directories.logs
   const token = randomBytes(32).toString('hex')
   backend = await startLocalBackend({
     authenticationToken: token,
     backupDirectory: directories.backups,
     databasePath: directories.database,
-    enableDocumentation: !app.isPackaged || process.env.STREAMKIT_DEBUG === 'true',
+    enableDocumentation:
+      !app.isPackaged || process.env.STREAMKIT_DEBUG === 'true' || process.argv.includes('--debug'),
+    secureCredentialRepository: new ElectronSecureCredentialRepository(
+      join(directories.data, 'livepix.credential'),
+    ),
+    logPath: join(directories.logs, 'streamkit.log'),
   })
   const connection = BackendConnectionSchema.parse({ baseUrl: backend.baseUrl, token })
 
@@ -106,6 +174,7 @@ if (!hasSingleInstanceLock) {
 }
 
 app.on('before-quit', () => {
+  isQuitting = true
   removeNativeIpcHandlers()
   renderWindows?.closeAll()
 })

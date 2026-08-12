@@ -14,5 +14,6 @@ describe('settings store', () => {
       'data-reduced-motion': 'true',
       'data-theme': 'dark',
     })
+    expect(useSettingsStore()).toBe(settings)
   })
 })

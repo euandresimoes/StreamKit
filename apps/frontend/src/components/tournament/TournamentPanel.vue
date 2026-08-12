@@ -2,8 +2,10 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { BaseButton, BaseInput, BaseModal, BaseSelect } from '../base'
 import { useTournamentStore } from '../../stores/tournament.store'
+import { useSettingsStore } from '../../stores/settings.store'
 
 const store = useTournamentStore(),
+  settings = useSettingsStore(),
   name = ref(''),
   description = ref(''),
   participantName = ref(''),
@@ -95,7 +97,7 @@ async function confirmUndo() {
   undoMatch.value = null
 }
 function beforeUnload(event: globalThis.BeforeUnloadEvent) {
-  if (store.detail?.tournament.status === 'in_progress') {
+  if (settings.confirmExitDuringActive && store.detail?.tournament.status === 'in_progress') {
     event.preventDefault()
     event.returnValue = ''
   }

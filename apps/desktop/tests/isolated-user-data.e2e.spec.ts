@@ -1,5 +1,6 @@
 import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
 import {
+  AppSettingsSchema,
   GiveawayDetailSchema,
   GiveawayRoundSchema,
   GiveawaySchema,
@@ -290,6 +291,43 @@ describe('desktop E2E harness', () => {
           (item) => item.id,
         ),
       ).toContain(tournament.id)
+    } finally {
+      await backend.close()
+      await environment.cleanup()
+    }
+  })
+
+  it('synchronizes one persisted theme across two renderer-style clients and restart', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    let backend = await startLocalBackend({
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+    const request = (method = 'GET', body?: unknown) =>
+      fetch(`${backend.baseUrl}/api/v1/settings`, {
+        method,
+        headers: body === undefined ? { authorization: `Bearer ${token}` } : headers(),
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      })
+    try {
+      await request('PUT', {
+        confirmExitDuringActive: true,
+        debugEnabled: false,
+        minimizeToTray: false,
+        openAtLogin: false,
+        reduceMotion: true,
+        theme: 'dark',
+        updatePreference: 'notify',
+      })
+      const [mainRenderer, settingsRenderer] = await Promise.all([request(), request()])
+      expect(AppSettingsSchema.parse(await mainRenderer.json()).theme).toBe('dark')
+      expect(AppSettingsSchema.parse(await settingsRenderer.json()).reduceMotion).toBe(true)
+      await backend.close()
+      backend = await startLocalBackend({
+        authenticationToken: token,
+        databasePath: environment.databasePath,
+      })
+      expect(AppSettingsSchema.parse(await (await request()).json()).theme).toBe('dark')
     } finally {
       await backend.close()
       await environment.cleanup()

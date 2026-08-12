@@ -3,7 +3,7 @@ import { RenderWindow } from '@renderizer/vue'
 import { computed, onMounted, ref } from 'vue'
 
 import { showSettingsWindow } from './app/settings-window'
-import { BaseButton, BaseSelect, BaseToggle } from './components/base'
+import { BaseButton, BaseInput, BaseSelect, BaseToggle } from './components/base'
 import PrimitiveShowcase from './components/showcase/PrimitiveShowcase.vue'
 import AppSidebar, { type AppModule } from './components/shell/AppSidebar.vue'
 import NotificationCenter from './components/shell/NotificationCenter.vue'
@@ -20,11 +20,20 @@ const notifications = useNotificationStore()
 const settingsOpen = ref(false)
 const activeModule = ref<AppModule>('todo')
 const showShowcase = ref(import.meta.env.DEV)
-const debugEnabled = import.meta.env.DEV || import.meta.env.VITE_STREAMKIT_DEBUG === 'true'
+const livePixCredential = ref('')
+const debugEnabled = computed(
+  () =>
+    import.meta.env.DEV || import.meta.env.VITE_STREAMKIT_DEBUG === 'true' || settings.debugEnabled,
+)
 const themeOptions = [
   { label: 'Sistema', value: 'system' },
   { label: 'Escuro', value: 'dark' },
   { label: 'Claro', value: 'light' },
+]
+const updateOptions = [
+  { label: 'Notificar', value: 'notify' },
+  { label: 'Automático', value: 'automatic' },
+  { label: 'Manual', value: 'manual' },
 ]
 const activeTitle = computed(
   () => ({ todo: 'TODO', games: 'Games', giveaway: 'Giveaway' })[activeModule.value],
@@ -33,8 +42,25 @@ const activeTitle = computed(
 function openSettings(): void {
   showSettingsWindow(settingsOpen)
 }
+async function saveLivePixCredential() {
+  await settings.saveCredential(livePixCredential.value)
+  livePixCredential.value = ''
+}
+async function copyDiagnostics() {
+  await settings.loadDiagnostics()
+  await globalThis.navigator.clipboard.writeText(
+    JSON.stringify({ frontendVersion: '0.0.0', ...settings.diagnosticInfo }, null, 2),
+  )
+}
+function openDevTools() {
+  void window.streamkit.openDevTools()
+}
+function openLogsDirectory() {
+  void window.streamkit.openLogsDirectory()
+}
 
 onMounted(async () => {
+  await settings.load()
   try {
     await todoStore.loadWorkspaces()
   } catch {
@@ -110,6 +136,68 @@ onMounted(async () => {
               description="Reduz transições e animações não essenciais."
               label="Reduzir movimento"
             />
+            <BaseToggle v-model="settings.openAtLogin" label="Abrir com o sistema" />
+            <BaseToggle v-model="settings.minimizeToTray" label="Minimizar para a bandeja" />
+            <BaseToggle
+              v-model="settings.confirmExitDuringActive"
+              label="Confirmar saída durante atividade"
+            />
+            <BaseSelect
+              id="update-preference"
+              v-model="settings.updatePreference"
+              label="Atualizações"
+              :options="updateOptions"
+            />
+            <section class="settings-group">
+              <h3>LivePix</h3>
+              <BaseInput
+                id="livepix-credential"
+                v-model="livePixCredential"
+                type="password"
+                autocomplete="off"
+                label="Credencial"
+                description="Armazenada pelo cofre seguro do sistema; nunca no SQLite."
+              />
+              <div>
+                <BaseButton
+                  :disabled="!livePixCredential.trim() || settings.credential?.available === false"
+                  @click="saveLivePixCredential"
+                  >Salvar no cofre</BaseButton
+                ><BaseButton
+                  variant="danger"
+                  :disabled="!settings.credential?.configured"
+                  @click="settings.removeCredential"
+                  >Remover</BaseButton
+                >
+              </div>
+              <p role="status">
+                {{
+                  settings.credential?.available
+                    ? settings.credential.configured
+                      ? 'Credencial configurada'
+                      : 'Credencial não configurada'
+                    : 'Cofre seguro indisponível'
+                }}
+              </p>
+            </section>
+            <section class="settings-group">
+              <h3>Desenvolvedor</h3>
+              <BaseToggle v-model="settings.debugEnabled" label="Modo debug" />
+              <div>
+                <BaseButton @click="openDevTools">Abrir DevTools</BaseButton
+                ><BaseButton @click="settings.loadDiagnostics">Mostrar logs</BaseButton
+                ><BaseButton @click="copyDiagnostics">Copiar diagnóstico</BaseButton
+                ><BaseButton @click="openLogsDirectory">Abrir pasta de logs</BaseButton>
+              </div>
+              <p>
+                Frontend 0.0.0 · Backend {{ settings.diagnosticInfo?.backendVersion ?? '—' }} ·
+                Schema {{ settings.diagnosticInfo?.databaseSchemaVersion ?? '—' }}
+              </p>
+              <pre v-if="settings.diagnosticInfo">{{
+                settings.diagnosticInfo.logLines.join('\n')
+              }}</pre>
+            </section>
+            <p v-if="settings.error" role="alert">{{ settings.error }}</p>
             <p role="status">{{ todoStore.workspaces.length }} workspace(s) sincronizado(s).</p>
           </div>
         </section>
@@ -304,6 +392,25 @@ onMounted(async () => {
   max-width: 34rem;
   gap: var(--sk-space-4, 1rem);
   padding: var(--sk-space-4, 1rem);
+}
+.settings-group {
+  display: grid;
+  gap: var(--sk-space-3, 0.75rem);
+  padding-block: var(--sk-space-3, 0.75rem);
+  border-block-start: var(--sk-border-width, 1px) solid var(--sk-border-subtle, currentColor);
+}
+.settings-group > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sk-space-2, 0.5rem);
+}
+.settings-group pre {
+  max-height: 14rem;
+  overflow: auto;
+  padding: var(--sk-space-2, 0.5rem);
+  background: var(--sk-bg-elevated, transparent);
+  font: var(--sk-font-size-xs, 0.6875rem) var(--sk-font-mono, monospace);
+  white-space: pre-wrap;
 }
 
 @media (max-width: 48rem) {

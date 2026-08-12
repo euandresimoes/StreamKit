@@ -9,12 +9,20 @@ import { ApiExceptionFilter } from '../application/api-exception.filter'
 import { LocalAuthGuard } from '../application/local-auth.guard'
 import { SqliteDatabase } from '../infrastructure/database/sqlite-database'
 import { AppModule } from './app.module'
+import type { SecureCredentialRepository } from '../modules/settings/secure-credential.repository'
+import {
+  RotatingFileLogger,
+  SilentStreamKitLogger,
+  type StreamKitLogger,
+} from '../infrastructure/logging/streamkit-logger'
 
 export type StartLocalBackendOptions = {
   authenticationToken: string
   backupDirectory?: string
   databasePath: string
   enableDocumentation?: boolean
+  secureCredentialRepository?: SecureCredentialRepository
+  logPath?: string
 }
 
 export type LocalBackendHandle = {
@@ -32,8 +40,11 @@ export async function startLocalBackend(
     genReqId: () => randomUUID(),
     logger: false,
   })
+  const logger: StreamKitLogger = options.logPath
+    ? new RotatingFileLogger(options.logPath)
+    : new SilentStreamKitLogger()
   const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule.register(database),
+    AppModule.register(database, options.secureCredentialRepository, logger),
     adapter,
     {
       abortOnError: false,
@@ -43,6 +54,20 @@ export async function startLocalBackend(
 
   app.useGlobalFilters(new ApiExceptionFilter())
   app.useGlobalGuards(new LocalAuthGuard(options.authenticationToken))
+  const started = new WeakMap<object, number>()
+  adapter.getInstance().addHook('onRequest', async (request) => {
+    started.set(request, performance.now())
+  })
+  adapter.getInstance().addHook('onResponse', async (request, reply) => {
+    await logger.log('info', 'http.request', {
+      durationMs:
+        Math.round((performance.now() - (started.get(request) ?? performance.now())) * 100) / 100,
+      method: request.method,
+      requestId: request.id,
+      route: request.routeOptions.url,
+      statusCode: reply.statusCode,
+    })
+  })
   if (options.enableDocumentation) {
     const { apiReference } = await import('@scalar/nestjs-api-reference')
     const openApi = SwaggerModule.createDocument(
@@ -58,11 +83,15 @@ export async function startLocalBackend(
   }
 
   await app.listen(0, '127.0.0.1')
+  await logger.log('info', 'backend.started', {
+    environment: process.env.NODE_ENV ?? 'development',
+  })
   const address = app.getHttpServer().address() as AddressInfo
 
   return {
     baseUrl: `http://127.0.0.1:${address.port}`,
     close: async () => {
+      await logger.log('info', 'backend.stopping')
       await app.close()
       database.close()
     },

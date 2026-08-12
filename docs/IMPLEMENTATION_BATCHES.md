@@ -255,24 +255,24 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 4.2, 8, 12.3 (Settings), 13.1, 15, 19 e 24.
 
-- [ ] Implementar `useSettingsStore` e persistência backend de preferências não sensíveis.
-- [ ] Sincronizar tema e preferências imediatamente entre janelas Renderizer.
-- [ ] Implementar aparência light/dark/system e redução de animações.
-- [ ] Implementar preferências de inicialização, tray, confirmação de saída e updates conforme suporte decidido.
-- [ ] Criar campo de credencial LivePix sem armazenar segredo no SQLite/Pinia.
-- [ ] Implementar `SecureCredentialRepository` com cofre do Windows e adapters futuros isolados.
-- [ ] Garantir que renderer nunca leia a credencial diretamente.
-- [ ] Implementar salvar, testar futuramente/status e remover credencial por API restrita.
-- [ ] Implementar debug por ambiente, CLI, Settings e build de desenvolvimento.
-- [ ] Implementar DevTools, visualização de logs, cópia de diagnóstico e abertura da pasta de logs.
-- [ ] Exibir versões de frontend, backend e schema do banco.
-- [ ] Implementar níveis `trace` a `fatal`, rotação e limite de logs.
-- [ ] Adicionar request/correlation IDs e duração de casos de uso.
-- [ ] Redigir testes que provem redaction de tokens, auth headers e payloads sensíveis.
-- [ ] Criar E2E da segunda janela, tema sincronizado e ausência de duplicação.
-- [ ] Testar adapter seguro mockado e comportamento sem cofre disponível.
-- [ ] Atualizar Scalar e documentação de diagnóstico.
-- [ ] Executar gate completo e revisão de segurança.
+- [x] Implementar `useSettingsStore` e persistência backend de preferências não sensíveis.
+- [x] Sincronizar tema e preferências imediatamente entre janelas Renderizer.
+- [x] Implementar aparência light/dark/system e redução de animações.
+- [x] Implementar preferências de inicialização, tray, confirmação de saída e updates conforme suporte decidido.
+- [x] Criar campo de credencial LivePix sem armazenar segredo no SQLite/Pinia.
+- [x] Implementar `SecureCredentialRepository` com cofre do Windows e adapters futuros isolados.
+- [x] Garantir que renderer nunca leia a credencial diretamente.
+- [x] Implementar salvar, testar futuramente/status e remover credencial por API restrita.
+- [x] Implementar debug por ambiente, CLI, Settings e build de desenvolvimento.
+- [x] Implementar DevTools, visualização de logs, cópia de diagnóstico e abertura da pasta de logs.
+- [x] Exibir versões de frontend, backend e schema do banco.
+- [x] Implementar níveis `trace` a `fatal`, rotação e limite de logs.
+- [x] Adicionar request/correlation IDs e duração de casos de uso.
+- [x] Redigir testes que provem redaction de tokens, auth headers e payloads sensíveis.
+- [x] Criar E2E da segunda janela, tema sincronizado e ausência de duplicação.
+- [x] Testar adapter seguro mockado e comportamento sem cofre disponível.
+- [x] Atualizar Scalar e documentação de diagnóstico.
+- [x] Executar gate completo e revisão de segurança.
 - [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 11 — Auto update, empacotamento, backups e release do MVP

@@ -21,8 +21,11 @@ describe('useTodoStore', () => {
       writable: true,
     })
     window.streamkit = {
+      applySettings: async () => undefined,
       getBackendConnection: async () => ({ baseUrl: 'http://127.0.0.1:49152', token }),
       getPlatform: async () => 'win32',
+      openDevTools: async () => undefined,
+      openLogsDirectory: async () => undefined,
     }
   })
 
