@@ -13,6 +13,9 @@ import { WORKSPACE_REPOSITORY } from '../modules/todo/repositories/workspace.rep
 import { CreateWorkspaceService } from '../modules/todo/services/create-workspace.service'
 import { ListWorkspacesService } from '../modules/todo/services/list-workspaces.service'
 import { ManageTodoService } from '../modules/todo/services/manage-todo.service'
+import { TournamentController } from '../modules/tournament/tournament.controller'
+import { TournamentRepository } from '../modules/tournament/tournament.repository'
+import { TournamentService } from '../modules/tournament/tournament.service'
 
 @Module({})
 export class AppModule {
@@ -23,6 +26,7 @@ export class AppModule {
         GiveawayController,
         HealthController,
         WorkspaceController,
+        TournamentController,
       ],
       module: AppModule,
       providers: [
@@ -33,6 +37,8 @@ export class AppModule {
         ManageTodoService,
         GiveawayRepository,
         GiveawayService,
+        TournamentRepository,
+        TournamentService,
       ],
     }
   }

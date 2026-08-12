@@ -48,6 +48,62 @@ export const appSettings = sqliteTable('app_settings', {
   valueJson: text('value_json').notNull(),
 })
 
+export const tournaments = sqliteTable('tournaments', {
+  bracketSize: integer('bracket_size').notNull(),
+  createdAt: text('created_at').notNull(),
+  description: text('description'),
+  id: text('id').primaryKey(),
+  mode: text('mode').notNull(),
+  name: text('name').notNull(),
+  status: text('status').notNull(),
+  teamCapacity: integer('team_capacity'),
+  updatedAt: text('updated_at').notNull(),
+})
+export const tournamentParticipants = sqliteTable('tournament_participants', {
+  createdAt: text('created_at').notNull(),
+  displayName: text('display_name').notNull(),
+  externalRef: text('external_ref'),
+  id: text('id').primaryKey(),
+  source: text('source').notNull(),
+  tournamentId: text('tournament_id')
+    .notNull()
+    .references(() => tournaments.id, { onDelete: 'cascade' }),
+})
+export const tournamentEntries = sqliteTable('tournament_entries', {
+  createdAt: text('created_at').notNull(),
+  id: text('id').primaryKey(),
+  participantId: text('participant_id').references(() => tournamentParticipants.id),
+  seed: integer('seed').notNull(),
+  teamId: text('team_id'),
+  tournamentId: text('tournament_id')
+    .notNull()
+    .references(() => tournaments.id, { onDelete: 'cascade' }),
+})
+export const tournamentMatches = sqliteTable('tournament_matches', {
+  id: text('id').primaryKey(),
+  leftEntryId: text('left_entry_id').references(() => tournamentEntries.id),
+  matchNumber: integer('match_number').notNull(),
+  nextMatchId: text('next_match_id'),
+  nextSlot: text('next_slot'),
+  rightEntryId: text('right_entry_id').references(() => tournamentEntries.id),
+  roundNumber: integer('round_number').notNull(),
+  status: text('status').notNull(),
+  tournamentId: text('tournament_id')
+    .notNull()
+    .references(() => tournaments.id, { onDelete: 'cascade' }),
+  updatedAt: text('updated_at').notNull(),
+  winnerEntryId: text('winner_entry_id').references(() => tournamentEntries.id),
+})
+export const tournamentAuditLog = sqliteTable('tournament_audit_log', {
+  action: text('action').notNull(),
+  createdAt: text('created_at').notNull(),
+  id: text('id').primaryKey(),
+  payloadJson: text('payload_json').notNull(),
+  tournamentId: text('tournament_id')
+    .notNull()
+    .references(() => tournaments.id, { onDelete: 'cascade' }),
+})
+
 export const giveaways = sqliteTable('giveaways', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),

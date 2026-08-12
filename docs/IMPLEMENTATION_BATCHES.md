@@ -206,26 +206,26 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 6.1, 6.3–6.7, 6.9, 11.4 (Tournaments), 12.3 (Tournaments), 17.2 e 22 (Fase 3).
 
-- [ ] Modelar torneio, entrada, partida, rodadas e audit log.
-- [ ] Implementar estados de torneio e de partida com transições válidas.
-- [ ] Implementar criação com nome, descrição, modo e tamanho.
-- [ ] Suportar 4, 8, 16 e 32 entradas.
-- [ ] Implementar BYEs apenas conforme decisão registrada na Batch 0.
-- [ ] Implementar adicionar, renomear, remover e reordenar participante individual.
-- [ ] Implementar shuffle seguro/previsível conforme critério documentado.
-- [ ] Implementar drag and drop de seeding antes do início e alternativa acessível.
-- [ ] Gerar bracket, permitir confirmação de seeding e iniciar torneio.
-- [ ] Propagar vencedor automaticamente à partida seguinte.
-- [ ] Definir campeão somente após a final.
-- [ ] Implementar desfazer resultado com confirmação e invalidação descendente.
-- [ ] Bloquear mudanças estruturais após início, salvo fluxo administrativo explícito definido.
-- [ ] Registrar toda alteração relevante no histórico de auditoria.
-- [ ] Implementar endpoints, Zod, erros estáveis e Scalar.
-- [ ] Implementar `useTournamentStore` e UI de bracket responsiva/rolável.
-- [ ] Criar unitários de geração, progressão, invalidação e estados.
-- [ ] Criar integração transacional e E2E de torneio individual até campeão.
-- [ ] Validar persistência após reinício, temas, teclado e volumes máximos.
-- [ ] Executar gate completo.
+- [x] Modelar torneio, entrada, partida, rodadas e audit log.
+- [x] Implementar estados de torneio e de partida com transições válidas.
+- [x] Implementar criação com nome, descrição, modo e tamanho.
+- [x] Suportar 4, 8, 16 e 32 entradas.
+- [x] Implementar BYEs apenas conforme decisão registrada na Batch 0.
+- [x] Implementar adicionar, renomear, remover e reordenar participante individual.
+- [x] Implementar shuffle seguro/previsível conforme critério documentado.
+- [x] Implementar drag and drop de seeding antes do início e alternativa acessível.
+- [x] Gerar bracket, permitir confirmação de seeding e iniciar torneio.
+- [x] Propagar vencedor automaticamente à partida seguinte.
+- [x] Definir campeão somente após a final.
+- [x] Implementar desfazer resultado com confirmação e invalidação descendente.
+- [x] Bloquear mudanças estruturais após início, salvo fluxo administrativo explícito definido.
+- [x] Registrar toda alteração relevante no histórico de auditoria.
+- [x] Implementar endpoints, Zod, erros estáveis e Scalar.
+- [x] Implementar `useTournamentStore` e UI de bracket responsiva/rolável.
+- [x] Criar unitários de geração, progressão, invalidação e estados.
+- [x] Criar integração transacional e E2E de torneio individual até campeão.
+- [x] Validar persistência após reinício, temas, teclado e volumes máximos.
+- [x] Executar gate completo.
 - [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 9 — Games: equipes, slots e torneio completo

@@ -7,6 +7,8 @@ import {
   CreateColumnRequestSchema,
   type CreateGiveawayRequest,
   CreateGiveawayRequestSchema,
+  type CreateTournamentRequest,
+  CreateTournamentRequestSchema,
   type CreateWorkspaceRequest,
   CreateWorkspaceRequestSchema,
   type DeleteColumnRequest,
@@ -27,6 +29,9 @@ import {
   TodoCardSchema,
   type TodoColumn,
   TodoColumnSchema,
+  TournamentDetailSchema,
+  TournamentListSchema,
+  TournamentSchema,
   type UpdateCardRequest,
   UpdateCardRequestSchema,
   type UpdateColumnRequest,
@@ -40,6 +45,65 @@ import {
 } from '@streamkit/contracts'
 
 export class StreamKitApiClient {
+  public listTournaments() {
+    return this.json('/api/v1/tournaments', TournamentListSchema)
+  }
+  public createTournament(input: CreateTournamentRequest) {
+    return this.json('/api/v1/tournaments', TournamentSchema, {
+      body: JSON.stringify(CreateTournamentRequestSchema.parse(input)),
+      method: 'POST',
+    })
+  }
+  public tournament(id: string) {
+    return this.json(`/api/v1/tournaments/${id}`, TournamentDetailSchema)
+  }
+  public addTournamentParticipant(id: string, displayName: string) {
+    return this.json(`/api/v1/tournaments/${id}/participants`, TournamentDetailSchema, {
+      body: JSON.stringify({ displayName }),
+      method: 'POST',
+    })
+  }
+  public renameTournamentParticipant(id: string, participantId: string, displayName: string) {
+    return this.json(
+      `/api/v1/tournaments/${id}/participants/${participantId}`,
+      TournamentDetailSchema,
+      { body: JSON.stringify({ displayName }), method: 'PATCH' },
+    )
+  }
+  public removeTournamentParticipant(id: string, participantId: string) {
+    return this.json(
+      `/api/v1/tournaments/${id}/participants/${participantId}`,
+      TournamentDetailSchema,
+      { method: 'DELETE' },
+    )
+  }
+  public reorderTournamentParticipant(id: string, participantId: string, seed: number) {
+    return this.json(
+      `/api/v1/tournaments/${id}/participants/${participantId}/reorder`,
+      TournamentDetailSchema,
+      { body: JSON.stringify({ seed }), method: 'POST' },
+    )
+  }
+  public tournamentAction(
+    id: string,
+    action: 'shuffle' | 'bracket/generate' | 'start' | 'archive',
+  ) {
+    return this.json(`/api/v1/tournaments/${id}/${action}`, TournamentDetailSchema, {
+      method: 'POST',
+    })
+  }
+  public setTournamentWinner(id: string, matchId: string, winnerEntryId: string) {
+    return this.json(
+      `/api/v1/tournaments/${id}/matches/${matchId}/winner`,
+      TournamentDetailSchema,
+      { body: JSON.stringify({ winnerEntryId }), method: 'POST' },
+    )
+  }
+  public undoTournamentResult(id: string, matchId: string) {
+    return this.json(`/api/v1/tournaments/${id}/matches/${matchId}/undo`, TournamentDetailSchema, {
+      method: 'POST',
+    })
+  }
   public listGiveaways() {
     return this.json('/api/v1/giveaways', GiveawayListSchema)
   }

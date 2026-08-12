@@ -6,6 +6,8 @@ import {
   TodoBoardSchema,
   TodoCardSchema,
   TodoColumnSchema,
+  TournamentDetailSchema,
+  TournamentSchema,
   WorkspaceListResponseSchema,
   WorkspaceSchema,
 } from '@streamkit/contracts'
@@ -145,4 +147,65 @@ describe('desktop E2E harness', () => {
       await environment.cleanup()
     },
   )
+
+  it('completes and restores an individual tournament champion', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    let backend = await startLocalBackend({
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+    const call = (path: string, method = 'GET', body?: unknown) =>
+      fetch(`${backend.baseUrl}${path}`, {
+        method,
+        headers: body === undefined ? { authorization: `Bearer ${token}` } : headers(),
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      })
+    try {
+      const tournament = TournamentSchema.parse(
+        await (
+          await call('/api/v1/tournaments', 'POST', {
+            bracketSize: 4,
+            description: null,
+            mode: 'individual',
+            name: 'E2E Cup',
+          })
+        ).json(),
+      )
+      for (const displayName of ['A', 'B', 'C', 'D'])
+        await call(`/api/v1/tournaments/${tournament.id}/participants`, 'POST', { displayName })
+      let detail = TournamentDetailSchema.parse(
+        await (await call(`/api/v1/tournaments/${tournament.id}/bracket/generate`, 'POST')).json(),
+      )
+      await call(`/api/v1/tournaments/${tournament.id}/start`, 'POST')
+      for (const match of detail.matches.filter((item) => item.roundNumber === 1))
+        detail = TournamentDetailSchema.parse(
+          await (
+            await call(`/api/v1/tournaments/${tournament.id}/matches/${match.id}/winner`, 'POST', {
+              winnerEntryId: match.leftEntryId,
+            })
+          ).json(),
+        )
+      const final = detail.matches.find((match) => match.roundNumber === 2)!
+      detail = TournamentDetailSchema.parse(
+        await (
+          await call(`/api/v1/tournaments/${tournament.id}/matches/${final.id}/winner`, 'POST', {
+            winnerEntryId: final.leftEntryId,
+          })
+        ).json(),
+      )
+      await backend.close()
+      backend = await startLocalBackend({
+        authenticationToken: token,
+        databasePath: environment.databasePath,
+      })
+      const restored = TournamentDetailSchema.parse(
+        await (await call(`/api/v1/tournaments/${tournament.id}`)).json(),
+      )
+      expect(restored.tournament.status).toBe('finished')
+      expect(restored.championEntryId).toBe(detail.championEntryId)
+    } finally {
+      await backend.close()
+      await environment.cleanup()
+    }
+  })
 })

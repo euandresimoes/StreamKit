@@ -9,6 +9,7 @@ import AppSidebar, { type AppModule } from './components/shell/AppSidebar.vue'
 import NotificationCenter from './components/shell/NotificationCenter.vue'
 import TodoKanban from './components/todo/TodoKanban.vue'
 import GiveawayPanel from './components/giveaway/GiveawayPanel.vue'
+import TournamentPanel from './components/tournament/TournamentPanel.vue'
 import { useNotificationStore } from './stores/notification.store'
 import { useSettingsStore } from './stores/settings.store'
 import { useTodoStore } from './stores/todo.store'
@@ -69,6 +70,9 @@ onMounted(async () => {
       </section>
       <section v-else-if="activeModule === 'giveaway'" class="workspace__content">
         <GiveawayPanel />
+      </section>
+      <section v-else-if="activeModule === 'games'" class="workspace__content">
+        <TournamentPanel />
       </section>
 
       <section v-else class="workspace__content standard-state" :aria-label="activeTitle">
