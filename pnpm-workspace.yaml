@@ -2,6 +2,9 @@ packages:
   - apps/*
   - packages/*
 
+overrides:
+  js-yaml: 5.2.3
+
 onlyBuiltDependencies:
   - better-sqlite3
   - electron
