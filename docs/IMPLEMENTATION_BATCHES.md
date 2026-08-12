@@ -273,7 +273,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Testar adapter seguro mockado e comportamento sem cofre disponível.
 - [x] Atualizar Scalar e documentação de diagnóstico.
 - [x] Executar gate completo e revisão de segurança.
-- [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
+- [x] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
 ## Batch 11 — Auto update, empacotamento, backups e release do MVP
 
