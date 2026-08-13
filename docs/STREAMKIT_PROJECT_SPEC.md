@@ -323,6 +323,22 @@ O suporte a quantidades não potências de dois pode ser adicionado com **BYEs**
 - `finished`: vencedor registrado;
 - `cancelled`: partida invalidada.
 
+Cada torneio pode possuir no máximo uma **partida atual**. Selecionar uma partida `ready` como atual
+a inicia e destaca no bracket; partidas `pending`, finalizadas ou sem os dois lados definidos não
+podem ser iniciadas. A partida atual permanece selecionada depois do resultado para consulta do chat
+até o operador iniciar outra partida.
+
+Cada lado da partida possui um resultado operacional:
+
+- `pending`: resultado ainda não informado;
+- `won`: venceu a partida;
+- `lost`: perdeu a partida;
+- `forfeit`: desistiu e concede vitória ao adversário;
+- `draw`: empatou e exige desempate antes da progressão.
+
+Somente combinações coerentes podem ser confirmadas: `won/lost` ou `won/forfeit`. Um empate pode ser
+registrado como estado operacional e histórico, mas não finaliza nem avança a partida eliminatória.
+
 ### 6.7 Operações do modo Individual
 
 - adicionar pessoa;
@@ -355,6 +371,28 @@ O suporte a quantidades não potências de dois pode ser adicionado com **BYEs**
 - Alterar um resultado anterior invalida os resultados descendentes que dependem dele.
 - Depois que o torneio começa, alterações estruturais devem ser bloqueadas ou exigir uma operação explícita de edição administrativa.
 - O histórico deve registrar alterações de resultados.
+- Confirmar um resultado finaliza a partida, persiste os resultados dos dois lados e ocupa o slot da
+  rodada seguinte em uma única transação; não existe uma segunda ação manual para "avançar".
+
+### 6.9.1 Painel operacional e chat da partida
+
+Selecionar a partida atual abre um painel com os dois lados, seus participantes, estados e ações de
+resultado. Para participantes capturados por provider, o painel oferece chats isolados por equipe ou
+participante usando `provider`, `channel_id` e `provider_user_id`; entradas manuais sem identidade
+externa permanecem visíveis na escalação, mas não geram um chat fictício.
+
+O chat bilateral fica disponível durante a partida e depois do resultado até outra partida ser
+iniciada. Respostas só são habilitadas por uma conexão `connected` com capacidade `chat.write` para o
+provider e canal correspondentes. Ao finalizar o torneio, o painel focado da equipe campeã continua
+derivado do resultado persistido.
+
+### 6.9.2 Provider simulado para desenvolvimento
+
+Builds de desenvolvimento/debug podem expor um provider simulado pela mesma interface dos providers
+reais. Ele deve emitir eventos pelo pipeline normal e nunca estar disponível em builds de produção.
+O simulador fornece identidades e avatares determinísticos, cenários reproduzíveis, rajadas,
+duplicatas, troca de handle, papéis, desconexão/reconexão e encerramento de chat. Deve permitir validar
+8, 16, 32, 1.000 e 10.000 eventos sem exigir contas reais.
 
 ### 6.10 Integração LivePix futura
 

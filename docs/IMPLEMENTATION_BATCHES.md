@@ -295,7 +295,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Aplicar permissões mínimas, secrets somente na CI e lockfile fixado.
 - [x] Proibir release a partir de árvore suja ou pipeline não verde.
 - [x] Testar update disponível, versão pulada, erro de update e continuidade do app.
-- [x] Testar migration/backup/restauração usando banco versionado anterior; repetir entre pacotes publicados na Batch 22.
+- [x] Testar migration/backup/restauração usando banco versionado anterior; repetir entre pacotes publicados na Batch 23.
 - [x] Executar os dez fluxos de sucesso do MVP em Windows e registrar evidências.
 - [ ] Executar teste guiado dos fluxos manuais com o proprietário/streamer e registrar os achados antes de corrigir.
 - [ ] Revisar e melhorar a UI do frontend a partir dos achados do teste manual.
@@ -309,7 +309,7 @@ gerado e passou por instalação silenciosa, abertura com `AppData` isolado e de
 Metadados do updater, blockmap e SHA-256 também foram validados. Por decisão registrada no
 ADR 0012, as releases Windows iniciais não serão assinadas e devem avisar sobre SmartScreen
 e editor desconhecido. A matriz de evidências está em `docs/BATCH_11_VALIDATION.md`. Como não
-existe pacote público anterior, o teste entre instaladores permanece na Batch 22. Por decisão do
+existe pacote público anterior, o teste entre instaladores permanece na Batch 23. Por decisão do
 ADR 0013, a batch foi reaberta para teste manual do proprietário e refinamento da interface antes
 de qualquer integração. Nenhuma tag ou release foi criada sem autorização.
 
@@ -522,7 +522,71 @@ frontend, 39 unitários do backend, 33 integrações, 19 testes desktop e 8 E2E 
 Windows unsigned `StreamKit-0.0.0-x64-setup.exe` foi gerado e passou no smoke de integridade com
 SHA-256 `47c0dd961074b0e8b27c53a05549bc650b77af6539cd4891bb33348c564dee2d`.
 
-## Batch 20 — LivePix
+## Batch 20 — Operação de torneios, bracket e simulação de chat
+
+**Referências:** seções 6, 8, 10, 17, 18, 24 e ADRs 0014 e 0016.
+
+**Critério de saída:** um operador consegue popular, conduzir e concluir torneios individuais e por
+equipes com chats simulados/externos, restaurar todo o estado após reinício e executar o cenário de
+10.000 eventos sem perda silenciosa, progressão inconsistente ou bloqueio perceptível da UI.
+
+### 20.1 Provider simulado e carga
+
+- [ ] Registrar `SimulatedChatProviderAdapter` somente em desenvolvimento/debug, sem aparecer em produção.
+- [ ] Criar contratos e endpoints de controle sem regra de Games/Giveaway dentro do adapter.
+- [ ] Criar painel de simulação com cenários de 8, 16, 32, 1.000 e 10.000 identidades determinísticas.
+- [ ] Permitir mensagem/prefixo, ritmo instantâneo, gradual ou em rajadas e iniciar/parar emissão.
+- [ ] Simular duplicatas, tickets, bots, broadcaster, moderadores, membros e troca de handle estável.
+- [ ] Simular perda de rede, reconexão e encerramento sem afetar providers reais.
+- [ ] Continuar emitindo mensagens dos participantes depois da inscrição para testar chats de partida.
+- [ ] Medir recebidos, processados, duplicados, rejeitados, fila/latência e persistência no cenário de carga.
+- [ ] Garantir backpressure/fila limitada e nenhuma escrita silenciosamente perdida.
+
+### 20.2 Modelo e persistência operacional
+
+- [ ] Definir contratos Zod para partida atual, resultado por lado e comandos de iniciar/confirmar/reabrir.
+- [ ] Criar migration não destrutiva para estado por lado, partida atual e timestamps necessários.
+- [ ] Garantir no máximo uma partida atual por torneio e aceitar apenas partidas `ready` completas.
+- [ ] Implementar `pending`, `won`, `lost`, `forfeit` e `draw` com combinações válidas.
+- [ ] Manter empate sem progressão até o operador registrar um desempate.
+- [ ] Confirmar resultado e propagar vencedor para a próxima rodada em uma transação.
+- [ ] Reabrir/corrigir com confirmação, auditoria e invalidação dos descendentes afetados.
+- [ ] Restaurar partida atual, resultados, progressão e campeão após reinício.
+
+### 20.3 Bracket e painel da partida
+
+- [ ] Refazer o layout do bracket para alinhar rounds, conectores e cards em 4, 8, 16 e 32 entradas.
+- [ ] Preservar zoom/scroll, legibilidade, foco, redução de movimento e alternativa ao drag and drop.
+- [ ] Selecionar/iniciar a partida atual pelo card e destacar com outline e indicador textual.
+- [ ] Mostrar estado, equipes/participantes e resultado de cada lado sem depender somente de cor.
+- [ ] Criar painel operacional bilateral com escalação e ações ganhar, perder, desistir e empatar.
+- [ ] Derivar automaticamente o estado oposto e impedir combinações contraditórias.
+- [ ] Manter o resultado/chat consultável até o início da próxima partida.
+- [ ] Virtualizar ou limitar listas grandes para não degradar a árvore.
+
+### 20.4 Chat bilateral e integração com Games
+
+- [ ] Validar captura simulada, Twitch e YouTube em torneio individual e por equipes.
+- [ ] Preservar atribuição manual, drag and drop e distribuição aleatória dos capturados.
+- [ ] Criar consulta de chat por lado usando somente identidades externas persistidas daquele lado.
+- [ ] Exibir duas colunas/abas com avatar, handle, provider, mensagens e estado da conexão.
+- [ ] Permitir resposta somente por conexão compatível `connected` com `chat.write`.
+- [ ] Informar participantes manuais sem chat e suportar equipes com Twitch e YouTube simultaneamente.
+- [ ] Preservar chat bilateral durante/depois da partida e chat focado da campeã ao finalizar.
+- [ ] Isolar mensagens por provider, canal e identidade; preservar retenção de 24 horas e limite global.
+
+### 20.5 Testes, documentação e gate
+
+- [ ] Cobrir invariantes, combinações inválidas, empate, desistência, progressão e rollback em unitários.
+- [ ] Cobrir migrations, transações, concorrência, restart, auditoria e chats isolados em integração.
+- [ ] Cobrir layout 4/8/16/32, seleção, teclado, estados e chat bilateral em componentes.
+- [ ] Cobrir torneio individual/equipes completo, correção de resultado e restart em E2E.
+- [ ] Executar soak com 10.000 eventos, burst, duplicatas e reconexão sem usar o banco real.
+- [ ] Atualizar especificação, Scalar/OpenAPI, privacidade e guia de teste do simulador.
+- [ ] Executar format, lint, typecheck, todas as suítes, build e E2E aplicável.
+- [ ] Revisar diff/segurança, marcar somente tasks comprovadas, fazer commit e push.
+
+## Batch 21 — LivePix
 
 **Referências:** seções 6.10–6.11, 7.2, 7.7, 8.1 (LivePix), 11.4 (`integration_events`), 17.2, 21 e 22 (Fase 5).
 
@@ -552,7 +616,7 @@ constitui início de implementação.
 - [ ] Executar gate completo e verificar o critério de saída da Fase 5.
 - [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
-## Batch 21 — OBS, overlays e expansão
+## Batch 22 — OBS, overlays e expansão
 
 **Referências:** seções 2.2, 9.5, 20, 22 (Fase 6) e 28.
 
@@ -572,7 +636,7 @@ constitui início de implementação.
 - [ ] Executar gate completo por sub-batch.
 - [ ] Marcar tasks, fazer commit e push somente após cada sub-batch verde.
 
-## Batch 22 — Validação final do projeto completo
+## Batch 23 — Validação final do projeto completo
 
 **Referências:** seções 1–29, com ênfase em 2.3, 17, 18, 24, 26 e 29.
 
