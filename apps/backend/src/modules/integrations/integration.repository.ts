@@ -47,6 +47,17 @@ export class IntegrationRepository {
     return rows.map((row) => this.parseConnection(row))
   }
 
+  public async updateProviderState(
+    provider: 'kick' | 'twitch' | 'youtube',
+    status: IntegrationConnectionStatus,
+    lastErrorCode: string | null,
+  ): Promise<void> {
+    await this.database.orm
+      .update(integrationConnections)
+      .set({ lastErrorCode, status, updatedAt: new Date().toISOString() })
+      .where(eq(integrationConnections.provider, provider))
+  }
+
   public async getOffset(connectionId: string): Promise<string | null> {
     const [row] = await this.database.orm
       .select()

@@ -50,6 +50,10 @@ import {
 import { TwitchAuthController } from '../modules/integrations/twitch/twitch-auth.controller'
 import { TwitchAuthService } from '../modules/integrations/twitch/twitch-auth.service'
 import { TwitchChatAdapter } from '../modules/integrations/twitch/twitch-chat.adapter'
+import { YouTubeAuthService } from '../modules/integrations/youtube/youtube-auth.service'
+import { YouTubeBroadcastService } from '../modules/integrations/youtube/youtube-broadcast.service'
+import { YouTubeChatAdapter } from '../modules/integrations/youtube/youtube-chat.adapter'
+import { YouTubeController } from '../modules/integrations/youtube/youtube.controller'
 
 @Module({})
 export class AppModule {
@@ -67,6 +71,7 @@ export class AppModule {
         HealthController,
         IntegrationController,
         TwitchAuthController,
+        YouTubeController,
         WorkspaceController,
         TournamentController,
         SettingsController,
@@ -93,6 +98,9 @@ export class AppModule {
         { provide: INTEGRATION_RUNTIME_CONFIG, useValue: integrationConfig },
         TwitchAuthService,
         TwitchChatAdapter,
+        YouTubeAuthService,
+        YouTubeBroadcastService,
+        YouTubeChatAdapter,
         TournamentCaptureRepository,
         TournamentChatCaptureService,
         TournamentRepository,

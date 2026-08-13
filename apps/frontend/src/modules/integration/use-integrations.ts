@@ -3,6 +3,8 @@ import type {
   SaveIntegrationConnectionRequest,
   TwitchAuthorizationStatus,
   TwitchDeviceAuthorization,
+  YouTubeAuthorizationStatus,
+  YouTubeLiveBroadcast,
 } from "@streamkit/contracts";
 import { useCallback, useEffect, useState } from "react";
 
@@ -15,15 +17,19 @@ export function useIntegrations(active: boolean) {
   const [error, setError] = useState<string | null>(null);
   const [twitchAuth, setTwitchAuth] = useState<TwitchAuthorizationStatus | null>(null);
   const [twitchDevice, setTwitchDevice] = useState<TwitchDeviceAuthorization | null>(null);
+  const [youtubeAuth, setYouTubeAuth] = useState<YouTubeAuthorizationStatus | null>(null);
+  const [youtubeBroadcasts, setYouTubeBroadcasts] = useState<YouTubeLiveBroadcast[]>([]);
   const load = useCallback(async () => {
     try {
       setError(null);
-      const [nextConnections, nextTwitchAuth] = await Promise.all([
+      const [nextConnections, nextTwitchAuth, nextYouTubeAuth] = await Promise.all([
         integrationApi.listConnections(),
         integrationApi.twitchAuthStatus(),
+        integrationApi.youtubeAuthStatus(),
       ]);
       setConnections(nextConnections);
       setTwitchAuth(nextTwitchAuth);
+      setYouTubeAuth(nextYouTubeAuth);
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Não foi possível carregar as integrações.",
@@ -51,6 +57,8 @@ export function useIntegrations(active: boolean) {
     error,
     twitchAuth,
     twitchDevice,
+    youtubeAuth,
+    youtubeBroadcasts,
     connectTwitch: async () => {
       setBusy(true);
       setError(null);
@@ -80,6 +88,39 @@ export function useIntegrations(active: boolean) {
         setTwitchAuth(await integrationApi.disconnectTwitch());
         setTwitchDevice(null);
       }),
+    connectYouTube: async () => {
+      setBusy(true);
+      setError(null);
+      try {
+        const flow = await integrationApi.beginYouTubeAuth();
+        await getDesktopBridge().openExternalAuth(flow.authorizationUrl);
+        while (Date.parse(flow.expiresAt) > Date.now()) {
+          await new Promise((resolve) => setTimeout(resolve, 1_500));
+          const result = await integrationApi.pollYouTubeAuth(flow.flowId);
+          if (result.status === "pending") continue;
+          if (result.status === "failed") throw new Error(result.error);
+          if (result.status === "expired") throw new Error("A autorização do YouTube expirou.");
+          setYouTubeAuth(result.authorization);
+          setYouTubeBroadcasts(await integrationApi.listYouTubeBroadcasts());
+          await load();
+          return;
+        }
+        throw new Error("A autorização do YouTube expirou.");
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Não foi possível conectar o YouTube.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    disconnectYouTube: () =>
+      execute(async () => {
+        setYouTubeAuth(await integrationApi.disconnectYouTube());
+        setYouTubeBroadcasts([]);
+      }),
+    discoverYouTubeBroadcasts: () =>
+      execute(async () => setYouTubeBroadcasts(await integrationApi.listYouTubeBroadcasts())),
+    selectYouTubeBroadcast: (broadcast: YouTubeLiveBroadcast) =>
+      execute(() => integrationApi.selectYouTubeBroadcast(broadcast)),
     remove: (id: string) => execute(() => integrationApi.deleteConnection(id)),
     save: (input: SaveIntegrationConnectionRequest) =>
       execute(() => integrationApi.saveConnection(input)),

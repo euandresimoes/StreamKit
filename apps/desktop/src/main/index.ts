@@ -190,6 +190,7 @@ async function bootstrap(): Promise<void> {
     logPath: join(directories.logs, 'streamkit.log'),
     integrationConfig: {
       twitchClientId: process.env.STREAMKIT_TWITCH_CLIENT_ID?.trim() || null,
+      youtubeClientId: process.env.STREAMKIT_YOUTUBE_CLIENT_ID?.trim() || null,
     },
   })
   const connection = BackendConnectionSchema.parse({ baseUrl: backend.baseUrl, token })

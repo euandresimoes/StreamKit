@@ -110,6 +110,35 @@ export const TwitchDeviceAuthorizationPollSchema = z.discriminatedUnion('status'
   z.object({ status: z.literal('authorized'), authorization: TwitchAuthorizationStatusSchema }),
   z.object({ status: z.literal('expired') }),
 ])
+export const YouTubeAuthorizationStatusSchema = z.object({
+  available: z.boolean(),
+  configured: z.boolean(),
+  expiresAt: z.iso.datetime().nullable(),
+  scopes: z.array(z.string()),
+})
+export const YouTubeAuthorizationStartSchema = z.object({
+  authorizationUrl: z.url(),
+  expiresAt: z.iso.datetime(),
+  flowId: z.uuid(),
+})
+export const YouTubeAuthorizationPollSchema = z.discriminatedUnion('status', [
+  z.object({ status: z.literal('pending') }),
+  z.object({ status: z.literal('authorized'), authorization: YouTubeAuthorizationStatusSchema }),
+  z.object({ status: z.literal('expired') }),
+  z.object({ status: z.literal('failed'), error: z.string() }),
+])
+export const YouTubeLiveBroadcastSchema = z.object({
+  channelId: z.string().min(1),
+  liveChatId: z.string().min(1),
+  scheduledStartAt: z.iso.datetime().nullable(),
+  title: z.string().min(1),
+  videoId: z.string().min(1),
+})
+export const SelectYouTubeBroadcastRequestSchema = z.object({
+  liveChatId: z.string().min(1),
+  title: z.string().min(1),
+  videoId: z.string().min(1),
+})
 
 export type ChatMessageReceived = z.infer<typeof ChatMessageReceivedSchema>
 export type IntegrationCapability = z.infer<typeof IntegrationCapabilitySchema>
@@ -123,3 +152,5 @@ export type SaveIntegrationConnectionRequest = z.infer<
 >
 export type TwitchAuthorizationStatus = z.infer<typeof TwitchAuthorizationStatusSchema>
 export type TwitchDeviceAuthorization = z.infer<typeof TwitchDeviceAuthorizationSchema>
+export type YouTubeAuthorizationStatus = z.infer<typeof YouTubeAuthorizationStatusSchema>
+export type YouTubeLiveBroadcast = z.infer<typeof YouTubeLiveBroadcastSchema>

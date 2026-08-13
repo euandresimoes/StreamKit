@@ -5,6 +5,10 @@ import {
   TwitchAuthorizationStatusSchema,
   TwitchDeviceAuthorizationPollSchema,
   TwitchDeviceAuthorizationSchema,
+  YouTubeAuthorizationPollSchema,
+  YouTubeAuthorizationStartSchema,
+  YouTubeAuthorizationStatusSchema,
+  YouTubeLiveBroadcastSchema,
 } from "@streamkit/contracts";
 
 import { apiClient } from "@/infrastructure/api-client";
@@ -53,5 +57,34 @@ export const integrationApi = {
     apiClient.request("/api/v1/integrations/twitch/auth", {
       method: "DELETE",
       schema: TwitchAuthorizationStatusSchema,
+    }),
+  youtubeAuthStatus: () =>
+    apiClient.request("/api/v1/integrations/youtube/auth/status", {
+      schema: YouTubeAuthorizationStatusSchema,
+    }),
+  beginYouTubeAuth: () =>
+    apiClient.request("/api/v1/integrations/youtube/auth", {
+      method: "POST",
+      schema: YouTubeAuthorizationStartSchema,
+    }),
+  pollYouTubeAuth: (flowId: string) =>
+    apiClient.request(`/api/v1/integrations/youtube/auth/${flowId}/poll`, {
+      method: "POST",
+      schema: YouTubeAuthorizationPollSchema,
+    }),
+  disconnectYouTube: () =>
+    apiClient.request("/api/v1/integrations/youtube/auth", {
+      method: "DELETE",
+      schema: YouTubeAuthorizationStatusSchema,
+    }),
+  listYouTubeBroadcasts: () =>
+    apiClient.request("/api/v1/integrations/youtube/broadcasts", {
+      schema: YouTubeLiveBroadcastSchema.array(),
+    }),
+  selectYouTubeBroadcast: (broadcast: { liveChatId: string; title: string; videoId: string }) =>
+    apiClient.request("/api/v1/integrations/youtube/broadcasts/select", {
+      body: broadcast,
+      method: "POST",
+      schema: IntegrationConnectionSchema,
     }),
 };

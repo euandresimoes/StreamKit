@@ -226,6 +226,75 @@ export function SettingsDialog({
                   )}
                 </div>
 
+                <div className="mt-3 rounded-2xl border border-border bg-surface-2/60 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 items-center justify-center rounded-xl bg-red-500/15 text-red-400">
+                      <Plug className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold">YouTube Live Chat</p>
+                      <p className="truncate text-[11.5px] text-muted-foreground">
+                        {integrations.youtubeAuth?.configured
+                          ? "Autorizado · selecione uma transmissão ativa"
+                          : integrations.youtubeAuth?.available
+                            ? "Pronto para conectar"
+                            : "Client ID do YouTube não configurado no build"}
+                      </p>
+                    </div>
+                    {integrations.youtubeAuth?.configured ? (
+                      <>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          loading={integrations.busy}
+                          onClick={() => void integrations.discoverYouTubeBroadcasts()}
+                        >
+                          Buscar lives
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          loading={integrations.busy}
+                          onClick={() => void integrations.disconnectYouTube()}
+                        >
+                          Desconectar
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="sm"
+                        loading={integrations.busy}
+                        disabled={!integrations.youtubeAuth?.available}
+                        onClick={() => void integrations.connectYouTube()}
+                      >
+                        Conectar
+                      </Button>
+                    )}
+                  </div>
+                  {integrations.youtubeBroadcasts.length > 0 && (
+                    <div className="mt-3 space-y-2 border-t border-border pt-3">
+                      {integrations.youtubeBroadcasts.map((broadcast) => (
+                        <div
+                          key={broadcast.liveChatId}
+                          className="flex items-center gap-2 rounded-xl border border-border bg-card p-2.5"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-medium">{broadcast.title}</p>
+                            <p className="text-[10px] text-muted-foreground">Transmissão ativa</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => void integrations.selectYouTubeBroadcast(broadcast)}
+                          >
+                            Usar chat
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="mt-4 space-y-2">
                   {integrations.connections.map((connection) => (
                     <div
@@ -239,6 +308,15 @@ export function SettingsDialog({
                         <p className="text-[11px] capitalize text-muted-foreground">
                           {connection.provider} · {connection.status}
                         </p>
+                        {connection.lastErrorCode && (
+                          <p className="text-[10px] text-destructive">
+                            {connection.lastErrorCode === "YOUTUBE_QUOTA_OR_PERMISSION_ERROR"
+                              ? "Quota esgotada ou permissão insuficiente no YouTube"
+                              : connection.lastErrorCode === "YOUTUBE_CHAT_ENDED"
+                                ? "O chat desta transmissão foi encerrado"
+                                : connection.lastErrorCode}
+                          </p>
+                        )}
                       </div>
                       {connection.status === "connected" ? (
                         <Button
@@ -253,7 +331,10 @@ export function SettingsDialog({
                           size="sm"
                           variant="secondary"
                           disabled={
-                            connection.provider === "twitch" && !integrations.twitchAuth?.configured
+                            (connection.provider === "twitch" &&
+                              !integrations.twitchAuth?.configured) ||
+                            (connection.provider === "youtube" &&
+                              !integrations.youtubeAuth?.configured)
                           }
                           onClick={() => void integrations.start(connection.id)}
                         >

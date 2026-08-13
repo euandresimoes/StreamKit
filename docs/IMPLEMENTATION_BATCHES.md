@@ -435,15 +435,26 @@ limite e restart; o teste frontend cobre landmarks e labels acessíveis. O gate 
 **Referências:** seções 8, 10, 17, 21 e ADR 0014.
 
 - [ ] **Dependência externa:** criar projeto Google, habilitar YouTube Data API e configurar Client ID desktop.
-- [ ] Implementar OAuth de aplicativo instalado com PKCE, browser do sistema e callback loopback.
-- [ ] Guardar refresh/access tokens somente no cofre e implementar revogação/desconexão.
-- [ ] Descobrir/selecionar transmissão e `liveChatId` sem exigir IDs técnicos na UX comum.
-- [ ] Ler mensagens com `streamList` quando disponível e fallback documentado respeitando quota.
-- [ ] Normalizar ID do canal do autor, handle/nome, avatar, papel, mensagem e eventos suportados.
-- [ ] Expor escrita somente com capacidade, escopo e transmissão ativa compatíveis.
-- [ ] Mostrar quota/limitação, chat encerrado e autorização não verificada de forma acionável.
-- [ ] Executar a suíte compartilhada de fontes, chat focado, revogação e reconexão.
-- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+- [x] Implementar OAuth de aplicativo instalado com PKCE, browser do sistema e callback loopback.
+- [x] Guardar refresh/access tokens somente no cofre e implementar revogação/desconexão.
+- [x] Descobrir/selecionar transmissão e `liveChatId` sem exigir IDs técnicos na UX comum.
+- [x] Ler mensagens com `streamList` quando disponível e fallback documentado respeitando quota.
+- [x] Normalizar ID do canal do autor, handle/nome, avatar, papel, mensagem e eventos suportados.
+- [x] Expor escrita somente com capacidade, escopo e transmissão ativa compatíveis.
+- [x] Mostrar quota/limitação, chat encerrado e autorização não verificada de forma acionável.
+- [x] Executar a suíte compartilhada de fontes, chat focado, revogação e reconexão.
+- [x] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+**Evidência parcial registrada em 2026-08-13:** OAuth desktop usa PKCE S256, `state` aleatório,
+callback em `127.0.0.1` com porta efêmera e nenhum client secret; tokens ficam no cofre e refresh,
+revogação e desconexão atualizam as conexões. A UI descobre lives ativas pelo título. O adapter
+normaliza identidade/cargos, persiste cursor, respeita `pollingIntervalMillis`, lê e escreve pela API
+oficial. Como o runtime não inclui transporte gRPC, o fallback `liveChatMessages.list` está
+documentado em `CHAT_INTEGRATIONS.md`, junto de quota/privacidade/suporte. Testes controlados cobrem
+PKCE completo, cofre, refresh, descoberta, normalização, leitura e escrita; as suítes compartilhadas
+cobrem fontes e chat focado. O gate passou com 1 teste frontend, 38 unitários do backend, 32
+integrações, 18 testes do desktop e 8 E2E. A batch permanece aberta somente para criar/configurar um
+Client ID Google e executar a autorização real controlada.
 
 ## Batch 18 — Kick Chat
 
