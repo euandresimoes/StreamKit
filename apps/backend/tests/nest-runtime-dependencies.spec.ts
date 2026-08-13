@@ -5,4 +5,8 @@ describe('Nest runtime dependencies', () => {
       expect(() => require.resolve(dependency)).not.toThrow()
     },
   )
+
+  it('exposes the class-transformer storage implementation used by Nest Swagger', () => {
+    expect(() => require.resolve('class-transformer/cjs/storage')).not.toThrow()
+  })
 })

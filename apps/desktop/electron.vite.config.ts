@@ -24,6 +24,10 @@ export default defineConfig({
         '@streamkit/backend': resolve(__dirname, '../backend/src/main.ts'),
         '@streamkit/config': resolve(__dirname, '../../packages/config/src/index.ts'),
         '@streamkit/contracts': resolve(__dirname, '../../packages/contracts/src/index.ts'),
+        'class-transformer/storage': resolve(
+          __dirname,
+          '../backend/node_modules/class-transformer/cjs/storage.js',
+        ),
       },
     },
   },
