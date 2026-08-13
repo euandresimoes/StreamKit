@@ -21,11 +21,13 @@ export function ParticipantChatCapturePanel({
   target,
   targetId,
   participantCount,
+  temporarilyPaused = false,
   onRefresh,
 }: {
   target: "giveaway" | "tournament";
   targetId: string;
   participantCount: number;
+  temporarilyPaused?: boolean;
   onRefresh: () => Promise<void>;
 }) {
   const captures = useParticipantCaptureRules(target, targetId, onRefresh);
@@ -164,7 +166,7 @@ export function ParticipantChatCapturePanel({
               })
             }
           >
-            <Radio /> {captureButtonLabel(isCapturing, participantCount)}
+            <Radio /> {captureButtonLabel(isCapturing, participantCount, temporarilyPaused)}
           </Button>
         </div>
       )}

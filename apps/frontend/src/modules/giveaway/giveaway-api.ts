@@ -66,7 +66,10 @@ export const giveawayApi = {
       schema: GiveawayRoundSchema,
     }),
   complete: (id: string, roundId: string) =>
-    apiClient.request(`/api/v1/giveaways/${id}/rounds/${roundId}/complete`, { method: "POST" }),
+    apiClient.request(`/api/v1/giveaways/${id}/rounds/${roundId}/complete`, {
+      method: "POST",
+      schema: GiveawayRoundSchema,
+    }),
   nextRound: (id: string, removeWinner: boolean) =>
     apiClient.request(`/api/v1/giveaways/${id}/next-round`, {
       method: "POST",
