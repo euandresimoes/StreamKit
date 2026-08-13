@@ -3,6 +3,8 @@ import { resolve } from 'node:path'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 
+const optionalNestModule = resolve(__dirname, 'src/main/optional-nest-module.ts')
+
 const bundledWorkspaceDependencies = [
   '@renderizer/core',
   '@renderizer/vue',
@@ -28,6 +30,12 @@ export default defineConfig({
           __dirname,
           '../backend/node_modules/class-transformer/cjs/storage.js',
         ),
+        '@nestjs/microservices/microservices-module': optionalNestModule,
+        '@nestjs/microservices': optionalNestModule,
+        '@nestjs/platform-express': optionalNestModule,
+        '@nestjs/websockets/socket-module': optionalNestModule,
+        '@fastify/static': optionalNestModule,
+        '@fastify/view': optionalNestModule,
       },
     },
   },
