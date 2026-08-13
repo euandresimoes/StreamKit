@@ -14,6 +14,7 @@ import { app, BrowserWindow, Menu, nativeImage, session, shell, Tray } from 'ele
 import { registerNativeIpcHandlers, removeNativeIpcHandlers } from './ipc'
 import { createSecureWebPreferences, isAllowedExternalUrl } from './security-policy'
 import { WindowStateRepository } from './window-state.repository'
+import { UpdateManager } from './update-manager'
 import { ensureUserDataDirectories } from './user-data-directories'
 import { ElectronSecureCredentialRepository } from './electron-secure-credential.repository'
 
@@ -25,6 +26,7 @@ let renderWindows: RenderWindowManager | undefined
 let tray: Tray | undefined
 let logsDirectory = ''
 let isQuitting = false
+let updateManager: UpdateManager | undefined
 let desktopSettings: UpdateAppSettingsRequest = {
   confirmExitDuringActive: true,
   debugEnabled: false,
@@ -98,13 +100,23 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
     preloadPath,
   })
   renderWindows.attachTo(mainWindow)
-  registerNativeIpcHandlers(connection, renderWindows, {
-    applySettings: applyDesktopSettings,
-    openDevTools: () => mainWindow?.webContents.openDevTools({ mode: 'detach' }),
-    openLogsDirectory: async () => {
-      await shell.openPath(logsDirectory)
+  updateManager = new UpdateManager(
+    () => mainWindow,
+    process.env.STREAMKIT_RELEASE_CHANNEL === 'beta' ? 'beta' : 'stable',
+    join(app.getPath('userData'), 'update-state.json'),
+  )
+  registerNativeIpcHandlers(
+    connection,
+    renderWindows,
+    {
+      applySettings: applyDesktopSettings,
+      openDevTools: () => mainWindow?.webContents.openDevTools({ mode: 'detach' }),
+      openLogsDirectory: async () => {
+        await shell.openPath(logsDirectory)
+      },
     },
-  })
+    updateManager,
+  )
 
   mainWindow.webContents.on('did-create-window', (window, details) => {
     if (details.frameName !== 'renderizer:settings') return
@@ -118,6 +130,11 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
   })
 
   mainWindow.once('ready-to-show', () => mainWindow?.show())
+  mainWindow.once('ready-to-show', () => {
+    globalThis.setTimeout(() => {
+      void updateManager?.command({ action: 'check', manual: false })
+    }, 1500)
+  })
   mainWindow.on('closed', () => {
     mainWindow = undefined
   })

@@ -939,7 +939,7 @@ Ao abrir o StreamKit:
 4. se houver atualização, exibir título, versão e changelog;
 5. permitir **Atualizar agora** ou **Pular esta versão**;
 6. baixar com progresso visível após autorização;
-7. validar assinatura/checksum do pacote;
+7. validar o checksum do pacote e, quando futuramente configurada, sua assinatura;
 8. instalar no momento seguro definido para a plataforma;
 9. informar erros sem impedir o uso da versão atual.
 
@@ -950,7 +950,7 @@ Ao abrir o StreamKit:
 - Não aplicar atualização durante sorteio ou torneio ativo sem confirmação.
 - Releases de teste devem usar canal separado, como `beta`.
 - O repositório e o provedor de release devem ser configuráveis no build.
-- Atualizações devem ser assinadas quando a plataforma permitir/exigir.
+- Releases Windows iniciais podem ser não assinadas conforme o ADR 0012; checksum e aviso claro de SmartScreen são obrigatórios.
 - A API do repositório não deve receber tokens privados a partir do renderer.
 
 ### 14.3 Changelog
@@ -1065,7 +1065,7 @@ Os comandos reais serão definidos conforme o bundler, runner do Electron e ferr
 - não usar portas fixas conflitantes quando uma porta dinâmica resolver;
 - testes não devem acessar o banco real do usuário;
 - release deve falhar se lint, types, testes ou build falharem;
-- credenciais de assinatura/publicação devem existir somente no ambiente seguro da CI.
+- credenciais de publicação e, quando adotadas, de assinatura devem existir somente no ambiente seguro da CI.
 
 ---
 
@@ -1177,7 +1177,7 @@ Uma tag semântica, por exemplo `v0.1.0`, deverá disparar:
 2. geração do changelog;
 3. build de produção;
 4. empacotamento do instalador;
-5. assinatura quando configurada;
+5. assinatura opcional quando futuramente configurada;
 6. geração de checksums;
 7. publicação da release;
 8. upload dos arquivos necessários ao auto updater;
@@ -1373,7 +1373,7 @@ Evento externo
 - configurações finais;
 - auto update;
 - instalador;
-- assinatura/checksum;
+- checksum obrigatório e assinatura opcional futura;
 - CI/CD de release;
 - backup e migrações;
 - telemetria somente se futura, transparente e opt-in;
@@ -1483,7 +1483,7 @@ As decisões acima foram fechadas em 12 de agosto de 2026 e registradas nos ADRs
 - brackets de 4, 8, 16 e 32, sem BYEs no MVP;
 - limites iniciais documentados no ADR 0006;
 - PolyForm Noncommercial License 1.0.0, código source-available público e binários via GitHub Releases;
-- canais stable/beta, checksum e assinatura para release pública stable quando configurada;
+- canais stable/beta, checksum obrigatório e releases Windows iniciais sem assinatura conforme ADR 0012;
 - auditoria pública de sorteio com metadados e hash do snapshot;
 - Renderizer como framework obrigatório para superfícies multiwindow com um único runtime Vue.
 
@@ -1499,7 +1499,7 @@ As decisões acima foram fechadas em 12 de agosto de 2026 e registradas nos ADRs
 | Resultado parecer manipulado      | perda de confiança      | selecionar antes da animação e manter histórico            |
 | Banco corrompido/migração falhar  | perda de dados          | WAL, transações e backup antes de migration                |
 | Credencial exposta                | incidente de segurança  | cofre do sistema e isolamento do renderer                  |
-| Auto update comprometido          | risco crítico           | assinatura, checksums e releases protegidas                |
+| Auto update comprometido          | risco crítico           | checksums, metadados íntegros e releases protegidas        |
 | API externa instável              | automação indisponível  | modo manual sempre funcional e adapter isolado             |
 | Animação pesada                   | travamento durante live | profiling, virtualização e redução de efeitos              |
 | Arquitetura excessiva cedo demais | baixa velocidade        | casos de uso claros, interfaces apenas em fronteiras reais |

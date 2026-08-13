@@ -1,5 +1,7 @@
 {
   "name": "@streamkit/desktop",
+  "description": "Local-first desktop toolbox for streamers",
+  "author": "André Simões",
   "version": "0.0.0",
   "private": true,
   "main": "out/main/index.js",
@@ -13,7 +15,9 @@
     "predev": "pnpm native:electron",
     "preprod": "pnpm native:electron",
     "prod": "electron-vite preview",
-    "release": "node scripts/release-not-configured.mjs",
+    "package:win": "node scripts/package-windows.mjs",
+    "release": "node scripts/assert-release-ready.mjs && pnpm package:win",
+    "smoke:artifact": "node scripts/smoke-artifact.mjs",
     "test": "jest --config jest.config.cjs",
     "test:e2e": "jest --config jest.e2e.config.cjs",
     "typecheck": "tsc -p tsconfig.typecheck.json --noEmit"
@@ -24,6 +28,7 @@
     "@streamkit/config": "workspace:*",
     "@streamkit/contracts": "workspace:*",
     "better-sqlite3": "12.11.1",
+    "electron-updater": "6.7.0",
     "zod": "4.4.3"
   },
   "devDependencies": {

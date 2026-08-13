@@ -130,7 +130,7 @@ Regras do gate:
 - Guardar credenciais no cofre seguro do sistema operacional por uma API restrita do processo principal/backend.
 - Não registrar tokens, headers de autenticação ou payloads sensíveis integrais.
 - Usar permissões mínimas na CI e manter secrets apenas no provedor seguro.
-- Validar assinatura/checksum de atualização e auditar dependências críticas.
+- Validar checksum de atualização, validar assinatura quando configurada e auditar dependências críticas.
 
 ## 10. Frontend, componentes base e temas SCSS
 

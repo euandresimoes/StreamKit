@@ -26,6 +26,16 @@ describe('useTodoStore', () => {
       getPlatform: async () => 'win32',
       openDevTools: async () => undefined,
       openLogsDirectory: async () => undefined,
+      onUpdateState: () => () => undefined,
+      setUpdateActivity: async () => undefined,
+      updateCommand: async () => ({
+        available: null,
+        channel: 'stable',
+        error: null,
+        progress: null,
+        status: 'idle',
+      }),
+      updateState: async () => undefined,
     }
   })
 

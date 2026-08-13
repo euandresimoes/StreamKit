@@ -1,0 +1,34 @@
+name: Release
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+*']
+permissions:
+  contents: write
+jobs:
+  release-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      STREAMKIT_PIPELINE_GREEN: 'true'
+      STREAMKIT_RELEASE_CHANNEL: ${{ contains(github.ref_name, '-') && 'beta' || 'stable' }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.33.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22.12.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm validate
+      - name: Package configured release repository
+        run: pnpm --filter @streamkit/desktop release -- --config.publish.provider=github --config.publish.owner=${{ github.repository_owner }} --config.publish.repo=${{ github.event.repository.name }}
+      - run: pnpm --filter @streamkit/desktop smoke:artifact
+      - name: Generate SHA-256 checksums
+        shell: pwsh
+        run: Get-ChildItem apps/desktop/release -File | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)" } | Set-Content apps/desktop/release/SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: CHANGELOG.md
+          files: apps/desktop/release/*
+          prerelease: ${{ contains(github.ref_name, '-') }}

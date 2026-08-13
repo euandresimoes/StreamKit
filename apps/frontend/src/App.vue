@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RenderWindow } from '@renderizer/vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { showSettingsWindow } from './app/settings-window'
 import { BaseButton, BaseInput, BaseSelect, BaseToggle } from './components/base'
@@ -13,11 +13,18 @@ import TournamentPanel from './components/tournament/TournamentPanel.vue'
 import { useNotificationStore } from './stores/notification.store'
 import { useSettingsStore } from './stores/settings.store'
 import { useTodoStore } from './stores/todo.store'
+import { useUpdateStore } from './stores/update.store'
+import { useGiveawayStore } from './stores/giveaway.store'
+import { useTournamentStore } from './stores/tournament.store'
 
 const todoStore = useTodoStore()
 const settings = useSettingsStore()
 const notifications = useNotificationStore()
+const updates = useUpdateStore()
+const giveawayStore = useGiveawayStore()
+const tournamentStore = useTournamentStore()
 const settingsOpen = ref(false)
+const confirmUpdateInstall = ref(false)
 const activeModule = ref<AppModule>('todo')
 const showShowcase = ref(import.meta.env.DEV)
 const livePixCredential = ref('')
@@ -38,6 +45,19 @@ const updateOptions = [
 const activeTitle = computed(
   () => ({ todo: 'TODO', games: 'Games', giveaway: 'Giveaway' })[activeModule.value],
 )
+const activeOperation = computed(
+  () =>
+    giveawayStore.detail?.giveaway.status === 'drawing' ||
+    tournamentStore.detail?.tournament.status === 'in_progress',
+)
+
+watch(
+  activeOperation,
+  (active) => {
+    void window.streamkit.setUpdateActivity(active)
+  },
+  { immediate: true },
+)
 
 function openSettings(): void {
   showSettingsWindow(settingsOpen)
@@ -52,6 +72,15 @@ async function copyDiagnostics() {
     JSON.stringify({ frontendVersion: '0.0.0', ...settings.diagnosticInfo }, null, 2),
   )
 }
+async function requestInstall() {
+  if (activeOperation.value) confirmUpdateInstall.value = true
+  else await updates.install(false)
+}
+async function confirmInstall() {
+  await window.streamkit.setUpdateActivity(false)
+  confirmUpdateInstall.value = false
+  await updates.install(false)
+}
 function openDevTools() {
   void window.streamkit.openDevTools()
 }
@@ -61,6 +90,7 @@ function openLogsDirectory() {
 
 onMounted(async () => {
   await settings.load()
+  await updates.initialize()
   try {
     await todoStore.loadWorkspaces()
   } catch {
@@ -112,6 +142,56 @@ onMounted(async () => {
       </footer>
     </main>
     <NotificationCenter />
+    <BaseModal
+      :open="Boolean(updates.state?.available)"
+      title="Atualização disponível"
+      @close="updates.state?.available && updates.skip(updates.state.available.version)"
+    >
+      <template v-if="updates.state?.available"
+        ><h3>{{ updates.state.available.title }}</h3>
+        <p>Versão {{ updates.state.available.version }} · canal {{ updates.state.channel }}</p>
+        <p>{{ updates.state.available.changelog }}</p>
+        <p v-if="updates.state.status === 'downloading'" role="status">
+          Baixando… {{ Math.round(updates.state.progress ?? 0) }}%
+        </p>
+        <p v-if="updates.state.error" role="alert">
+          {{ updates.state.error }}. O StreamKit continua disponível.
+        </p></template
+      >
+      <template #footer
+        ><BaseButton
+          v-if="updates.state?.available"
+          variant="ghost"
+          @click="updates.skip(updates.state.available.version)"
+          >Pular esta versão</BaseButton
+        ><BaseButton
+          v-if="updates.state?.status === 'available'"
+          variant="primary"
+          @click="updates.download"
+          >Atualizar agora</BaseButton
+        ><BaseButton
+          v-if="updates.state?.status === 'downloaded'"
+          variant="primary"
+          @click="requestInstall"
+          >Instalar e reiniciar</BaseButton
+        ></template
+      >
+    </BaseModal>
+    <BaseModal
+      :open="confirmUpdateInstall"
+      title="Interromper operação ativa?"
+      @close="confirmUpdateInstall = false"
+      ><p>
+        A instalação fechará o aplicativo. Confirme somente após salvar ou concluir a operação
+        atual.
+      </p>
+      <template #footer
+        ><BaseButton variant="ghost" @click="confirmUpdateInstall = false">Cancelar</BaseButton
+        ><BaseButton variant="danger" @click="confirmInstall"
+          >Instalar mesmo assim</BaseButton
+        ></template
+      ></BaseModal
+    >
 
     <RenderWindow
       v-model:open="settingsOpen"
@@ -148,6 +228,7 @@ onMounted(async () => {
               label="Atualizações"
               :options="updateOptions"
             />
+            <BaseButton @click="updates.check">Verificar atualizações agora</BaseButton>
             <section class="settings-group">
               <h3>LivePix</h3>
               <BaseInput

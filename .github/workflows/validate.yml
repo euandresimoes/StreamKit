@@ -13,7 +13,7 @@ jobs:
   validate:
     name: Windows validation
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -52,5 +52,16 @@ jobs:
       - name: E2E harness
         run: pnpm test:e2e
 
+      - name: Coverage
+        run: pnpm test:coverage
+
       - name: Build
         run: pnpm build
+
+      - name: Upload validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-artifacts
+          path: coverage
+          if-no-files-found: ignore

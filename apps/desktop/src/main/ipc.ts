@@ -1,4 +1,9 @@
-import { type BackendConnection, UpdateAppSettingsRequestSchema } from '@streamkit/contracts'
+import {
+  type BackendConnection,
+  UpdateAppSettingsRequestSchema,
+  UpdateCommandSchema,
+} from '@streamkit/contracts'
+import type { UpdateManager } from './update-manager'
 import type { RenderWindowManager } from '@renderizer/vue/electron'
 import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { z } from 'zod'
@@ -15,7 +20,21 @@ export function registerNativeIpcHandlers(
     openDevTools: () => void
     openLogsDirectory: () => Promise<void>
   },
+  updates?: UpdateManager,
 ): void {
+  ipcMain.handle('streamkit:update-command', (_event, input: unknown, ...rest: unknown[]) => {
+    EmptyArgumentsSchema.parse(rest)
+    if (!updates) throw new Error('Updater unavailable')
+    return updates.command(UpdateCommandSchema.parse(input))
+  })
+  ipcMain.handle('streamkit:update-state', (_event, ...rest: unknown[]) => {
+    EmptyArgumentsSchema.parse(rest)
+    return updates?.snapshot()
+  })
+  ipcMain.handle('streamkit:update-activity', (_event, active: unknown, ...rest: unknown[]) => {
+    EmptyArgumentsSchema.parse(rest)
+    updates?.setActivity(z.boolean().parse(active))
+  })
   ipcMain.handle('streamkit:apply-settings', (_event, input: unknown, ...rest: unknown[]) => {
     EmptyArgumentsSchema.parse(rest)
     actions.applySettings(UpdateAppSettingsRequestSchema.parse(input))
@@ -79,6 +98,9 @@ export function removeNativeIpcHandlers(): void {
     'streamkit:apply-settings',
     'streamkit:open-devtools',
     'streamkit:open-logs-directory',
+    'streamkit:update-command',
+    'streamkit:update-state',
+    'streamkit:update-activity',
     'renderizer-window-ready',
     'renderizer-window-control',
     'renderizer-window-state',

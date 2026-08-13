@@ -1,6 +1,11 @@
 /// <reference types="vite/client" />
 
-import type { BackendConnection, UpdateAppSettingsRequest } from '@streamkit/contracts'
+import type {
+  BackendConnection,
+  UpdateAppSettingsRequest,
+  UpdateCommand,
+  UpdateState,
+} from '@streamkit/contracts'
 
 declare global {
   interface Window {
@@ -10,6 +15,10 @@ declare global {
       applySettings: (settings: UpdateAppSettingsRequest) => Promise<void>
       openDevTools: () => Promise<void>
       openLogsDirectory: () => Promise<void>
+      updateCommand: (command: UpdateCommand) => Promise<UpdateState>
+      updateState: () => Promise<UpdateState | undefined>
+      setUpdateActivity: (active: boolean) => Promise<void>
+      onUpdateState: (listener: (state: UpdateState) => void) => () => void
     }
   }
 }

@@ -1,0 +1,24 @@
+appId: com.euandresimoes.streamkit
+productName: StreamKit
+artifactName: StreamKit-${version}-${arch}-setup.${ext}
+directories:
+  output: release
+files:
+  - out/**/*
+  - package.json
+asar: true
+asarUnpack:
+  - '**/node_modules/better-sqlite3/**/*'
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  signExecutable: false
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+publish:
+  provider: github
+  owner: euandresimoes
+  repo: StreamKit

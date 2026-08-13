@@ -89,7 +89,7 @@ O equipamento de referência é Windows 10 22H2 ou Windows 11 x64, CPU de 4 núc
 | R-04 | Sorteio parecer manipulado        | Giveaway         | Resultado depende de frame/timing        | Seleção com `crypto`, snapshot e persistência pré-animação   | 6, 7              |
 | R-05 | Corrupção/migration falhar        | Data             | Banco não abre após upgrade              | WAL, transações, backup pré-migration e teste de restauração | 4, 11             |
 | R-06 | Credencial exposta                | Security         | Secret aparece em renderer/DB/log        | Cofre do SO, API restrita e testes de redaction              | 10, 12            |
-| R-07 | Update comprometido               | Desktop/Release  | Artefato sem assinatura/checksum         | Assinatura, checksum e workflow protegido                    | 11                |
+| R-07 | Update comprometido               | Desktop/Release  | Artefato ou metadado adulterado          | Checksums, metadados íntegros e workflow protegido           | 11                |
 | R-08 | LivePix indisponível              | Integrations     | Reconexões/falhas recorrentes            | Modo manual independente, adapter, backoff e fila            | 12                |
 | R-09 | Animação pesada                   | Frontend         | Frame p95 acima do alvo                  | Profiling, GPU, limite/virtualização e reduced motion        | 7                 |
 | R-10 | Arquitetura excessiva             | Tech lead        | Abstração sem segunda variação/fronteira | ADR e revisão contra YAGNI/SRP                               | todas             |
@@ -115,5 +115,5 @@ Essa ordem prova cedo a arquitetura ponta a ponta, entrega primeiro os módulos 
 | Comunicação        | HTTP loopback dinâmico, SSE, IPC nativo e token efêmero                 | 0005 |
 | Plataforma/limites | Windows x64, sem BYEs e limites iniciais definidos                      | 0006 |
 | Licença            | PolyForm Noncommercial 1.0.0, source-available                          | 0007 |
-| Releases           | stable/beta, GitHub Releases, NSIS, assinatura/checksum                 | 0008 |
+| Releases           | stable/beta, GitHub Releases, NSIS e checksum; sem assinatura inicial   | 0012 |
 | Auditoria          | Metadados públicos e hash do snapshot por rodada                        | 0009 |

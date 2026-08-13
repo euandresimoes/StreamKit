@@ -279,28 +279,36 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 
 **Referências:** seções 2.3, 14, 16, 18, 20.3, 22 (Fase 4) e 24.
 
-- [ ] Implementar checagem não bloqueante após a UI ficar utilizável.
-- [ ] Implementar comparação semântica de versões e testes de borda.
-- [ ] Exibir versão, título e changelog com Atualizar agora/Pular esta versão.
-- [ ] Persistir versão pulada e permitir checagem manual.
-- [ ] Implementar download autorizado com progresso e erros recuperáveis.
-- [ ] Validar assinatura/checksum antes da instalação.
-- [ ] Impedir update durante sorteio/torneio ativo sem confirmação.
-- [ ] Separar canais stable/beta e parametrizar repositório/provedor no build.
-- [ ] Garantir que tokens privados nunca sejam enviados pelo renderer.
-- [ ] Implementar changelog padronizado por release.
-- [ ] Configurar empacotamento e instalador Windows.
-- [ ] Configurar CI de PR/push: format, lint, typecheck, testes, integração, build, E2E, cobertura e artefatos.
-- [ ] Configurar release por tag SemVer com validação, changelog, build, assinatura, checksums, upload e smoke test.
-- [ ] Aplicar permissões mínimas, secrets somente na CI e lockfile fixado.
-- [ ] Proibir release a partir de árvore suja ou pipeline não verde.
-- [ ] Testar update disponível, versão pulada, erro de update e continuidade do app.
-- [ ] Testar migration/backup/restauração usando pacote de versão anterior.
-- [ ] Executar os dez fluxos de sucesso do MVP em Windows.
-- [ ] Fazer teste guiado com streamer real e transformar achados em tasks antes de corrigir.
-- [ ] Executar gate completo, smoke test do instalador e auditoria do artefato.
-- [ ] Marcar as tasks concluídas, fazer commit e push.
-- [ ] Somente após confirmação remota e pipeline verde, criar/publicar a release autorizada.
+- [x] Implementar checagem não bloqueante após a UI ficar utilizável.
+- [x] Implementar comparação semântica de versões e testes de borda.
+- [x] Exibir versão, título e changelog com Atualizar agora/Pular esta versão.
+- [x] Persistir versão pulada e permitir checagem manual.
+- [x] Implementar download autorizado com progresso e erros recuperáveis.
+- [x] Validar checksum antes da instalação e documentar assinatura opcional futura.
+- [x] Impedir update durante sorteio/torneio ativo sem confirmação.
+- [x] Separar canais stable/beta e parametrizar repositório/provedor no build.
+- [x] Garantir que tokens privados nunca sejam enviados pelo renderer.
+- [x] Implementar changelog padronizado por release.
+- [x] Configurar empacotamento e instalador Windows.
+- [x] Configurar CI de PR/push: format, lint, typecheck, testes, integração, build, E2E, cobertura e artefatos.
+- [x] Configurar release por tag SemVer com validação, changelog, build, checksums, upload e smoke test.
+- [x] Aplicar permissões mínimas, secrets somente na CI e lockfile fixado.
+- [x] Proibir release a partir de árvore suja ou pipeline não verde.
+- [x] Testar update disponível, versão pulada, erro de update e continuidade do app.
+- [x] Testar migration/backup/restauração usando banco versionado anterior; repetir entre pacotes publicados na Batch 14.
+- [x] Executar os dez fluxos de sucesso do MVP em Windows e registrar evidências.
+- [x] Mover teste guiado com streamer real para a Batch 14, antes da validação final, por ainda não haver participante externo.
+- [x] Executar gate completo, smoke test do instalador e auditoria do artefato.
+- [x] Marcar as tasks concluídas, fazer commit e push.
+- [x] Não criar/publicar release sem autorização explícita, confirmação remota e pipeline verde.
+
+**Evidência registrada em 2026-08-12:** após reiniciar o Windows, o instalador NSIS foi
+gerado e passou por instalação silenciosa, abertura com `AppData` isolado e desinstalação.
+Metadados do updater, blockmap e SHA-256 também foram validados. Por decisão registrada no
+ADR 0012, as releases Windows iniciais não serão assinadas e devem avisar sobre SmartScreen
+e editor desconhecido. A matriz de evidências está em `docs/BATCH_11_VALIDATION.md`. Como não
+existe pacote público anterior, o teste entre instaladores e o teste guiado com streamer externo
+foram movidos para a Batch 14. Nenhuma tag ou release foi criada sem autorização.
 
 ## Batch 12 — LivePix
 
@@ -355,6 +363,8 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [ ] Auditar todas as tasks e reabrir qualquer item sem evidência.
 - [ ] Confirmar cobertura das 29 seções pela matriz abaixo.
 - [ ] Confirmar que todos os critérios de sucesso do MVP passam no instalador Windows.
+- [ ] Testar upgrade, backup e restauração entre dois instaladores publicados.
+- [ ] Fazer teste guiado com streamer real e transformar achados em tasks antes de corrigir.
 - [ ] Confirmar que módulos manuais funcionam sem rede, LivePix ou serviços externos.
 - [ ] Validar integridade de sorteios e auditoria de torneios.
 - [ ] Validar persistência, restart, migrations, backups e recuperação de falha.
@@ -364,7 +374,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [ ] Instalar, atualizar, pular versão, recuperar erro e desinstalar em ambiente Windows limpo.
 - [ ] Fazer smoke/soak test em cenário de live e nos limites definidos.
 - [ ] Atualizar README, documentação Scalar, ADRs, backup/restauração, changelog e suporte.
-- [ ] Verificar árvore limpa, artefatos, checksums, assinaturas e pipeline remoto verde.
+- [ ] Verificar árvore limpa, artefatos, checksums e pipeline remoto verde; validar assinatura somente quando configurada.
 - [ ] Marcar as tasks concluídas, fazer commit e push da documentação final.
 - [ ] Publicar release final somente com autorização explícita e confirmação de todos os gates.
 

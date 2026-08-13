@@ -1,6 +1,6 @@
 # ADR 0008 — Canais, assinatura e auto update
 
-**Status:** aceita  
+**Status:** substituída pelo ADR 0012 quanto à assinatura
 **Data:** 2026-08-12  
 **Responsáveis:** André Simões  
 **Especificação:** seções 14, 18 e 25  

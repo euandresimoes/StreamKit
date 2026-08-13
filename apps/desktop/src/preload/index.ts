@@ -1,5 +1,10 @@
 import { exposeRenderizerBridge } from '@renderizer/vue/preload'
-import type { BackendConnection, UpdateAppSettingsRequest } from '@streamkit/contracts'
+import type {
+  BackendConnection,
+  UpdateAppSettingsRequest,
+  UpdateCommand,
+  UpdateState,
+} from '@streamkit/contracts'
 import { contextBridge, ipcRenderer } from 'electron'
 
 export type StreamKitBridge = {
@@ -8,6 +13,10 @@ export type StreamKitBridge = {
   applySettings: (settings: UpdateAppSettingsRequest) => Promise<void>
   openDevTools: () => Promise<void>
   openLogsDirectory: () => Promise<void>
+  updateCommand: (command: UpdateCommand) => Promise<UpdateState>
+  updateState: () => Promise<UpdateState | undefined>
+  setUpdateActivity: (active: boolean) => Promise<void>
+  onUpdateState: (listener: (state: UpdateState) => void) => () => void
 }
 
 const streamKitBridge: StreamKitBridge = {
@@ -16,6 +25,14 @@ const streamKitBridge: StreamKitBridge = {
   getPlatform: async () => ipcRenderer.invoke('streamkit:get-platform'),
   openDevTools: async () => ipcRenderer.invoke('streamkit:open-devtools'),
   openLogsDirectory: async () => ipcRenderer.invoke('streamkit:open-logs-directory'),
+  updateCommand: async (command) => ipcRenderer.invoke('streamkit:update-command', command),
+  updateState: async () => ipcRenderer.invoke('streamkit:update-state'),
+  setUpdateActivity: async (active) => ipcRenderer.invoke('streamkit:update-activity', active),
+  onUpdateState: (listener) => {
+    const handler = (_event: Electron.IpcRendererEvent, state: UpdateState) => listener(state)
+    ipcRenderer.on('streamkit:update-state', handler)
+    return () => ipcRenderer.removeListener('streamkit:update-state', handler)
+  },
 }
 
 contextBridge.exposeInMainWorld('streamkit', Object.freeze(streamKitBridge))
