@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { captureButtonLabel } from "@/modules/integration/capture-presentation";
 import { useParticipantCaptureRules } from "@/modules/integration/use-participant-capture-rules";
 
 export function ParticipantChatCapturePanel({
@@ -41,6 +42,9 @@ export function ParticipantChatCapturePanel({
   useEffect(() => {
     if (!connectionId && captures.connections[0]) setConnectionId(captures.connections[0].id);
   }, [captures.connections, connectionId]);
+  const isCapturing = captures.rules.some(
+    (rule) => rule.connectionId === connectionId && rule.status === "active",
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -156,7 +160,7 @@ export function ParticipantChatCapturePanel({
               })
             }
           >
-            <Radio /> Capturando ({participantCount} participantes)
+            <Radio /> {captureButtonLabel(isCapturing, participantCount)}
           </Button>
         </div>
       )}
