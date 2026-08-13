@@ -1,17 +1,28 @@
-import { resolve } from 'node:path'
-
-import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vite'
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import viteReact from "@vitejs/plugin-react";
+import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vite";
+import tsConfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  base: "./",
   resolve: {
     alias: {
-      '@streamkit/contracts': resolve(__dirname, '../../packages/contracts/src/index.ts'),
+      "@streamkit/contracts": fileURLToPath(
+        new URL("../../packages/contracts/src/index.ts", import.meta.url),
+      ),
     },
   },
-  build: {
-    emptyOutDir: true,
-    outDir: 'dist',
+  server: {
+    host: "127.0.0.1",
+    port: 5174,
+    strictPort: true,
   },
-  plugins: [vue()],
-})
+  plugins: [
+    tanstackRouter({ target: "react", autoCodeSplitting: true }),
+    viteReact(),
+    tailwindcss(),
+    tsConfigPaths(),
+  ],
+});

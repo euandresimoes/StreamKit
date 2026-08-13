@@ -33,6 +33,11 @@ export const CreateGiveawayRequestSchema = z.object({
   mode: GiveawayModeSchema,
   name: GiveawayNameSchema,
 })
+export const UpdateGiveawayRequestSchema = z.object({
+  mode: GiveawayModeSchema,
+  name: GiveawayNameSchema,
+})
+export const UpdateGiveawayModeRequestSchema = z.object({ mode: GiveawayModeSchema })
 export const GiveawaySchema = z.object({
   createdAt: z.iso.datetime(),
   duplicatePolicy: DuplicatePolicySchema,
@@ -83,6 +88,8 @@ export type DuplicatePolicy = z.infer<typeof DuplicatePolicySchema>
 export type ParsedParticipant = z.infer<typeof ParsedParticipantSchema>
 export type ParticipantPreview = z.infer<typeof ParticipantPreviewSchema>
 export type CreateGiveawayRequest = z.infer<typeof CreateGiveawayRequestSchema>
+export type UpdateGiveawayModeRequest = z.infer<typeof UpdateGiveawayModeRequestSchema>
+export type UpdateGiveawayRequest = z.infer<typeof UpdateGiveawayRequestSchema>
 export type Giveaway = z.infer<typeof GiveawaySchema>
 export type GiveawayParticipant = z.infer<typeof GiveawayParticipantSchema>
 export type GiveawayRound = z.infer<typeof GiveawayRoundSchema>

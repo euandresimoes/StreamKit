@@ -13,9 +13,15 @@ export class ListWorkspacesService {
   ) {}
 
   public async execute(): Promise<WorkspaceListResponse> {
+    const items = await this.workspaceRepository.list()
+    const persistedSelectedId = await this.workspaceRepository.selectedId()
+    const selectedId = items.some((workspace) => workspace.id === persistedSelectedId)
+      ? persistedSelectedId
+      : (items[0]?.id ?? null)
+    if (selectedId !== persistedSelectedId) await this.workspaceRepository.select(selectedId)
     return {
-      items: await this.workspaceRepository.list(),
-      selectedId: await this.workspaceRepository.selectedId(),
+      items,
+      selectedId,
     }
   }
 }

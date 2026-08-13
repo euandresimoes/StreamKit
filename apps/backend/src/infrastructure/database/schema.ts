@@ -4,6 +4,7 @@ export const todoWorkspaces = sqliteTable('todo_workspaces', {
   createdAt: text('created_at').notNull(),
   description: text('description'),
   id: text('id').primaryKey(),
+  icon: text('icon').notNull().default('📋'),
   name: text('name').notNull(),
   position: integer('position').notNull(),
   updatedAt: text('updated_at').notNull(),
@@ -82,7 +83,7 @@ export const tournamentEntries = sqliteTable('tournament_entries', {
 })
 export const tournamentTeams = sqliteTable('tournament_teams', {
   capacity: integer('capacity').notNull(),
-  color: text('color'),
+  color: text('color').notNull().default('#3B82F6'),
   createdAt: text('created_at').notNull(),
   id: text('id').primaryKey(),
   name: text('name').notNull(),

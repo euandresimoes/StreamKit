@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Post } f
 import {
   AddTournamentParticipantRequestSchema,
   AddTournamentTeamMemberRequestSchema,
+  AssignTournamentParticipantRequestSchema,
   CreateTournamentRequestSchema,
   CreateTournamentTeamRequestSchema,
   EntityIdSchema,
@@ -11,6 +12,7 @@ import {
   ReorderTournamentParticipantRequestSchema,
   ReorderTournamentTeamRequestSchema,
   SetTournamentWinnerRequestSchema,
+  UpdateTournamentRequestSchema,
 } from '@streamkit/contracts'
 import { TournamentService } from './tournament.service'
 
@@ -25,6 +27,12 @@ export class TournamentController {
   }
   @Get(':id') public detail(@Param('id') id: unknown) {
     return this.service.detail(EntityIdSchema.parse(id))
+  }
+  @Patch(':id') public update(@Param('id') id: unknown, @Body() body: unknown) {
+    return this.service.update(EntityIdSchema.parse(id), UpdateTournamentRequestSchema.parse(body))
+  }
+  @Delete(':id') @HttpCode(204) public delete(@Param('id') id: unknown): Promise<void> {
+    return this.service.delete(EntityIdSchema.parse(id))
   }
   @Post(':id/participants') public add(@Param('id') id: unknown, @Body() body: unknown) {
     return this.service.add(
@@ -50,6 +58,12 @@ export class TournamentController {
       input.capacity,
     )
   }
+  @Delete(':id/teams/:teamId') public removeTeam(
+    @Param('id') id: unknown,
+    @Param('teamId') teamId: unknown,
+  ) {
+    return this.service.removeTeam(EntityIdSchema.parse(id), EntityIdSchema.parse(teamId))
+  }
   @Post(':id/teams/:teamId/members') public addTeamMember(
     @Param('id') id: unknown,
     @Param('teamId') teamId: unknown,
@@ -60,6 +74,19 @@ export class TournamentController {
       EntityIdSchema.parse(id),
       EntityIdSchema.parse(teamId),
       input.displayName,
+      input.slotPosition,
+    )
+  }
+  @Post(':id/teams/:teamId/members/assign') public assignParticipant(
+    @Param('id') id: unknown,
+    @Param('teamId') teamId: unknown,
+    @Body() body: unknown,
+  ) {
+    const input = AssignTournamentParticipantRequestSchema.parse(body)
+    return this.service.assignParticipant(
+      EntityIdSchema.parse(id),
+      EntityIdSchema.parse(teamId),
+      input.participantId,
       input.slotPosition,
     )
   }
@@ -74,6 +101,15 @@ export class TournamentController {
       input.targetTeamId,
       input.targetSlotPosition,
     )
+  }
+  @Delete(':id/team-members/:memberId') public removeTeamMember(
+    @Param('id') id: unknown,
+    @Param('memberId') memberId: unknown,
+  ) {
+    return this.service.removeTeamMember(EntityIdSchema.parse(id), EntityIdSchema.parse(memberId))
+  }
+  @Post(':id/team-members/shuffle') public shuffleTeamMembers(@Param('id') id: unknown) {
+    return this.service.shuffleTeamMembers(EntityIdSchema.parse(id))
   }
   @Post(':id/teams/:teamId/reorder') public reorderTeam(
     @Param('id') id: unknown,

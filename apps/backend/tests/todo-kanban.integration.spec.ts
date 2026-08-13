@@ -113,6 +113,10 @@ describe('TODO Kanban persistence', () => {
     const workspace = WorkspaceSchema.parse(
       await (await request('/api/v1/todo/workspaces', 'POST', { name: 'Board' })).json(),
     )
+    const fallbackWorkspace = WorkspaceSchema.parse(
+      await (await request('/api/v1/todo/workspaces', 'POST', { name: 'Fallback' })).json(),
+    )
+    await request('/api/v1/todo/workspaces/select', 'POST', { workspaceId: workspace.id })
     const source = TodoColumnSchema.parse(
       await (
         await request(`/api/v1/todo/workspaces/${workspace.id}/columns`, 'POST', { name: 'A' })
@@ -139,6 +143,10 @@ describe('TODO Kanban persistence', () => {
     ).toBe(target.id)
     expect((await request(`/api/v1/todo/workspaces/${workspace.id}`, 'DELETE')).status).toBe(204)
     expect((await request(`/api/v1/todo/workspaces/${workspace.id}`)).status).toBe(404)
+    const afterDeletion = (await (await request('/api/v1/todo/workspaces')).json()) as {
+      selectedId: string | null
+    }
+    expect(afterDeletion.selectedId).toBe(fallbackWorkspace.id)
     await backend.close()
     backend = undefined
     await environment.cleanup()

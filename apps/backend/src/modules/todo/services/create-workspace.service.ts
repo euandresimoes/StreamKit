@@ -26,6 +26,7 @@ export class CreateWorkspaceService {
       randomUUID(),
       parsed.name,
       parsed.description ?? null,
+      parsed.icon,
       await this.workspaceRepository.nextPosition(),
       now,
       now,

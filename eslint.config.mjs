@@ -4,7 +4,15 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['**/coverage/**', '**/dist/**', '**/node_modules/**', '**/out/**', '.codex-tmp-*/**'],
+    ignores: [
+      '**/coverage/**',
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/.output/**',
+      '**/out/**',
+      '.codex-tmp-*/**',
+      'style-template/**',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

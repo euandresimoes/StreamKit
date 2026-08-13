@@ -12,6 +12,7 @@ import {
   GiveawayRoundSchema,
   GiveawaySchema,
   type ParsedParticipant,
+  type UpdateGiveawayRequest,
 } from '@streamkit/contracts'
 import { and, asc, desc, eq } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
@@ -61,18 +62,32 @@ export class GiveawayRepository {
     entries: ParsedParticipant[],
   ): Promise<GiveawayDetail | null> {
     const [giveaway] = await this.database.orm.select().from(giveaways).where(eq(giveaways.id, id))
-    if (!giveaway || giveaway.status !== 'draft') return null
+    if (!giveaway || !['draft', 'ready'].includes(giveaway.status)) return null
+    const persisted = await this.database.orm
+      .select()
+      .from(giveawayParticipants)
+      .where(eq(giveawayParticipants.giveawayId, id))
     this.database.transaction(() => {
-      this.database.orm
-        .delete(giveawayParticipants)
-        .where(eq(giveawayParticipants.giveawayId, id))
-        .run()
       const createdAt = new Date().toISOString()
-      if (entries.length)
+      const pending = new Map(entries.map((entry) => [entry.normalizedName, entry]))
+      for (const participant of persisted) {
+        const entry = pending.get(participant.normalizedName)
+        this.database.orm
+          .update(giveawayParticipants)
+          .set(
+            entry
+              ? { active: true, displayName: entry.displayName, ticketCount: entry.ticketCount }
+              : { active: false },
+          )
+          .where(eq(giveawayParticipants.id, participant.id))
+          .run()
+        if (entry) pending.delete(participant.normalizedName)
+      }
+      if (pending.size)
         this.database.orm
           .insert(giveawayParticipants)
           .values(
-            entries.map((entry) => ({
+            [...pending.values()].map((entry) => ({
               ...entry,
               active: true,
               createdAt,
@@ -96,6 +111,32 @@ export class GiveawayRepository {
     const updatedAt = new Date().toISOString()
     await this.database.orm.update(giveaways).set({ status, updatedAt }).where(eq(giveaways.id, id))
     return GiveawaySchema.parse({ ...current, status, updatedAt })
+  }
+  public async update(id: string, input: UpdateGiveawayRequest): Promise<Giveaway | null> {
+    const detail = await this.detail(id)
+    if (!detail || !['draft', 'ready'].includes(detail.giveaway.status)) return null
+    const updatedAt = new Date().toISOString()
+    await this.database.orm
+      .update(giveaways)
+      .set({ ...input, updatedAt })
+      .where(eq(giveaways.id, id))
+    return GiveawaySchema.parse({ ...detail.giveaway, ...input, updatedAt })
+  }
+  public async delete(id: string): Promise<boolean> {
+    return this.database.orm.delete(giveaways).where(eq(giveaways.id, id)).run().changes > 0
+  }
+  public async removeParticipant(id: string, participantId: string): Promise<boolean> {
+    const result = await this.database.orm
+      .update(giveawayParticipants)
+      .set({ active: false })
+      .where(
+        and(
+          eq(giveawayParticipants.id, participantId),
+          eq(giveawayParticipants.giveawayId, id),
+          eq(giveawayParticipants.active, true),
+        ),
+      )
+    return result.changes > 0
   }
   public async draw(id: string): Promise<GiveawayRound | null> {
     const detail = await this.detail(id)

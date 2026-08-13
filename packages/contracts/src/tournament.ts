@@ -47,6 +47,13 @@ export const CreateTournamentRequestSchema = z
 export const AddTournamentParticipantRequestSchema = z.object({
   displayName: TournamentParticipantNameSchema,
 })
+export const UpdateTournamentRequestSchema = z.object({
+  bracketSize: TournamentSizeSchema.optional(),
+  description: z.string().trim().max(1000).nullable(),
+  mode: z.enum(['individual', 'team']).optional(),
+  name: TournamentNameSchema,
+  teamCapacity: z.number().int().min(1).max(16).nullable().optional(),
+})
 export const RenameTournamentParticipantRequestSchema = AddTournamentParticipantRequestSchema
 export const ReorderTournamentParticipantRequestSchema = z.object({
   seed: z.number().int().positive(),
@@ -54,12 +61,20 @@ export const ReorderTournamentParticipantRequestSchema = z.object({
 export const SetTournamentWinnerRequestSchema = z.object({ winnerEntryId: z.uuid() })
 export const CreateTournamentTeamRequestSchema = z.object({
   capacity: z.number().int().min(1).max(16).optional(),
-  color: z.string().trim().max(40).nullable().default(null),
+  color: z
+    .string()
+    .trim()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .default('#3B82F6'),
   name: TournamentNameSchema,
 })
 export const RenameTournamentTeamRequestSchema = CreateTournamentTeamRequestSchema
 export const AddTournamentTeamMemberRequestSchema = z.object({
   displayName: TournamentParticipantNameSchema,
+  slotPosition: z.number().int().min(1).max(16),
+})
+export const AssignTournamentParticipantRequestSchema = z.object({
+  participantId: z.uuid(),
   slotPosition: z.number().int().min(1).max(16),
 })
 export const MoveTournamentTeamMemberRequestSchema = z.object({
@@ -97,7 +112,7 @@ export const TournamentTeamMemberSchema = z.object({
 })
 export const TournamentTeamSchema = z.object({
   capacity: z.number().int().min(1).max(16),
-  color: z.string().nullable(),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   createdAt: z.iso.datetime(),
   entryId: z.uuid(),
   id: z.uuid(),
@@ -137,6 +152,7 @@ export const TournamentDetailSchema = z.object({
 })
 export const TournamentListSchema = z.object({ items: z.array(TournamentSchema) })
 export type CreateTournamentRequest = z.infer<typeof CreateTournamentRequestSchema>
+export type UpdateTournamentRequest = z.infer<typeof UpdateTournamentRequestSchema>
 export type Tournament = z.infer<typeof TournamentSchema>
 export type TournamentDetail = z.infer<typeof TournamentDetailSchema>
 export type TournamentMatch = z.infer<typeof TournamentMatchSchema>

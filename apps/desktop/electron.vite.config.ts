@@ -1,6 +1,5 @@
 import { resolve } from 'node:path'
 
-import vue from '@vitejs/plugin-vue'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 
 const optionalNestModule = resolve(__dirname, 'src/main/optional-nest-module.ts')
@@ -51,20 +50,5 @@ export default defineConfig({
         '@streamkit/contracts': resolve(__dirname, '../../packages/contracts/src/index.ts'),
       },
     },
-  },
-  renderer: {
-    build: {
-      outDir: resolve(__dirname, 'out/renderer'),
-      rollupOptions: {
-        input: resolve(__dirname, '../frontend/index.html'),
-      },
-    },
-    plugins: [vue({})],
-    resolve: {
-      alias: {
-        '@streamkit/contracts': resolve(__dirname, '../../packages/contracts/src/index.ts'),
-      },
-    },
-    root: resolve(__dirname, '../frontend'),
   },
 })

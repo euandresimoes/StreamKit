@@ -3,6 +3,7 @@ import { z } from 'zod'
 export const EntityIdSchema = z.uuid()
 export const WorkspaceNameSchema = z.string().trim().min(1).max(120)
 export const WorkspaceDescriptionSchema = z.string().trim().max(500).nullable()
+export const WorkspaceIconSchema = z.string().trim().min(1).max(32).default('📋')
 export const TodoColumnNameSchema = z.string().trim().min(1).max(120)
 export const TodoColorSchema = z
   .string()
@@ -15,11 +16,13 @@ export const TodoCardNotesSchema = z.string().trim().max(5000).nullable()
 
 export const CreateWorkspaceRequestSchema = z.object({
   description: z.string().trim().max(500).optional(),
+  icon: WorkspaceIconSchema,
   name: WorkspaceNameSchema,
 })
 export const UpdateWorkspaceRequestSchema = z
   .object({
     description: WorkspaceDescriptionSchema.optional(),
+    icon: WorkspaceIconSchema.optional(),
     name: WorkspaceNameSchema.optional(),
   })
   .refine((value) => Object.keys(value).length > 0)
@@ -27,6 +30,7 @@ export const WorkspaceSchema = z.object({
   createdAt: z.iso.datetime(),
   description: WorkspaceDescriptionSchema,
   id: EntityIdSchema,
+  icon: WorkspaceIconSchema,
   name: WorkspaceNameSchema,
   position: z.number().int().nonnegative(),
   updatedAt: z.iso.datetime(),

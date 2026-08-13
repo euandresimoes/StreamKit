@@ -118,4 +118,16 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
         WHERE identity_key IS NOT NULL;
     `,
   },
+  {
+    destructive: false,
+    name: 'todo_workspace_icon',
+    version: 5,
+    sql: `ALTER TABLE todo_workspaces ADD COLUMN icon TEXT NOT NULL DEFAULT '📋';`,
+  },
+  {
+    destructive: false,
+    name: 'tournament_team_default_color',
+    version: 6,
+    sql: `UPDATE tournament_teams SET color = '#3B82F6' WHERE color IS NULL;`,
+  },
 ]

@@ -7,6 +7,8 @@ import { ApiApplicationError } from './api-error'
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
+  public constructor(private readonly exposeInternalErrors = false) {}
+
   public catch(exception: unknown, host: ArgumentsHost): void {
     const context = host.switchToHttp()
     const request = context.getRequest<FastifyRequest>()
@@ -68,12 +70,24 @@ export class ApiExceptionFilter implements ExceptionFilter {
       body: {
         error: {
           code: 'INTERNAL_ERROR',
-          details: null,
-          message: 'An unexpected error occurred',
+          details: this.exposeInternalErrors ? this.internalErrorDetails(exception) : null,
+          message:
+            this.exposeInternalErrors && exception instanceof Error
+              ? exception.message
+              : 'An unexpected error occurred',
           requestId,
         },
       },
       statusCode: 500,
+    }
+  }
+
+  private internalErrorDetails(exception: unknown): unknown {
+    if (!(exception instanceof Error)) return { thrown: String(exception) }
+    return {
+      cause: exception.cause instanceof Error ? exception.cause.message : exception.cause,
+      name: exception.name,
+      stack: exception.stack,
     }
   }
 }

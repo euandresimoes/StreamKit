@@ -239,7 +239,10 @@ describe('desktop E2E harness', () => {
       for (const name of ['A', 'B', 'C', 'D'])
         detail = TournamentDetailSchema.parse(
           await (
-            await call(`/api/v1/tournaments/${tournament.id}/teams`, 'POST', { color: null, name })
+            await call(`/api/v1/tournaments/${tournament.id}/teams`, 'POST', {
+              color: '#D97757',
+              name,
+            })
           ).json(),
         )
       const [first, second] = detail!.teams

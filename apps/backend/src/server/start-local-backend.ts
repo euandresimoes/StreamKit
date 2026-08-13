@@ -53,7 +53,7 @@ export async function startLocalBackend(
     },
   )
 
-  app.useGlobalFilters(new ApiExceptionFilter())
+  app.useGlobalFilters(new ApiExceptionFilter(process.env.NODE_ENV !== 'production'))
   app.useGlobalGuards(new LocalAuthGuard(options.authenticationToken))
   if (options.allowedOrigins?.length) {
     app.enableCors({

@@ -44,6 +44,10 @@ export class ManageTodoService {
   public async deleteWorkspace(id: string): Promise<void> {
     if (!(await this.repository.delete(id)))
       throw new ApiApplicationError('TODO_WORKSPACE_NOT_FOUND', 'Workspace not found', 404)
+    if ((await this.repository.selectedId()) === id) {
+      const remaining = await this.repository.list()
+      await this.repository.select(remaining[0]?.id ?? null)
+    }
   }
   public async selectWorkspace(id: string | null): Promise<void> {
     if (id && !(await this.repository.findBoard(id)))

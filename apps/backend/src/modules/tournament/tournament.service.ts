@@ -1,5 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common'
-import type { CreateTournamentRequest, TournamentDetail } from '@streamkit/contracts'
+import type {
+  CreateTournamentRequest,
+  TournamentDetail,
+  UpdateTournamentRequest,
+} from '@streamkit/contracts'
 import { ApiApplicationError } from '../../application/api-error'
 import { TournamentRepository } from './tournament.repository'
 
@@ -19,34 +23,57 @@ export class TournamentService {
       .detail(id)
       .then((value) => this.required(value, 'TOURNAMENT_NOT_FOUND', 'Tournament not found', 404))
   }
+  public update(id: string, input: UpdateTournamentRequest) {
+    return this.repository.update(id, input).then((value) => {
+      if (value === 'conflict')
+        throw new ApiApplicationError(
+          'TOURNAMENT_INVALID_STATE',
+          'Type and participant count can only change before adding entrants',
+          409,
+        )
+      return this.required(value, 'TOURNAMENT_NOT_FOUND', 'Tournament not found', 404)
+    })
+  }
+  public async delete(id: string): Promise<void> {
+    if (!(await this.repository.delete(id)))
+      throw new ApiApplicationError('TOURNAMENT_NOT_FOUND', 'Tournament not found', 404)
+  }
   public add(id: string, name: string) {
     return this.resolve(this.repository.addParticipant(id, name))
   }
-  public addTeam(id: string, name: string, color: string | null, capacity?: number) {
+  public addTeam(id: string, name: string, color: string, capacity?: number) {
     return this.resolve(
       this.repository.addTeam(id, name, color, capacity),
       undefined,
       'TOURNAMENT_TEAM_NOT_FOUND',
     )
   }
-  public updateTeam(
-    id: string,
-    teamId: string,
-    name: string,
-    color: string | null,
-    capacity?: number,
-  ) {
+  public updateTeam(id: string, teamId: string, name: string, color: string, capacity?: number) {
     return this.resolve(
       this.repository.updateTeam(id, teamId, name, color, capacity),
       teamId,
       'TOURNAMENT_TEAM_NOT_FOUND',
     )
   }
+  public removeTeam(id: string, teamId: string) {
+    return this.resolve(this.repository.removeTeam(id, teamId), teamId, 'TOURNAMENT_TEAM_NOT_FOUND')
+  }
   public addTeamMember(id: string, teamId: string, displayName: string, slotPosition: number) {
     return this.resolve(
       this.repository.addTeamMember(id, teamId, displayName, slotPosition),
       teamId,
       'TOURNAMENT_TEAM_NOT_FOUND',
+    )
+  }
+  public assignParticipant(
+    id: string,
+    teamId: string,
+    participantId: string,
+    slotPosition: number,
+  ) {
+    return this.resolve(
+      this.repository.assignParticipant(id, teamId, participantId, slotPosition),
+      participantId,
     )
   }
   public moveTeamMember(
@@ -60,6 +87,12 @@ export class TournamentService {
       memberId,
       'TOURNAMENT_TEAM_NOT_FOUND',
     )
+  }
+  public removeTeamMember(id: string, memberId: string) {
+    return this.resolve(this.repository.removeTeamMember(id, memberId), memberId)
+  }
+  public shuffleTeamMembers(id: string) {
+    return this.resolve(this.repository.shuffleTeamMembers(id))
   }
   public reorderTeam(id: string, teamId: string, seed: number) {
     return this.resolve(

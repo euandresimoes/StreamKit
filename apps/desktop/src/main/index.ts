@@ -88,12 +88,21 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
   const savedSettingsBounds = await settingsState.load()
 
   mainWindow = new BrowserWindow({
-    backgroundColor: '#0d0f13',
+    backgroundColor: '#1f1e1d',
     height: 820,
     minHeight: 640,
     minWidth: 960,
     show: false,
     title: STREAMKIT_APP_NAME,
+    titleBarOverlay:
+      process.platform === 'darwin'
+        ? true
+        : {
+            color: '#1f1e1d',
+            height: 40,
+            symbolColor: '#f1efeb',
+          },
+    titleBarStyle: 'hidden',
     webPreferences: createSecureWebPreferences(preloadPath),
     width: 1280,
   })

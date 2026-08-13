@@ -127,7 +127,10 @@ describe('Tournament API', () => {
     for (const name of ['Azul', 'Verde', 'Roxo', 'Laranja'])
       detail = TournamentDetailSchema.parse(
         await (
-          await call(`/api/v1/tournaments/${tournament.id}/teams`, 'POST', { color: null, name })
+          await call(`/api/v1/tournaments/${tournament.id}/teams`, 'POST', {
+            color: '#D97757',
+            name,
+          })
         ).json(),
       )
     const [blue, green, purple, orange] = detail.teams

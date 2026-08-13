@@ -50,12 +50,37 @@ describe('Giveaway API integrity', () => {
       input: 'Ana, ana\nBia',
       policy: 'group-tickets',
     })
+    await call(`/api/v1/giveaways/${giveaway.id}/participants/import`, 'POST', {
+      input: 'Caio',
+      policy: 'group-tickets',
+    })
+    const imported = GiveawayDetailSchema.parse(
+      await (await call(`/api/v1/giveaways/${giveaway.id}`)).json(),
+    )
+    expect(imported.participants.map((item) => item.displayName)).toEqual(['Ana', 'Bia', 'Caio'])
+    const participantToRemove = imported.participants.find((item) => item.displayName === 'Bia')!
+    expect(
+      (
+        await call(
+          `/api/v1/giveaways/${giveaway.id}/participants/${participantToRemove.id}`,
+          'DELETE',
+        )
+      ).status,
+    ).toBe(204)
+    expect(
+      GiveawayDetailSchema.parse(await (await call(`/api/v1/giveaways/${giveaway.id}`)).json())
+        .participants,
+    ).toHaveLength(2)
+    await call(`/api/v1/giveaways/${giveaway.id}/participants/import`, 'POST', {
+      input: 'Bia',
+      policy: 'group-tickets',
+    })
     await call(`/api/v1/giveaways/${giveaway.id}/prepare`, 'POST')
     const round = GiveawayRoundSchema.parse(
       await (await call(`/api/v1/giveaways/${giveaway.id}/draw`, 'POST')).json(),
     )
-    expect(round.ticketCount).toBe(3)
-    expect(round.entries).toHaveLength(2)
+    expect(round.ticketCount).toBe(4)
+    expect(round.entries).toHaveLength(3)
     expect(
       (
         await call(`/api/v1/giveaways/${giveaway.id}/participants/import`, 'POST', {
@@ -93,6 +118,19 @@ describe('Giveaway API integrity', () => {
     )
     expect(next.giveaway.status).toBe('ready')
     expect(next.participants.some((item) => item.id === completed.winnerParticipantId)).toBe(false)
+    expect(
+      GiveawayHistorySchema.parse(
+        await (await call(`/api/v1/giveaways/${giveaway.id}/history`)).json(),
+      ).items[0],
+    ).toEqual(completed)
+    const resavedResponse = await call(
+      `/api/v1/giveaways/${giveaway.id}/participants/import`,
+      'POST',
+      { input: 'Nova participante', policy: 'group-tickets' },
+    )
+    expect(resavedResponse.status).toBe(201)
+    const resaved = GiveawayDetailSchema.parse(await resavedResponse.json())
+    expect(resaved.participants.some((item) => item.displayName === 'Nova participante')).toBe(true)
     expect(
       GiveawayHistorySchema.parse(
         await (await call(`/api/v1/giveaways/${giveaway.id}/history`)).json(),

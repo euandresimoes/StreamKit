@@ -11,6 +11,7 @@ describe('WorkspaceNameSchema', () => {
 
   it('normalizes a create workspace request', () => {
     expect(CreateWorkspaceRequestSchema.parse({ name: '  Filmes  ' })).toEqual({
+      icon: '📋',
       name: 'Filmes',
     })
   })

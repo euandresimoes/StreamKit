@@ -6,8 +6,9 @@ import {
   TournamentDetailSchema,
   TournamentListSchema,
   TournamentSchema,
+  type UpdateTournamentRequest,
 } from '@streamkit/contracts'
-import { and, asc, desc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq, sql } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {
   tournamentAuditLog,
@@ -50,6 +51,136 @@ export class TournamentRepository {
         .from(tournaments)
         .orderBy(desc(tournaments.createdAt)),
     })
+  }
+  public async update(id: string, input: UpdateTournamentRequest) {
+    const [current] = await this.database.orm
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, id))
+    if (!current) return null
+    const changesStructure =
+      (input.mode !== undefined && input.mode !== current.mode) ||
+      (input.bracketSize !== undefined && input.bracketSize !== current.bracketSize)
+    if (changesStructure) {
+      const detail = await this.detail(id)
+      if (!detail || detail.matches.length) return 'conflict' as const
+      const entrantCount =
+        current.mode === 'team' ? detail.teams.length : detail.participants.length
+      if (input.bracketSize !== undefined && input.bracketSize < entrantCount)
+        return 'conflict' as const
+    }
+    const mode = input.mode ?? current.mode
+    const teamCapacity = mode === 'team' ? (input.teamCapacity ?? current.teamCapacity ?? 3) : null
+    const updatedAt = new Date().toISOString()
+    const next = { ...input, mode, teamCapacity, updatedAt }
+    this.database.transaction(() => {
+      if (input.mode !== undefined && input.mode !== current.mode)
+        this.adaptTournamentMode(id, current.mode, input.mode, teamCapacity ?? 3)
+      this.database.orm.update(tournaments).set(next).where(eq(tournaments.id, id)).run()
+      this.audit(id, 'tournament.structure.updated', {
+        bracketSize: input.bracketSize ?? current.bracketSize,
+        mode,
+      })
+    })
+    return TournamentSchema.parse({ ...current, ...next })
+  }
+  private adaptTournamentMode(
+    id: string,
+    from: string,
+    to: 'individual' | 'team',
+    teamCapacity: number,
+  ): void {
+    const now = new Date().toISOString()
+    if (from === 'individual' && to === 'team') {
+      const entrants = this.database.orm
+        .select({ name: tournamentParticipants.displayName, seed: tournamentEntries.seed })
+        .from(tournamentEntries)
+        .innerJoin(
+          tournamentParticipants,
+          eq(tournamentEntries.participantId, tournamentParticipants.id),
+        )
+        .where(eq(tournamentEntries.tournamentId, id))
+        .orderBy(asc(tournamentEntries.seed))
+        .all()
+      this.database.orm
+        .delete(tournamentEntries)
+        .where(eq(tournamentEntries.tournamentId, id))
+        .run()
+      this.database.orm
+        .delete(tournamentParticipants)
+        .where(eq(tournamentParticipants.tournamentId, id))
+        .run()
+      entrants.forEach((entrant) => {
+        const teamId = randomUUID()
+        this.database.orm
+          .insert(tournamentTeams)
+          .values({
+            capacity: teamCapacity,
+            color: '#3B82F6',
+            createdAt: now,
+            id: teamId,
+            name: entrant.name,
+            seed: entrant.seed,
+            tournamentId: id,
+            updatedAt: now,
+          })
+          .run()
+        this.database.orm
+          .insert(tournamentEntries)
+          .values({
+            createdAt: now,
+            id: randomUUID(),
+            participantId: null,
+            seed: entrant.seed,
+            teamId,
+            tournamentId: id,
+          })
+          .run()
+      })
+      return
+    }
+    const entrants = this.database.orm
+      .select({ name: tournamentTeams.name, seed: tournamentEntries.seed })
+      .from(tournamentEntries)
+      .innerJoin(tournamentTeams, eq(tournamentEntries.teamId, tournamentTeams.id))
+      .where(eq(tournamentEntries.tournamentId, id))
+      .orderBy(asc(tournamentEntries.seed))
+      .all()
+    this.database.orm.delete(tournamentEntries).where(eq(tournamentEntries.tournamentId, id)).run()
+    this.database.orm.delete(tournamentTeams).where(eq(tournamentTeams.tournamentId, id)).run()
+    this.database.orm
+      .delete(tournamentParticipants)
+      .where(eq(tournamentParticipants.tournamentId, id))
+      .run()
+    entrants.forEach((entrant) => {
+      const participantId = randomUUID()
+      this.database.orm
+        .insert(tournamentParticipants)
+        .values({
+          createdAt: now,
+          displayName: entrant.name,
+          externalRef: null,
+          id: participantId,
+          identityKey: normalizedPersonName(entrant.name),
+          source: 'manual',
+          tournamentId: id,
+        })
+        .run()
+      this.database.orm
+        .insert(tournamentEntries)
+        .values({
+          createdAt: now,
+          id: randomUUID(),
+          participantId,
+          seed: entrant.seed,
+          teamId: null,
+          tournamentId: id,
+        })
+        .run()
+    })
+  }
+  public async delete(id: string): Promise<boolean> {
+    return this.database.orm.delete(tournaments).where(eq(tournaments.id, id)).run().changes > 0
   }
   public async detail(id: string): Promise<TournamentDetail | null> {
     const [tournament] = await this.database.orm
@@ -145,7 +276,7 @@ export class TournamentRepository {
       tournament,
     })
   }
-  public async addTeam(id: string, name: string, color: string | null, capacity?: number) {
+  public async addTeam(id: string, name: string, color: string, capacity?: number) {
     const tournament = await this.mutableDraft(id)
     if (!tournament || tournament.mode !== 'team') return null
     const count = await this.database.orm.$count(
@@ -189,7 +320,7 @@ export class TournamentRepository {
     id: string,
     teamId: string,
     name: string,
-    color: string | null,
+    color: string,
     capacity?: number,
   ) {
     const tournament = await this.mutableDraft(id)
@@ -210,6 +341,21 @@ export class TournamentRepository {
       .set({ capacity: nextCapacity, color, name, updatedAt: new Date().toISOString() })
       .where(eq(tournamentTeams.id, teamId))
     this.audit(id, 'team.updated', { capacity: nextCapacity, teamId })
+    return this.detail(id)
+  }
+  public async removeTeam(id: string, teamId: string) {
+    if (!(await this.mutableDraft(id))) return null
+    const [team] = await this.database.orm
+      .select()
+      .from(tournamentTeams)
+      .where(and(eq(tournamentTeams.id, teamId), eq(tournamentTeams.tournamentId, id)))
+    if (!team) return 'missing' as const
+    this.database.transaction(() => {
+      this.database.orm.delete(tournamentEntries).where(eq(tournamentEntries.teamId, teamId)).run()
+      this.database.orm.delete(tournamentTeams).where(eq(tournamentTeams.id, teamId)).run()
+      this.reseed(id)
+      this.audit(id, 'team.removed', { teamId })
+    })
     return this.detail(id)
   }
   public async addTeamMember(
@@ -278,6 +424,50 @@ export class TournamentRepository {
     }
     return this.detail(id)
   }
+  public async assignParticipant(
+    id: string,
+    teamId: string,
+    participantId: string,
+    slotPosition: number,
+  ) {
+    const tournament = await this.mutableDraft(id)
+    if (!tournament || tournament.mode !== 'team') return null
+    const [team] = await this.database.orm
+      .select()
+      .from(tournamentTeams)
+      .where(and(eq(tournamentTeams.id, teamId), eq(tournamentTeams.tournamentId, id)))
+    const [participant] = await this.database.orm
+      .select()
+      .from(tournamentParticipants)
+      .where(
+        and(
+          eq(tournamentParticipants.id, participantId),
+          eq(tournamentParticipants.tournamentId, id),
+        ),
+      )
+    if (!team || !participant) return 'missing' as const
+    const occupied = (
+      await this.database.orm
+        .select()
+        .from(tournamentTeamMembers)
+        .where(eq(tournamentTeamMembers.teamId, teamId))
+    ).map((member) => member.slotPosition)
+    if (!canOccupySlot(team.capacity, slotPosition, occupied)) return 'conflict' as const
+    const assigned = await this.database.orm.$count(
+      tournamentTeamMembers,
+      eq(tournamentTeamMembers.participantId, participantId),
+    )
+    if (assigned) return 'conflict' as const
+    await this.database.orm.insert(tournamentTeamMembers).values({
+      createdAt: new Date().toISOString(),
+      id: randomUUID(),
+      participantId,
+      slotPosition,
+      teamId,
+    })
+    this.audit(id, 'team_member.assigned', { participantId, slotPosition, teamId })
+    return this.detail(id)
+  }
   public async moveTeamMember(
     id: string,
     memberId: string,
@@ -318,6 +508,68 @@ export class TournamentRepository {
     }
     return this.detail(id)
   }
+  public async removeTeamMember(id: string, memberId: string) {
+    if (!(await this.mutableDraft(id))) return null
+    const [member] = await this.database.orm
+      .select()
+      .from(tournamentTeamMembers)
+      .where(eq(tournamentTeamMembers.id, memberId))
+    if (!member) return 'missing' as const
+    this.database.transaction(() => {
+      this.database.orm
+        .delete(tournamentTeamMembers)
+        .where(eq(tournamentTeamMembers.id, memberId))
+        .run()
+      this.audit(id, 'team_member.unassigned', { memberId, participantId: member.participantId })
+    })
+    return this.detail(id)
+  }
+  public async shuffleTeamMembers(id: string) {
+    const tournament = await this.mutableDraft(id)
+    if (!tournament || tournament.mode !== 'team') return null
+    const teams = await this.database.orm
+      .select()
+      .from(tournamentTeams)
+      .where(eq(tournamentTeams.tournamentId, id))
+      .orderBy(asc(tournamentTeams.seed))
+    const participants = await this.database.orm
+      .select()
+      .from(tournamentParticipants)
+      .where(eq(tournamentParticipants.tournamentId, id))
+    if (!teams.length || participants.length > teams.reduce((sum, team) => sum + team.capacity, 0))
+      return 'conflict' as const
+    const shuffled = secureShuffle(participants)
+    this.database.transaction(() => {
+      this.database.orm
+        .delete(tournamentTeamMembers)
+        .where(
+          sql`${tournamentTeamMembers.teamId} IN (${sql.join(
+            teams.map((team) => sql`${team.id}`),
+            sql`, `,
+          )})`,
+        )
+        .run()
+      let memberIndex = 0
+      for (let slot = 1; memberIndex < shuffled.length; slot += 1) {
+        for (const team of teams) {
+          if (slot > team.capacity || memberIndex >= shuffled.length) continue
+          const participant = shuffled[memberIndex++]!
+          this.database.orm
+            .insert(tournamentTeamMembers)
+            .values({
+              createdAt: new Date().toISOString(),
+              id: randomUUID(),
+              participantId: participant.id,
+              slotPosition: slot,
+              teamId: team.id,
+            })
+            .run()
+        }
+      }
+      this.audit(id, 'team_members.shuffled', { memberCount: shuffled.length })
+    })
+    return this.detail(id)
+  }
   public async reorderTeam(id: string, teamId: string, seed: number) {
     const tournament = await this.mutableDraft(id)
     if (!tournament || tournament.mode !== 'team') return null
@@ -345,7 +597,30 @@ export class TournamentRepository {
   }
   public async addParticipant(id: string, displayName: string) {
     const tournament = await this.mutableDraft(id)
-    if (!tournament || tournament.mode !== 'individual') return null
+    if (!tournament) return null
+    if (tournament.mode === 'team') {
+      const duplicate = await this.database.orm.$count(
+        tournamentParticipants,
+        and(
+          eq(tournamentParticipants.tournamentId, id),
+          eq(tournamentParticipants.identityKey, normalizedPersonName(displayName)),
+        ),
+      )
+      if (duplicate) return 'duplicate' as const
+      const now = new Date().toISOString(),
+        participantId = randomUUID()
+      await this.database.orm.insert(tournamentParticipants).values({
+        createdAt: now,
+        displayName,
+        externalRef: null,
+        id: participantId,
+        identityKey: normalizedPersonName(displayName),
+        source: 'manual',
+        tournamentId: id,
+      })
+      this.audit(id, 'participant.queued', { participantId })
+      return this.detail(id)
+    }
     const count = await this.database.orm.$count(
       tournamentEntries,
       eq(tournamentEntries.tournamentId, id),
@@ -398,7 +673,25 @@ export class TournamentRepository {
     return this.detail(id)
   }
   public async removeParticipant(id: string, participantId: string) {
-    if (!(await this.mutableDraft(id))) return null
+    const tournament = await this.mutableDraft(id)
+    if (!tournament) return null
+    if (tournament.mode === 'team') {
+      const [participant] = await this.database.orm
+        .select()
+        .from(tournamentParticipants)
+        .where(
+          and(
+            eq(tournamentParticipants.id, participantId),
+            eq(tournamentParticipants.tournamentId, id),
+          ),
+        )
+      if (!participant) return 'missing' as const
+      await this.database.orm
+        .delete(tournamentParticipants)
+        .where(eq(tournamentParticipants.id, participantId))
+      this.audit(id, 'participant.removed', { participantId })
+      return this.detail(id)
+    }
     const entries = await this.database.orm
       .select()
       .from(tournamentEntries)

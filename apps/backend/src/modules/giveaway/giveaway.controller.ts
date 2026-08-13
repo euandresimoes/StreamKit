@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, Inject, Param, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Post } from '@nestjs/common'
 import {
   CreateGiveawayRequestSchema,
   EntityIdSchema,
   ImportParticipantsRequestSchema,
   NextGiveawayRoundRequestSchema,
   ParseParticipantsRequestSchema,
+  UpdateGiveawayRequestSchema,
 } from '@streamkit/contracts'
 import { GiveawayService } from './giveaway.service'
 
@@ -24,9 +25,24 @@ export class GiveawayController {
   @Get(':id') public detail(@Param('id') id: unknown) {
     return this.service.detail(EntityIdSchema.parse(id))
   }
+  @Patch(':id') public update(@Param('id') id: unknown, @Body() body: unknown) {
+    return this.service.update(EntityIdSchema.parse(id), UpdateGiveawayRequestSchema.parse(body))
+  }
+  @Delete(':id') @HttpCode(204) public delete(@Param('id') id: unknown): Promise<void> {
+    return this.service.delete(EntityIdSchema.parse(id))
+  }
   @Post(':id/participants/import') public import(@Param('id') id: unknown, @Body() body: unknown) {
     const input = ImportParticipantsRequestSchema.parse(body)
     return this.service.import(EntityIdSchema.parse(id), input.input, input.policy)
+  }
+  @Delete(':id/participants/:participantId') @HttpCode(204) public removeParticipant(
+    @Param('id') id: unknown,
+    @Param('participantId') participantId: unknown,
+  ): Promise<void> {
+    return this.service.removeParticipant(
+      EntityIdSchema.parse(id),
+      EntityIdSchema.parse(participantId),
+    )
   }
   @Post(':id/prepare') public prepare(@Param('id') id: unknown) {
     return this.service.prepare(EntityIdSchema.parse(id))

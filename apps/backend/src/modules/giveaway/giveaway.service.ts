@@ -7,6 +7,7 @@ import type {
   GiveawayHistory,
   GiveawayRound,
   ParticipantPreview,
+  UpdateGiveawayRequest,
 } from '@streamkit/contracts'
 import { ApiApplicationError } from '../../application/api-error'
 import { GiveawayRepository } from './giveaway.repository'
@@ -38,12 +39,30 @@ export class GiveawayService {
         'Import policy must match giveaway policy',
         409,
       )
-    const preview = this.parse(input, policy)
+    const existingInput = current.participants
+      .flatMap((participant) => Array(participant.ticketCount).fill(participant.displayName))
+      .join('\n')
+    const preview = this.parse([existingInput, input].filter(Boolean).join('\n'), policy)
     return this.repository
       .replaceParticipants(id, preview.entries)
       .then((value) =>
-        this.required(value, 'GIVEAWAY_INVALID_STATE', 'Participants can only change in draft'),
+        this.required(
+          value,
+          'GIVEAWAY_INVALID_STATE',
+          'Participants can only change before or between rounds',
+        ),
       )
+  }
+  public update(id: string, input: UpdateGiveawayRequest): Promise<Giveaway> {
+    return this.repository
+      .update(id, input)
+      .then((value) =>
+        this.required(value, 'GIVEAWAY_INVALID_STATE', 'Mode can only change before a draw'),
+      )
+  }
+  public async delete(id: string): Promise<void> {
+    if (!(await this.repository.delete(id)))
+      throw new ApiApplicationError('GIVEAWAY_NOT_FOUND', 'Giveaway not found', 404)
   }
   public async prepare(id: string): Promise<Giveaway> {
     const detail = await this.detail(id)
@@ -54,6 +73,17 @@ export class GiveawayService {
       'GIVEAWAY_INVALID_STATE',
       'Giveaway cannot be prepared',
     )
+  }
+  public async removeParticipant(id: string, participantId: string): Promise<void> {
+    const detail = await this.detail(id)
+    if (!['draft', 'ready'].includes(detail.giveaway.status))
+      throw new ApiApplicationError(
+        'GIVEAWAY_INVALID_STATE',
+        'Participants can only change before or between rounds',
+        409,
+      )
+    if (!(await this.repository.removeParticipant(id, participantId)))
+      throw new ApiApplicationError('GIVEAWAY_NOT_FOUND', 'Participant not found', 404)
   }
   public draw(id: string): Promise<GiveawayRound> {
     return this.repository

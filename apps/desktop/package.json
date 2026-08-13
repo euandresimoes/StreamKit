@@ -6,8 +6,8 @@
   "private": true,
   "main": "out/main/index.js",
   "scripts": {
-    "build": "electron-vite build && node scripts/assert-main-bundle.mjs",
-    "dev": "wait-on http-get://127.0.0.1:5173 && cross-env STREAMKIT_RENDERER_URL=http://127.0.0.1:5173 electron-vite dev",
+    "build": "pnpm --filter @streamkit/frontend build && electron-vite build && node scripts/copy-frontend.mjs && node scripts/assert-main-bundle.mjs",
+    "dev": "wait-on http-get://127.0.0.1:5174 && cross-env STREAMKIT_RENDERER_URL=http://127.0.0.1:5174 electron-vite dev",
     "native:electron": "cd node_modules/better-sqlite3 && prebuild-install --runtime electron --target 39.8.10 --arch x64 --force",
     "native:node": "pnpm rebuild better-sqlite3",
     "postdev": "pnpm native:node",
@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "@streamkit/test-utils": "workspace:*",
-    "@vitejs/plugin-vue": "6.0.5",
     "electron": "39.8.10",
     "electron-builder": "26.15.3",
     "electron-vite": "5.0.0",
