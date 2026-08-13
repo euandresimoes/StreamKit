@@ -37,6 +37,15 @@ Referências oficiais consultadas em 2026-08-13:
 
 ## Diagnóstico
 
+Em **Configurações > Diagnóstico**, use **Exportar diagnóstico** para gerar um JSON local com o
+estado sanitizado do aplicativo e as linhas recentes de log. O arquivo não inclui access tokens,
+refresh tokens nem cabeçalhos de autorização. Revise-o antes de compartilhar, pois nomes locais de
+recursos e códigos operacionais ainda podem ser relevantes para a privacidade do streamer.
+
+Depois de perda de rede ou suspensão do Windows, o StreamKit reinicia as conexões que estavam ativas.
+Se uma conexão continuar com erro, desconecte e autorize o provider novamente. TODO, sorteios e
+campeonatos manuais não dependem dos providers e permanecem disponíveis offline.
+
 - `INTEGRATION_AUTH_REVOKED`: reconecte o provider.
 - `YOUTUBE_QUOTA_OR_PERMISSION_ERROR`: verifique a quota, API habilitada e escopo autorizado.
 - `YOUTUBE_CHAT_ENDED`: selecione outra transmissão ativa.

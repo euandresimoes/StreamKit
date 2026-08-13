@@ -9,7 +9,7 @@ import {
   BackendConnectionSchema,
   type UpdateAppSettingsRequest,
 } from '@streamkit/contracts'
-import { app, BrowserWindow, Menu, nativeImage, session, shell, Tray } from 'electron'
+import { app, BrowserWindow, Menu, nativeImage, powerMonitor, session, shell, Tray } from 'electron'
 import { z } from 'zod'
 
 import { registerNativeIpcHandlers, removeNativeIpcHandlers } from './ipc'
@@ -194,6 +194,13 @@ async function bootstrap(): Promise<void> {
     },
   })
   const connection = BackendConnectionSchema.parse({ baseUrl: backend.baseUrl, token })
+
+  powerMonitor.on('resume', () => {
+    void fetch(`${connection.baseUrl}/api/v1/integrations/runtime/resume`, {
+      headers: { authorization: `Bearer ${connection.token}` },
+      method: 'POST',
+    }).catch(() => undefined)
+  })
 
   await createMainWindow(connection)
 }

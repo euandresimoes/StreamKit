@@ -18,6 +18,7 @@ export function useSettings(active: boolean) {
         settingsApi.credentialStatus(),
       ]);
       setSettings(nextSettings);
+      document.documentElement.dataset["reduceMotion"] = String(nextSettings["reduceMotion"]);
       setCredentialConfigured(credential.configured);
     } catch (cause) {
       setError(
@@ -46,6 +47,7 @@ export function useSettings(active: boolean) {
       const saved = await settingsApi.update(input);
       await getDesktopBridge().applySettings(input);
       setSettings(saved);
+      document.documentElement.dataset["reduceMotion"] = String(saved["reduceMotion"]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível salvar a configuração.");
     } finally {
@@ -79,5 +81,15 @@ export function useSettings(active: boolean) {
     },
     checkUpdates: () => getDesktopBridge().updateCommand({ action: "check", manual: true }),
     openLogsDirectory: () => getDesktopBridge().openLogsDirectory(),
+    exportDiagnostics: async () => {
+      const diagnostic = await settingsApi.diagnostics();
+      const blob = new Blob([JSON.stringify(diagnostic, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `streamkit-diagnostics-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    },
   };
 }

@@ -6,6 +6,7 @@ import { TodoTab } from "./TodoTab";
 import { GamesTab } from "./GamesTab";
 import { GiveawaysTab } from "./GiveawaysTab";
 import { SettingsDialog } from "./SettingsDialog";
+import { useSettings } from "@/modules/settings/use-settings";
 
 type Tab = "todo" | "games" | "giveaways";
 
@@ -16,6 +17,7 @@ const tabs: { id: Tab; label: string; icon: typeof ListTodo }[] = [
 ];
 
 export function AppShell() {
+  useSettings(true);
   const [tab, setTab] = useState<Tab>("todo");
   const [settings, setSettings] = useState(false);
 

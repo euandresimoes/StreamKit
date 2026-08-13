@@ -43,6 +43,15 @@ describe('SQLite infrastructure', () => {
     const database = await SqliteDatabase.open(environment.databasePath)
 
     expect(database.tableNames()).toEqual(expectedTables)
+    expect(database.indexNames()).toEqual(
+      expect.arrayContaining([
+        'chat_message_buffer_identity_index',
+        'chat_message_buffer_retention_index',
+        'giveaway_capture_rules_active_index',
+        'integration_events_identity_index',
+        'tournament_capture_rules_active_index',
+      ]),
+    )
     expect(database.pragma('foreign_keys')).toBe(1)
     expect(database.pragma('journal_mode')).toBe('wal')
     expect(database.pragma('busy_timeout')).toBe(5000)

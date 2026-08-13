@@ -484,15 +484,27 @@ providers suportados.
 
 **Referências:** seções 17, 18, 20, 24, 26 e ADR 0014.
 
-- [ ] Executar soak test de conexões simultâneas Twitch, YouTube e Kick com adapters controlados.
-- [ ] Validar restart, perda de rede, suspensão do Windows, refresh, revogação e encerramento de live.
-- [ ] Validar quotas, backpressure, retenção, índices SQLite e listas grandes.
-- [ ] Auditar cofre, OAuth/PKCE/state, callback loopback, CSP, logs e exportação de diagnóstico.
-- [ ] Validar acessibilidade, redução de movimento, vazio, loading e erros em todas as telas.
-- [ ] Confirmar que TODO e todos os fluxos manuais continuam funcionando totalmente offline.
-- [ ] Atualizar documentação do usuário, privacidade, diagnóstico e suporte por provider.
-- [ ] Executar gate completo e E2E no instalador Windows.
-- [ ] Marcar tasks comprovadas, fazer commit e push.
+- [x] Executar soak test de conexões simultâneas Twitch, YouTube e Kick com adapters controlados.
+- [x] Validar restart, perda de rede, suspensão do Windows, refresh, revogação e encerramento de live.
+- [x] Validar quotas, backpressure, retenção, índices SQLite e listas grandes.
+- [x] Auditar cofre, OAuth/PKCE/state, callback loopback, CSP, logs e exportação de diagnóstico.
+- [x] Validar acessibilidade, redução de movimento, vazio, loading e erros em todas as telas.
+- [x] Confirmar que TODO e todos os fluxos manuais continuam funcionando totalmente offline.
+- [x] Atualizar documentação do usuário, privacidade, diagnóstico e suporte por provider.
+- [x] Executar gate completo e E2E no instalador Windows.
+- [x] Marcar tasks comprovadas, fazer commit e push.
+
+**Concluída em 2026-08-13.** O soak controlado processou 750 mensagens simultâneas dos três
+providers, rejeitou 50 duplicatas e comprovou recuperação após perda de rede e retomada do Windows.
+Os testes cobrem refresh/revogação, live encerrada, quota, buffer limitado a 10.000 mensagens,
+retenção de 24 horas e índices SQLite. A auditoria confirmou cofre do sistema, OAuth desktop sem
+segredo embarcado, PKCE/`state`/callback loopback, CSP restritiva, redação de logs e diagnóstico
+sanitizado. Estados de loading/vazio/erro e redução de movimento foram revisados nas telas da feature.
+
+**Evidência de qualidade:** `pnpm validate` passou com format, lint, typecheck, builds, 2 testes de
+frontend, 39 unitários do backend, 33 integrações, 19 testes desktop e 8 E2E offline. O instalador
+Windows unsigned `StreamKit-0.0.0-x64-setup.exe` foi gerado e passou no smoke de integridade com
+SHA-256 `47c0dd961074b0e8b27c53a05549bc650b77af6539cd4891bb33348c564dee2d`.
 
 ## Batch 20 — LivePix
 

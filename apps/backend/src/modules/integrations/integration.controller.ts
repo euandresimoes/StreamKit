@@ -17,6 +17,10 @@ export class IntegrationController {
     @Inject(FocusedChatService) private readonly focusedChat: FocusedChatService,
   ) {}
 
+  @Post('runtime/resume') public resumeRuntime() {
+    return this.manager.resumeAfterWake()
+  }
+
   @Get('focused-chat/giveaways/:id') public giveawayChat(@Param('id') id: string) {
     return this.focusedChat.forGiveaway(id)
   }

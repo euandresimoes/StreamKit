@@ -47,6 +47,17 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
     }
   }
 
+  public async resumeAfterWake(): Promise<void> {
+    const connections = await this.repository.listConnections()
+    await Promise.all(
+      connections
+        .filter((connection) =>
+          ['connected', 'connecting', 'error', 'reconnecting'].includes(connection.status),
+        )
+        .map((connection) => this.start(connection.id)),
+    )
+  }
+
   public async start(id: string): Promise<void> {
     await this.stop(id, false)
     const connection = await this.repository.getConnection(id)

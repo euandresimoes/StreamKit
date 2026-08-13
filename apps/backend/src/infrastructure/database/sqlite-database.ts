@@ -55,6 +55,15 @@ export class SqliteDatabase {
       .map((row) => (row as { name: string }).name)
   }
 
+  public indexNames(): string[] {
+    return this.client
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+      )
+      .all()
+      .map((row) => (row as { name: string }).name)
+  }
+
   public schemaVersion(): number {
     const row = this.client
       .prepare('SELECT MAX(version) AS version FROM schema_migrations')

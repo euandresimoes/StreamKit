@@ -171,6 +171,9 @@ export function SettingsDialog({
                 </div>
                 <Separator className="my-4" />
                 <div className="flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => void persisted.exportDiagnostics()}>
+                    Exportar diagnóstico
+                  </Button>
                   <Button variant="ghost" onClick={() => void persisted.openLogsDirectory()}>
                     Abrir pasta de logs
                   </Button>

@@ -14,6 +14,7 @@ export function FocusedChatPanel({
   targetId: string;
 }) {
   const [thread, setThread] = useState<FocusedChatThread | null>(null);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -29,10 +30,12 @@ export function FocusedChatPanel({
         if (active) {
           setThread(value);
           setError(null);
+          setLoading(false);
         }
       } catch (cause) {
         if (active)
           setError(cause instanceof Error ? cause.message : "Não foi possível carregar o chat.");
+        if (active) setLoading(false);
       }
     };
     void load();
@@ -130,6 +133,9 @@ export function FocusedChatPanel({
       </div>
 
       <div role="log" aria-live="polite" className="min-h-32 flex-1 space-y-2 overflow-y-auto p-3">
+        {loading && (
+          <p className="py-8 text-center text-xs text-muted-foreground">Carregando mensagens…</p>
+        )}
         {thread?.messages.map((item) => (
           <div key={item.id} className="rounded-xl border border-border bg-card p-2.5">
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
@@ -140,7 +146,7 @@ export function FocusedChatPanel({
             <p className="mt-1 whitespace-pre-wrap break-words text-xs">{item.message}</p>
           </div>
         ))}
-        {thread && !thread.messages.length && (
+        {!loading && thread && !thread.messages.length && (
           <p className="py-8 text-center text-xs text-muted-foreground">
             Nenhuma mensagem recente deste participante.
           </p>
