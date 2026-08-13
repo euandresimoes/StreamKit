@@ -105,6 +105,7 @@ export const tournaments = sqliteTable('tournaments', {
   updatedAt: text('updated_at').notNull(),
 })
 export const tournamentParticipants = sqliteTable('tournament_participants', {
+  channelId: text('channel_id'),
   createdAt: text('created_at').notNull(),
   displayName: text('display_name').notNull(),
   externalRef: text('external_ref'),
@@ -215,6 +216,7 @@ export const giveaways = sqliteTable('giveaways', {
 })
 export const giveawayParticipants = sqliteTable('giveaway_participants', {
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
+  channelId: text('channel_id'),
   id: text('id').primaryKey(),
   giveawayId: text('giveaway_id')
     .notNull()
@@ -228,6 +230,24 @@ export const giveawayParticipants = sqliteTable('giveaway_participants', {
   externalRef: text('external_ref'),
   createdAt: text('created_at').notNull(),
 })
+export const chatMessageBuffer = sqliteTable(
+  'chat_message_buffer',
+  {
+    avatarUrl: text('avatar_url'),
+    badgesJson: text('badges_json').notNull(),
+    channelId: text('channel_id').notNull(),
+    displayName: text('display_name').notNull(),
+    externalEventId: text('external_event_id').notNull(),
+    handle: text('handle').notNull(),
+    id: text('id').primaryKey(),
+    message: text('message').notNull(),
+    occurredAt: text('occurred_at').notNull(),
+    provider: text('provider').notNull(),
+    providerUserId: text('provider_user_id').notNull(),
+    receivedAt: text('received_at').notNull(),
+  },
+  (table) => [unique().on(table.provider, table.externalEventId)],
+)
 export const giveawayCaptureRules = sqliteTable(
   'giveaway_capture_rules',
   {

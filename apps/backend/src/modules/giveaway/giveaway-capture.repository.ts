@@ -82,6 +82,7 @@ export class GiveawayCaptureRepository {
           .update(giveawayParticipants)
           .set({
             active: true,
+            channelId: event.channelId,
             displayName: event.author.displayName,
             normalizedName: normalizeCaptureText(event.author.handle),
             ticketCount:
@@ -94,6 +95,7 @@ export class GiveawayCaptureRepository {
           .insert(giveawayParticipants)
           .values({
             active: true,
+            channelId: event.channelId,
             createdAt: now,
             displayName: event.author.displayName,
             externalRef: `${event.provider}:${event.author.providerUserId}`,
@@ -114,7 +116,7 @@ export class GiveawayCaptureRepository {
         .run()
       this.database.orm
         .update(giveaways)
-        .set({ updatedAt: now })
+        .set({ status: 'ready', updatedAt: now })
         .where(eq(giveaways.id, rule.giveawayId))
         .run()
       return true

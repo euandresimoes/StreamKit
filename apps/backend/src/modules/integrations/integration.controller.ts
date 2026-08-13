@@ -7,13 +7,23 @@ import {
 
 import { IntegrationService } from './integration.service'
 import { IntegrationConnectionManager } from './integration-connection.manager'
+import { FocusedChatService } from './focused-chat.service'
 
 @Controller('api/v1/integrations')
 export class IntegrationController {
   public constructor(
     @Inject(IntegrationService) private readonly service: IntegrationService,
     @Inject(IntegrationConnectionManager) private readonly manager: IntegrationConnectionManager,
+    @Inject(FocusedChatService) private readonly focusedChat: FocusedChatService,
   ) {}
+
+  @Get('focused-chat/giveaways/:id') public giveawayChat(@Param('id') id: string) {
+    return this.focusedChat.forGiveaway(id)
+  }
+
+  @Get('focused-chat/tournaments/:id') public tournamentChat(@Param('id') id: string) {
+    return this.focusedChat.forTournament(id)
+  }
 
   @Put('connections/:id/start') public start(@Param('id') id: string) {
     return this.manager.start(id)

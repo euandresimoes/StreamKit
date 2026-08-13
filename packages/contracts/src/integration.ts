@@ -61,6 +61,28 @@ export const SaveIntegrationConnectionRequestSchema = z.object({
 export const SendChatMessageRequestSchema = z.object({
   message: z.string().trim().min(1).max(500),
 })
+export const FocusedChatMessageSchema = z.object({
+  avatarUrl: z.url().nullable(),
+  badges: z.array(z.string()),
+  channelId: z.string().min(1),
+  connectionId: z.uuid().nullable(),
+  displayName: z.string().min(1),
+  handle: z.string().min(1),
+  id: z.uuid(),
+  message: z.string().max(5_000),
+  occurredAt: z.iso.datetime(),
+  provider: IntegrationProviderSchema,
+  providerUserId: z.string().min(1),
+})
+export const FocusedChatIdentitySchema = ExternalUserIdentitySchema.extend({
+  channelId: z.string().min(1),
+})
+export const FocusedChatThreadSchema = z.object({
+  connections: z.array(IntegrationConnectionSchema),
+  identities: z.array(FocusedChatIdentitySchema),
+  messages: z.array(FocusedChatMessageSchema).max(200),
+  subject: z.string().min(1).max(200),
+})
 
 export const UpdateIntegrationConnectionStateRequestSchema = z.object({
   lastErrorCode: z.string().trim().min(1).max(100).nullable().optional(),
@@ -94,6 +116,8 @@ export type IntegrationCapability = z.infer<typeof IntegrationCapabilitySchema>
 export type IntegrationConnection = z.infer<typeof IntegrationConnectionSchema>
 export type IntegrationConnectionStatus = z.infer<typeof IntegrationConnectionStatusSchema>
 export type IntegrationProvider = z.infer<typeof IntegrationProviderSchema>
+export type FocusedChatMessage = z.infer<typeof FocusedChatMessageSchema>
+export type FocusedChatThread = z.infer<typeof FocusedChatThreadSchema>
 export type SaveIntegrationConnectionRequest = z.infer<
   typeof SaveIntegrationConnectionRequestSchema
 >

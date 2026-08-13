@@ -1,4 +1,5 @@
 import {
+  FocusedChatThreadSchema,
   IntegrationConnectionSchema,
   type SaveIntegrationConnectionRequest,
   TwitchAuthorizationStatusSchema,
@@ -9,6 +10,15 @@ import {
 import { apiClient } from "@/infrastructure/api-client";
 
 export const integrationApi = {
+  focusedChat: (target: "giveaways" | "tournaments", id: string) =>
+    apiClient.request(`/api/v1/integrations/focused-chat/${target}/${id}`, {
+      schema: FocusedChatThreadSchema,
+    }),
+  sendMessage: (connectionId: string, message: string) =>
+    apiClient.request(`/api/v1/integrations/connections/${connectionId}/messages`, {
+      body: { message },
+      method: "POST",
+    }),
   deleteConnection: (id: string) =>
     apiClient.request(`/api/v1/integrations/connections/${id}`, { method: "DELETE" }),
   startConnection: (id: string) =>

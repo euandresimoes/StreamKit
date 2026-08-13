@@ -410,16 +410,25 @@ restart e participante manual offline. O gate completo passou com 32 testes unit
 
 **Referências:** seções 6, 7, 8, 17, 21 e ADR 0014.
 
-- [ ] Persistir um buffer local limitado de mensagens normalizadas, com política de retenção explícita.
-- [ ] Indexar mensagens por `provider + channelId + providerUserId`.
-- [ ] Abrir painel flutuante ao confirmar vencedor de giveaway com mensagens somente do vencedor.
-- [ ] Abrir painel equivalente para os membros da equipe campeã.
-- [ ] Mostrar plataforma, avatar, handle, status, histórico recente e mensagens em tempo real.
-- [ ] Permitir resposta apenas quando `ChatWriter` estiver disponível e autorizado.
-- [ ] Implementar copiar handle, vazio, desconectado, revogado e erro de envio.
-- [ ] Tratar conteúdo externo como texto não confiável e limitar memória/banco/renderização.
-- [ ] Testar isolamento entre usuários/equipes, retenção, restart, XSS e acessibilidade.
-- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+- [x] Persistir um buffer local limitado de mensagens normalizadas, com política de retenção explícita.
+- [x] Indexar mensagens por `provider + channelId + providerUserId`.
+- [x] Abrir painel flutuante ao confirmar vencedor de giveaway com mensagens somente do vencedor.
+- [x] Abrir painel equivalente para os membros da equipe campeã.
+- [x] Mostrar plataforma, avatar, handle, status, histórico recente e mensagens em tempo real.
+- [x] Permitir resposta apenas quando `ChatWriter` estiver disponível e autorizado.
+- [x] Implementar copiar handle, vazio, desconectado, revogado e erro de envio.
+- [x] Tratar conteúdo externo como texto não confiável e limitar memória/banco/renderização.
+- [x] Testar isolamento entre usuários/equipes, retenção, restart, XSS e acessibilidade.
+- [x] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+**Evidência registrada em 2026-08-13:** a migração 10 criou um buffer SQLite indexado pela
+identidade estável, limitado globalmente a 10.000 mensagens e 24 horas, e associou canal às origens
+capturadas. O painel flutuante deriva o vencedor/campeão exclusivamente do resultado persistido,
+acompanha novas mensagens, exibe identidades e estado de escrita, copia handle e só permite resposta
+em conexão `connected` com `chat.write`. React renderiza mensagem/handle como texto. Integrações
+cobrem isolamento entre canal/usuário/equipe, vencedor de giveaway, equipe campeã, XSS, retenção,
+limite e restart; o teste frontend cobre landmarks e labels acessíveis. O gate completo passou com
+1 teste frontend, 32 unitários do backend, 32 integrações, 18 testes do desktop e 8 E2E.
 
 ## Batch 17 — YouTube Live Chat
 

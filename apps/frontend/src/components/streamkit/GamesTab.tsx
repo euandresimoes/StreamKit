@@ -34,6 +34,7 @@ import { CreateItemDialog } from "./CreateItemDialog";
 import { EntitySelect } from "./EntitySelect";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { ParticipantChatCapturePanel } from "./GiveawayChatCapturePanel";
+import { FocusedChatPanel } from "./FocusedChatPanel";
 
 function getParticipantInitials(displayName: string) {
   return Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
@@ -731,6 +732,9 @@ export function GamesTab() {
           )}
         </DialogContent>
       </Dialog>
+      {detail?.tournament.status === "finished" && detail.championEntryId && (
+        <FocusedChatPanel target="tournaments" targetId={detail.tournament.id} />
+      )}
     </div>
   );
 }

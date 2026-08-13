@@ -23,6 +23,7 @@ import { EntitySelect } from "./EntitySelect";
 import { GiveawayStage } from "./GiveawayStage";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { ParticipantChatCapturePanel } from "./GiveawayChatCapturePanel";
+import { FocusedChatPanel } from "./FocusedChatPanel";
 
 export function GiveawaysTab() {
   const giveaways = useGiveaways();
@@ -318,6 +319,9 @@ export function GiveawaysTab() {
           setRemovingParticipant(null);
         }}
       />
+      {detail?.giveaway.status === "completed" && detail.activeRound?.completedAt && (
+        <FocusedChatPanel target="giveaways" targetId={detail.giveaway.id} />
+      )}
     </div>
   );
 }

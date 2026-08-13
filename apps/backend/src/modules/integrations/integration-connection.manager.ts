@@ -5,6 +5,7 @@ import {
   type OnModuleDestroy,
 } from '@nestjs/common'
 
+import { ApiApplicationError } from '../../application/api-error'
 import type { ChatProviderSession } from './chat-provider.adapter'
 import { ChatProviderRegistry } from './chat-provider.registry'
 import { IntegrationRepository } from './integration.repository'
@@ -92,9 +93,25 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
 
   public async sendMessage(id: string, message: string): Promise<void> {
     const connection = await this.repository.getConnection(id)
-    if (!connection) throw new Error('INTEGRATION_CONNECTION_NOT_FOUND')
+    if (!connection)
+      throw new ApiApplicationError(
+        'INTEGRATION_CONNECTION_NOT_FOUND',
+        'Integration connection not found',
+        404,
+      )
+    if (connection.status !== 'connected')
+      throw new ApiApplicationError(
+        'INTEGRATION_CONNECTION_UNAVAILABLE',
+        'The chat connection is not currently available',
+        409,
+      )
     const adapter = this.registry.get(connection.provider)
-    if (!adapter?.sendMessage) throw new Error('INTEGRATION_CAPABILITY_UNAVAILABLE')
+    if (!connection.capabilities.includes('chat.write') || !adapter?.sendMessage)
+      throw new ApiApplicationError(
+        'INTEGRATION_CAPABILITY_UNAVAILABLE',
+        'This provider connection cannot send chat messages',
+        409,
+      )
     await adapter.sendMessage(connection.channelId, message)
   }
 

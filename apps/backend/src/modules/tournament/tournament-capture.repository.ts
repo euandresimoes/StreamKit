@@ -75,6 +75,7 @@ export class TournamentCaptureRepository {
       this.database.orm
         .insert(tournamentParticipants)
         .values({
+          channelId: event.channelId,
           createdAt: now,
           displayName: event.author.displayName,
           externalRef: `${event.provider}:${event.author.providerUserId}`,

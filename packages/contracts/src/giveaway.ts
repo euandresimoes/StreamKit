@@ -50,6 +50,7 @@ export const GiveawaySchema = z.object({
 })
 export const GiveawayParticipantSchema = z.object({
   createdAt: z.iso.datetime(),
+  channelId: z.string().nullable().default(null),
   displayName: ParticipantNameSchema,
   giveawayId: z.uuid(),
   id: z.uuid(),

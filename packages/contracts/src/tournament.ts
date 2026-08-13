@@ -102,6 +102,7 @@ export const TournamentSchema = z.object({
   updatedAt: z.iso.datetime(),
 })
 export const TournamentParticipantSchema = z.object({
+  channelId: z.string().nullable().default(null),
   createdAt: z.iso.datetime(),
   displayName: TournamentParticipantNameSchema,
   entryId: z.uuid().nullable(),

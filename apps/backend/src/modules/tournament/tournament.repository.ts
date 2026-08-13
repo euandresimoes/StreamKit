@@ -192,6 +192,7 @@ export class TournamentRepository {
       tournament.mode === 'individual'
         ? await this.database.orm
             .select({
+              channelId: tournamentParticipants.channelId,
               createdAt: tournamentParticipants.createdAt,
               displayName: tournamentParticipants.displayName,
               entryId: tournamentEntries.id,
@@ -216,6 +217,7 @@ export class TournamentRepository {
               .where(eq(tournamentParticipants.tournamentId, id))
               .orderBy(asc(tournamentParticipants.createdAt))
           ).map((row) => ({
+            channelId: row.channelId,
             createdAt: row.createdAt,
             displayName: row.displayName,
             entryId: null,

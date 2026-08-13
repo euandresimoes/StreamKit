@@ -232,4 +232,32 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
         WHERE provider IS NOT NULL AND provider_user_id IS NOT NULL;
     `,
   },
+  {
+    destructive: false,
+    name: 'focused_chat_buffer',
+    version: 10,
+    sql: `
+      ALTER TABLE giveaway_participants ADD COLUMN channel_id TEXT;
+      ALTER TABLE tournament_participants ADD COLUMN channel_id TEXT;
+      CREATE TABLE chat_message_buffer (
+        id TEXT PRIMARY KEY NOT NULL,
+        provider TEXT NOT NULL,
+        external_event_id TEXT NOT NULL,
+        channel_id TEXT NOT NULL,
+        provider_user_id TEXT NOT NULL,
+        handle TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        avatar_url TEXT,
+        badges_json TEXT NOT NULL,
+        message TEXT NOT NULL,
+        occurred_at TEXT NOT NULL,
+        received_at TEXT NOT NULL,
+        UNIQUE(provider, external_event_id)
+      );
+      CREATE INDEX chat_message_buffer_identity_index
+        ON chat_message_buffer(provider, channel_id, provider_user_id, occurred_at);
+      CREATE INDEX chat_message_buffer_retention_index
+        ON chat_message_buffer(received_at);
+    `,
+  },
 ]
