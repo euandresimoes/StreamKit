@@ -16,6 +16,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { captureButtonLabel } from "@/modules/integration/capture-presentation";
 import { useParticipantCaptureRules } from "@/modules/integration/use-participant-capture-rules";
+import { ChatSimulationPanel } from "./ChatSimulationPanel";
 
 export function ParticipantChatCapturePanel({
   target,
@@ -46,6 +47,9 @@ export function ParticipantChatCapturePanel({
     if (!connectionId && captures.connections[0]) setConnectionId(captures.connections[0].id);
   }, [captures.connections, connectionId]);
   const currentRule = captures.rules.find((rule) => rule.connectionId === connectionId);
+  const currentConnection = captures.connections.find(
+    (connection) => connection.id === connectionId,
+  );
   const isCapturing = currentRule?.status === "active";
 
   return (
@@ -176,6 +180,14 @@ export function ParticipantChatCapturePanel({
               temporarilyPaused && Boolean(currentRule),
             )}
           </Button>
+          {import.meta.env.DEV && currentConnection && (
+            <ChatSimulationPanel
+              channelId={currentConnection.channelId}
+              defaultMessage={match === "any" ? "mensagem simulada" : matchValue.trim()}
+              enabled={Boolean(isCapturing)}
+              provider={currentConnection.provider}
+            />
+          )}
         </div>
       )}
       {captures.error && <p className="mt-2 text-xs text-destructive">{captures.error}</p>}

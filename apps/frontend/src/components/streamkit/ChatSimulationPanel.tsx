@@ -14,13 +14,20 @@ import {
 import { integrationApi } from "@/modules/integration/integration-api";
 
 export function ChatSimulationPanel({
-  defaultChannelId = "debug-channel",
+  channelId,
+  defaultMessage,
+  enabled,
+  provider,
 }: {
-  defaultChannelId?: string;
+  channelId: string;
+  defaultMessage: string;
+  enabled: boolean;
+  provider: "kick" | "twitch" | "youtube";
 }) {
   const [status, setStatus] = useState<ChatSimulationStatus | null>(null);
   const [count, setCount] = useState<8 | 16 | 32 | 1000 | 10000>(32);
-  const [message, setMessage] = useState("!join");
+  const [message, setMessage] = useState(defaultMessage);
+  useEffect(() => setMessage(defaultMessage), [defaultMessage]);
   useEffect(() => {
     const timer = window.setInterval(
       () =>
@@ -69,15 +76,16 @@ export function ChatSimulationPanel({
           </Button>
         ) : (
           <Button
+            disabled={!enabled}
             onClick={() =>
               void integrationApi
                 .startSimulation({
-                  channelId: defaultChannelId,
+                  channelId,
                   count,
                   duplicateEvery: 0,
                   message,
                   mode: count >= 1000 ? "burst" : "instant",
-                  provider: "twitch",
+                  provider,
                 })
                 .then(setStatus)
             }
@@ -86,6 +94,11 @@ export function ChatSimulationPanel({
           </Button>
         )}
       </div>
+      {!enabled && (
+        <p className="mt-2 text-[10px] text-muted-foreground">
+          Inicie a captura acima antes de executar a simulação.
+        </p>
+      )}
       {status && (
         <p className="mt-2 text-[10px] text-muted-foreground">
           {status.receivedCount} recebidos · {status.processedCount} processados ·{" "}

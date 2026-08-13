@@ -37,7 +37,6 @@ import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { ParticipantChatCapturePanel } from "./GiveawayChatCapturePanel";
 import { FocusedChatPanel } from "./FocusedChatPanel";
 import { TournamentMatchChat } from "./TournamentMatchChat";
-import { ChatSimulationPanel } from "./ChatSimulationPanel";
 
 function getParticipantInitials(displayName: string) {
   return Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
@@ -921,7 +920,6 @@ export function GamesTab() {
                   await tournaments.reload(detail.tournament.id);
                 }}
               />
-              {import.meta.env.DEV && <ChatSimulationPanel />}
             </div>
           )}
         </DialogContent>
