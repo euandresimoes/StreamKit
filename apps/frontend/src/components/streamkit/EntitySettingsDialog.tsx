@@ -19,12 +19,14 @@ type Props = {
   description?: string | null;
   entityLabel: string;
   mode?: "wheel" | "case-opening";
+  maxParticipants?: number;
   name: string;
   onDelete(): Promise<void> | void;
   onOpenChange(open: boolean): void;
   onSave(input: {
     description: string | null;
     mode?: "wheel" | "case-opening";
+    maxParticipants?: number;
     name: string;
   }): Promise<unknown> | unknown;
   open: boolean;
@@ -34,22 +36,25 @@ export function EntitySettingsDialog(props: Props) {
   const [name, setName] = useState(props.name);
   const [description, setDescription] = useState(props.description ?? "");
   const [mode, setMode] = useState(props.mode);
+  const [maxParticipants, setMaxParticipants] = useState(props.maxParticipants ?? 10000);
   const [confirming, setConfirming] = useState(false);
   useEffect(() => {
     if (props.open) {
       setName(props.name);
       setDescription(props.description ?? "");
       setMode(props.mode);
+      setMaxParticipants(props.maxParticipants ?? 10000);
     }
-  }, [props.open, props.name, props.description, props.mode]);
+  }, [props.open, props.name, props.description, props.mode, props.maxParticipants]);
   const save = async () => {
     if (!name.trim()) return;
-    await props.onSave({
+    const result = await props.onSave({
       name: name.trim(),
       description: description.trim() || null,
       ...(mode ? { mode } : {}),
+      ...(props.maxParticipants !== undefined ? { maxParticipants } : {}),
     });
-    props.onOpenChange(false);
+    if (result !== undefined) props.onOpenChange(false);
   };
   return (
     <>
@@ -71,6 +76,18 @@ export function EntitySettingsDialog(props: Props) {
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Descrição"
               />
+            )}
+            {props.maxParticipants !== undefined && (
+              <label className="space-y-1.5 text-xs font-medium">
+                <span>Máximo de participantes</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10000}
+                  value={maxParticipants}
+                  onChange={(event) => setMaxParticipants(Number(event.target.value))}
+                />
+              </label>
             )}
             {mode && (
               <BaseSegmentedControl
@@ -94,7 +111,11 @@ export function EntitySettingsDialog(props: Props) {
               <Button variant="ghost" onClick={() => props.onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button loading={props.busy} disabled={!name.trim()} onClick={() => void save()}>
+              <Button
+                loading={props.busy}
+                disabled={!name.trim() || maxParticipants < 1 || maxParticipants > 10000}
+                onClick={() => void save()}
+              >
                 Salvar
               </Button>
             </div>

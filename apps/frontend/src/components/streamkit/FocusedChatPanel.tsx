@@ -167,8 +167,9 @@ export function FocusedChatPanel({
       </div>
 
       <footer className="border-t border-border p-3">
-        <div className="flex gap-2">
+        <div className="flex min-w-0 gap-2">
           <Input
+            className="min-w-0 flex-1"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
             onKeyDown={(event) => {
@@ -181,6 +182,7 @@ export function FocusedChatPanel({
           />
           <Button
             size="icon"
+            className="aspect-square shrink-0 rounded-full p-0"
             loading={sending}
             disabled={!writer || !message.trim()}
             aria-label="Enviar mensagem"

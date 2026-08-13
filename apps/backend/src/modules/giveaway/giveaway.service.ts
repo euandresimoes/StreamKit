@@ -44,6 +44,15 @@ export class GiveawayService {
       .flatMap((participant) => Array(participant.ticketCount).fill(participant.displayName))
       .join('\n')
     const preview = this.parse([existingInput, input].filter(Boolean).join('\n'), policy)
+    const chatParticipants = current.participants.filter(
+      (participant) => participant.source !== 'manual',
+    ).length
+    if (chatParticipants + preview.entries.length > current.giveaway.maxParticipants)
+      throw new ApiApplicationError(
+        'GIVEAWAY_PARTICIPANT_LIMIT',
+        `Giveaway supports at most ${current.giveaway.maxParticipants} participants`,
+        409,
+      )
     return this.repository
       .replaceParticipants(id, preview.entries)
       .then((value) =>
@@ -54,7 +63,14 @@ export class GiveawayService {
         ),
       )
   }
-  public update(id: string, input: UpdateGiveawayRequest): Promise<Giveaway> {
+  public async update(id: string, input: UpdateGiveawayRequest): Promise<Giveaway> {
+    const current = await this.detail(id)
+    if (input.maxParticipants !== undefined && input.maxParticipants < current.participants.length)
+      throw new ApiApplicationError(
+        'GIVEAWAY_PARTICIPANT_LIMIT',
+        `The limit cannot be lower than the current ${current.participants.length} participants`,
+        409,
+      )
     return this.repository
       .update(id, input)
       .then((value) =>

@@ -442,6 +442,10 @@ O usuário poderá escolher:
 
 A comparação padrão deve ignorar espaços externos e diferenças de caixa, mas preservar o nome original para exibição.
 
+Cada giveaway deve persistir um limite configurável entre 1 e 10.000 participantes. O mesmo limite
+deve ser aplicado atomicamente à importação manual e à captura por provider; a configuração não
+pode ser reduzida abaixo da quantidade atual de participantes ativos.
+
 ### 7.5 Modos de sorteio
 
 #### Roleta comum
@@ -772,12 +776,12 @@ Arquivos adicionais poderão existir para:
 
 #### Giveaways
 
-| Tabela                   | Campos principais                                                                                    |
-| ------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `giveaways`              | `id`, `name`, `mode`, `source`, `status`, `duplicate_policy`, `created_at`, `updated_at`             |
-| `giveaway_participants`  | `id`, `giveaway_id`, `display_name`, `normalized_name`, `ticket_count`, `external_ref`, `created_at` |
-| `giveaway_rounds`        | `id`, `giveaway_id`, `status`, `winner_participant_id`, `random_proof`, `started_at`, `completed_at` |
-| `giveaway_round_entries` | `id`, `round_id`, `participant_id`, `ticket_count`                                                   |
+| Tabela                   | Campos principais                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `giveaways`              | `id`, `name`, `mode`, `source`, `status`, `duplicate_policy`, `max_participants`, `created_at`, `updated_at` |
+| `giveaway_participants`  | `id`, `giveaway_id`, `display_name`, `normalized_name`, `ticket_count`, `external_ref`, `created_at`         |
+| `giveaway_rounds`        | `id`, `giveaway_id`, `status`, `winner_participant_id`, `random_proof`, `started_at`, `completed_at`         |
+| `giveaway_round_entries` | `id`, `round_id`, `participant_id`, `ticket_count`                                                           |
 
 #### Configurações e infraestrutura
 

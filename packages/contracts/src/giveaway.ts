@@ -12,6 +12,7 @@ export const GiveawayStatusSchema = z.enum([
 export const GiveawayModeSchema = z.enum(['wheel', 'case-opening'])
 export const DuplicatePolicySchema = z.enum(['remove', 'keep', 'group-tickets'])
 export const GiveawayNameSchema = z.string().trim().min(1).max(120)
+export const GiveawayMaxParticipantsSchema = z.number().int().min(1).max(10_000)
 export const ParticipantNameSchema = z.string().trim().min(1).max(200)
 export const ParseParticipantsRequestSchema = z.object({
   input: z.string().max(2_000_000),
@@ -31,10 +32,12 @@ export const ParticipantPreviewSchema = z.object({
 export const CreateGiveawayRequestSchema = z.object({
   duplicatePolicy: DuplicatePolicySchema,
   mode: GiveawayModeSchema,
+  maxParticipants: GiveawayMaxParticipantsSchema.optional(),
   name: GiveawayNameSchema,
 })
 export const UpdateGiveawayRequestSchema = z.object({
   mode: GiveawayModeSchema,
+  maxParticipants: GiveawayMaxParticipantsSchema.optional(),
   name: GiveawayNameSchema,
 })
 export const UpdateGiveawayModeRequestSchema = z.object({ mode: GiveawayModeSchema })
@@ -43,6 +46,7 @@ export const GiveawaySchema = z.object({
   duplicatePolicy: DuplicatePolicySchema,
   id: z.uuid(),
   mode: GiveawayModeSchema,
+  maxParticipants: GiveawayMaxParticipantsSchema,
   name: GiveawayNameSchema,
   source: ParticipantSourceSchema,
   status: GiveawayStatusSchema,

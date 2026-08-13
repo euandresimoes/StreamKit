@@ -208,6 +208,7 @@ export const giveaways = sqliteTable('giveaways', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   mode: text('mode').notNull(),
+  maxParticipants: integer('max_participants').notNull().default(10_000),
   source: text('source').notNull(),
   status: text('status').notNull(),
   duplicatePolicy: text('duplicate_policy').notNull(),

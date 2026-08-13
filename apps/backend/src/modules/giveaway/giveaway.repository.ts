@@ -17,6 +17,7 @@ import {
 import { and, asc, desc, eq } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {
+  giveawayCaptureRules,
   giveawayParticipants,
   giveawayRoundEntries,
   giveawayRounds,
@@ -32,6 +33,7 @@ export class GiveawayRepository {
     const now = new Date().toISOString()
     const row = {
       ...input,
+      maxParticipants: input.maxParticipants ?? 10_000,
       createdAt: now,
       id: randomUUID(),
       source: 'manual' as const,
@@ -187,6 +189,13 @@ export class GiveawayRepository {
         .update(giveaways)
         .set({ status: 'drawing', updatedAt: startedAt })
         .where(eq(giveaways.id, id))
+        .run()
+      this.database.orm
+        .update(giveawayCaptureRules)
+        .set({ status: 'paused', updatedAt: startedAt })
+        .where(
+          and(eq(giveawayCaptureRules.giveawayId, id), eq(giveawayCaptureRules.status, 'active')),
+        )
         .run()
     })
     return GiveawayRoundSchema.parse({

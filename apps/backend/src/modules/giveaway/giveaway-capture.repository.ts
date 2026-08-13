@@ -27,7 +27,7 @@ export class GiveawayCaptureRepository {
   public async capture(rule: GiveawayCaptureRule, event: ChatMessageReceived): Promise<boolean> {
     return this.database.transaction(() => {
       const giveaway = this.database.orm
-        .select({ status: giveaways.status })
+        .select({ maxParticipants: giveaways.maxParticipants, status: giveaways.status })
         .from(giveaways)
         .where(eq(giveaways.id, rule.giveawayId))
         .get()
@@ -67,7 +67,7 @@ export class GiveawayCaptureRepository {
         )
         .get()
       const exceedsLimit =
-        (!existing && (limits?.participants ?? 0) >= 10_000) ||
+        (!existing?.active && (limits?.participants ?? 0) >= giveaway.maxParticipants) ||
         (rule.entryPolicy === 'tickets' && (limits?.tickets ?? 0) >= 100_000)
       if (exceedsLimit) {
         this.database.orm

@@ -173,4 +173,65 @@ describe('Giveaway API integrity', () => {
     backend = undefined
     await environment.cleanup()
   })
+  it('persists and enforces the configured participant limit', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    backend = await startLocalBackend({
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+    const giveaway = GiveawaySchema.parse(
+      await (
+        await call('/api/v1/giveaways', 'POST', {
+          duplicatePolicy: 'remove',
+          maxParticipants: 2,
+          mode: 'wheel',
+          name: 'Limitado',
+        })
+      ).json(),
+    )
+    expect(giveaway.maxParticipants).toBe(2)
+    expect(
+      (
+        await call(`/api/v1/giveaways/${giveaway.id}/participants/import`, 'POST', {
+          input: 'Ana\nBia\nCaio',
+          policy: 'remove',
+        })
+      ).status,
+    ).toBe(409)
+    await call(`/api/v1/giveaways/${giveaway.id}/participants/import`, 'POST', {
+      input: 'Ana\nBia',
+      policy: 'remove',
+    })
+    expect(
+      (
+        await call(`/api/v1/giveaways/${giveaway.id}`, 'PATCH', {
+          maxParticipants: 1,
+          mode: 'wheel',
+          name: 'Limitado',
+        })
+      ).status,
+    ).toBe(409)
+    const updated = GiveawaySchema.parse(
+      await (
+        await call(`/api/v1/giveaways/${giveaway.id}`, 'PATCH', {
+          maxParticipants: 3,
+          mode: 'wheel',
+          name: 'Limitado',
+        })
+      ).json(),
+    )
+    expect(updated.maxParticipants).toBe(3)
+    await backend.close()
+    backend = await startLocalBackend({
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+    expect(
+      GiveawayDetailSchema.parse(await (await call(`/api/v1/giveaways/${giveaway.id}`)).json())
+        .giveaway.maxParticipants,
+    ).toBe(3)
+    await backend.close()
+    backend = undefined
+    await environment.cleanup()
+  })
 })

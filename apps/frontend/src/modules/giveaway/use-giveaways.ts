@@ -94,7 +94,11 @@ export function useGiveaways() {
       detail
         ? mutate(async () => {
             await continueCompletedRound(detail.giveaway.id);
-            return giveawayApi.update(detail.giveaway.id, { mode, name: detail.giveaway.name });
+            return giveawayApi.update(detail.giveaway.id, {
+              maxParticipants: detail.giveaway.maxParticipants,
+              mode,
+              name: detail.giveaway.name,
+            });
           })
         : undefined,
     draw: async () => {
@@ -109,8 +113,16 @@ export function useGiveaways() {
       detail ? mutate(() => giveawayApi.complete(detail.giveaway.id, roundId)) : undefined,
     nextRound: () =>
       detail ? mutate(() => giveawayApi.nextRound(detail.giveaway.id, true)) : undefined,
-    update: (name: string, mode: "wheel" | "case-opening") =>
-      detail ? mutate(() => giveawayApi.update(detail.giveaway.id, { name, mode })) : undefined,
+    update: (name: string, mode: "wheel" | "case-opening", maxParticipants?: number) =>
+      detail
+        ? mutate(() =>
+            giveawayApi.update(detail.giveaway.id, {
+              maxParticipants: maxParticipants ?? detail.giveaway.maxParticipants,
+              name,
+              mode,
+            }),
+          )
+        : undefined,
     delete: async () => {
       if (!detail) return;
       setBusy(true);

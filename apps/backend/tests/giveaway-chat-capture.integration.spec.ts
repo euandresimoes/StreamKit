@@ -82,6 +82,8 @@ describe('giveaway chat capture persistence', () => {
 
     const round = await giveaways.draw(giveaway.id)
     expect(round).not.toBeNull()
+    const pausedRule = (await captures.list(giveaway.id)).items[0]
+    expect(pausedRule?.status).toBe('paused')
     await integrationService.ingest({
       ...message,
       author: {
@@ -103,16 +105,28 @@ describe('giveaway chat capture persistence', () => {
       externalEventId: 'message-between-rounds',
     })
     expect(await giveaways.detail(giveaway.id)).toMatchObject({
-      giveaway: { status: 'ready' },
-      participants: [
-        expect.objectContaining({ providerUserId: 'stable-user-id' }),
-        expect.objectContaining({ providerUserId: 'between-rounds-user' }),
-      ],
+      giveaway: { status: 'completed' },
+      participants: [expect.objectContaining({ providerUserId: 'stable-user-id' })],
     })
 
     await captureService.save(giveaway.id, { ...input, entryPolicy: 'tickets' })
+    await integrationService.ingest({
+      ...message,
+      author: {
+        ...message.author,
+        displayName: 'Entre rodadas',
+        providerUserId: 'between-rounds-user',
+      },
+      externalEventId: 'message-after-restart',
+    })
     await integrationService.ingest({ ...message, externalEventId: 'message-3' })
-    expect((await giveaways.detail(giveaway.id))?.participants[0]?.ticketCount).toBe(2)
+    expect(await giveaways.detail(giveaway.id)).toMatchObject({
+      giveaway: { status: 'ready' },
+      participants: [
+        expect.objectContaining({ providerUserId: 'stable-user-id', ticketCount: 2 }),
+        expect.objectContaining({ providerUserId: 'between-rounds-user' }),
+      ],
+    })
     captureService.onModuleDestroy()
     database.close()
 

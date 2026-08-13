@@ -260,4 +260,10 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
         ON chat_message_buffer(received_at);
     `,
   },
+  {
+    destructive: false,
+    name: 'giveaway_participant_limit',
+    version: 11,
+    sql: `ALTER TABLE giveaways ADD COLUMN max_participants INTEGER NOT NULL DEFAULT 10000;`,
+  },
 ]

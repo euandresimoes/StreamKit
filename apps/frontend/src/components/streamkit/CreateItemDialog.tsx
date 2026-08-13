@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { BaseSegmentedControl } from "@/components/base/BaseSegmentedControl";
 
 type CreateItemDialogProps = {
   busy?: boolean;
+  children?: ReactNode;
   description: string;
   label: string;
   onOpenChange(open: boolean): void;
@@ -21,6 +23,7 @@ type CreateItemDialogProps = {
   options?: Array<{ label: string; value: string }>;
   open: boolean;
   placeholder: string;
+  submitDisabled?: boolean;
   title: string;
 };
 
@@ -54,6 +57,7 @@ export function CreateItemDialog(props: CreateItemDialogProps) {
             if (event.key === "Enter") void submit();
           }}
         />
+        {props.children}
         {props.options && option && (
           <BaseSegmentedControl
             ariaLabel={`${props.title}: tipo`}
@@ -69,7 +73,7 @@ export function CreateItemDialog(props: CreateItemDialogProps) {
           </Button>
           <Button
             loading={props.busy ?? false}
-            disabled={!value.trim()}
+            disabled={!value.trim() || props.submitDisabled}
             onClick={() => void submit()}
           >
             {props.label}

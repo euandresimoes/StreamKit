@@ -377,6 +377,9 @@ simulado da Batch 12 e não dependem do Client ID/teste real ainda aberto na Bat
 - [x] Implementar filtros por broadcaster, bot, moderador e membro quando a capacidade existir.
 - [x] Mostrar preview, total capturado, duplicatas ignoradas, conexão e erro recuperável.
 - [x] Preservar os capturados após desconexão, reinício ou exclusão da credencial.
+- [x] Permitir iniciar/parar manualmente, pausar a captura ao iniciar o sorteio e exigir retomada explícita.
+- [x] Persistir e aplicar o limite configurável de participantes nas fontes manual e chat.
+- [x] Limitar e filtrar visualmente a lista de participantes sem deslocar os controles de captura.
 - [x] Testar concorrência, duplicatas, troca de handle, limite, restart e modo manual offline.
 - [x] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
 
@@ -387,6 +390,11 @@ pausar, retomar e remover regras e acompanha participantes e contadores. Testes 
 modos de correspondência, filtros, troca de handle, duplicidade e restart; os limites transacionais e
 o fluxo manual offline são cobertos pelas proteções do repositório e pela suíte de regressão. O gate
 completo passou com 32 testes unitários do backend, 26 integrações, 18 testes do desktop e 8 E2E.
+
+**Evidência complementar em 2026-08-13:** o botão de captura alterna explicitamente entre ativo e
+pausado; iniciar um sorteio pausa as regras ativas na mesma transação e elas não reiniciam após o
+resultado. A migration 11 persiste `max_participants`, validado para importação, chat e alteração de
+configuração. A lista ganhou busca e rolagem interna, e o compositor do chat preserva o botão circular.
 
 ## Batch 15 — Fontes de participantes em Games
 

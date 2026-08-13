@@ -45,9 +45,8 @@ export function ParticipantChatCapturePanel({
   useEffect(() => {
     if (!connectionId && captures.connections[0]) setConnectionId(captures.connections[0].id);
   }, [captures.connections, connectionId]);
-  const isCapturing = captures.rules.some(
-    (rule) => rule.connectionId === connectionId && rule.status === "active",
-  );
+  const currentRule = captures.rules.find((rule) => rule.connectionId === connectionId);
+  const isCapturing = currentRule?.status === "active";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -150,8 +149,12 @@ export function ParticipantChatCapturePanel({
             className="w-full"
             size="sm"
             loading={captures.busy}
-            disabled={!connectionId || (match !== "any" && !matchValue.trim())}
-            onClick={() =>
+            disabled={temporarilyPaused || !connectionId || (match !== "any" && !matchValue.trim())}
+            onClick={() => {
+              if (isCapturing && currentRule) {
+                void captures.setStatus(currentRule.id, "paused");
+                return;
+              }
               void captures.save({
                 connectionId,
                 endsAt: toIso(endsAt),
@@ -163,10 +166,15 @@ export function ParticipantChatCapturePanel({
                 matchValue: match === "any" ? null : matchValue.trim(),
                 membersOnly,
                 startsAt: toIso(startsAt),
-              })
-            }
+              });
+            }}
           >
-            <Radio /> {captureButtonLabel(isCapturing, participantCount, temporarilyPaused)}
+            <Radio />{" "}
+            {captureButtonLabel(
+              isCapturing,
+              participantCount,
+              temporarilyPaused && Boolean(currentRule),
+            )}
           </Button>
         </div>
       )}

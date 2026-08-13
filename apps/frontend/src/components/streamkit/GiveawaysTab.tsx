@@ -7,6 +7,7 @@ import {
   Plus,
   Radio,
   RotateCw,
+  Search,
   Settings2,
   Trash2,
   Trophy,
@@ -15,6 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { BaseSegmentedControl } from "@/components/base/BaseSegmentedControl";
 import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
 import { useGiveaways } from "@/modules/giveaway/use-giveaways";
@@ -33,6 +35,8 @@ export function GiveawaysTab() {
   const [targetWinner, setTargetWinner] = useState<string | null>(null);
   const [drawPhase, setDrawPhase] = useState<"idle" | "drawing" | "revealed">("idle");
   const [creating, setCreating] = useState(false);
+  const [newMaxParticipants, setNewMaxParticipants] = useState(1000);
+  const [participantQuery, setParticipantQuery] = useState("");
   const [configuring, setConfiguring] = useState(false);
   const [participantSource, setParticipantSource] = useState<"chat" | "manual">("manual");
   const [removingParticipant, setRemovingParticipant] = useState<{
@@ -61,6 +65,7 @@ export function GiveawaysTab() {
       name,
       mode: "wheel",
       duplicatePolicy: "remove",
+      maxParticipants: newMaxParticipants,
     });
   };
 
@@ -92,6 +97,12 @@ export function GiveawaysTab() {
     setTargetWinner(null);
     setDrawPhase("idle");
   };
+  const filteredParticipants =
+    detail?.participants.filter((participant) =>
+      participant.displayName
+        .toLocaleLowerCase("pt-BR")
+        .includes(participantQuery.trim().toLocaleLowerCase("pt-BR")),
+    ) ?? [];
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-auto px-6 pb-6">
@@ -210,27 +221,47 @@ export function GiveawaysTab() {
                 onRefresh={giveaways.refresh}
               />
             )}
-            <div className="mt-4 space-y-1.5 overflow-y-auto">
-              {detail.participants.map((participant) => (
-                <div
-                  key={participant.id}
-                  className="flex items-center rounded-xl border border-border bg-card py-1.5 pl-3 pr-1.5 text-[13px]"
-                >
-                  <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
-                  <span className="text-muted-foreground">×{participant.ticketCount}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Remover ${participant.displayName}`}
-                    disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
-                    onClick={() =>
-                      setRemovingParticipant({ id: participant.id, name: participant.displayName })
-                    }
+            <div className="mt-4 min-h-0 rounded-2xl border border-border bg-card/45 p-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  className="h-8 pl-8 text-xs"
+                  value={participantQuery}
+                  onChange={(event) => setParticipantQuery(event.target.value)}
+                  placeholder="Buscar participante"
+                  aria-label="Buscar participante"
+                />
+              </div>
+              <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto pr-1">
+                {filteredParticipants.map((participant) => (
+                  <div
+                    key={participant.id}
+                    className="flex items-center rounded-xl border border-border bg-card py-1.5 pl-3 pr-1.5 text-[13px]"
                   >
-                    <Trash2 />
-                  </Button>
-                </div>
-              ))}
+                    <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
+                    <span className="text-muted-foreground">×{participant.ticketCount}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Remover ${participant.displayName}`}
+                      disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
+                      onClick={() =>
+                        setRemovingParticipant({
+                          id: participant.id,
+                          name: participant.displayName,
+                        })
+                      }
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                ))}
+                {!filteredParticipants.length && (
+                  <p className="px-2 py-5 text-center text-xs text-muted-foreground">
+                    {participantQuery ? "Nenhum participante encontrado." : "Nenhum participante."}
+                  </p>
+                )}
+              </div>
             </div>
           </aside>
 
@@ -296,8 +327,20 @@ export function GiveawaysTab() {
         placeholder="Ex.: Gift card de R$ 100"
         label="Criar sorteio"
         busy={giveaways.busy}
+        submitDisabled={newMaxParticipants < 1 || newMaxParticipants > 10000}
         onSubmit={createGiveaway}
-      />
+      >
+        <label className="space-y-1.5 text-xs font-medium">
+          <span>Máximo de participantes</span>
+          <Input
+            type="number"
+            min={1}
+            max={10000}
+            value={newMaxParticipants}
+            onChange={(event) => setNewMaxParticipants(Number(event.target.value))}
+          />
+        </label>
+      </CreateItemDialog>
       {detail && (
         <EntitySettingsDialog
           open={configuring}
@@ -305,7 +348,10 @@ export function GiveawaysTab() {
           busy={giveaways.busy}
           entityLabel="sorteio"
           name={detail.giveaway.name}
-          onSave={({ name }) => giveaways.update(name, detail.giveaway.mode)}
+          maxParticipants={detail.giveaway.maxParticipants}
+          onSave={({ name, maxParticipants }) =>
+            giveaways.update(name, detail.giveaway.mode, maxParticipants)
+          }
           onDelete={() => giveaways.delete()}
         />
       )}
