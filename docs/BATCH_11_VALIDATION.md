@@ -1,7 +1,9 @@
 # Evidências de validação da Batch 11
 
-**Data:** 2026-08-12  
-**Plataforma:** Windows 11 x64  
+**Data:** 2026-08-12
+
+**Plataforma:** Windows 11 x64
+
 **Artefato:** `StreamKit-0.0.0-x64-setup.exe`
 
 ## Instalador e integridade

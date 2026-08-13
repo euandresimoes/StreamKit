@@ -1,10 +1,15 @@
 # ADR 0012 — Releases Windows iniciais sem assinatura Authenticode
 
-**Status:** aceita  
-**Data:** 2026-08-12  
-**Responsáveis:** André Simões  
-**Especificação:** seções 14, 18, 24, 25 e 26  
-**Batches:** 11 e 14  
+**Status:** aceita
+
+**Data:** 2026-08-12
+
+**Responsáveis:** André Simões
+
+**Especificação:** seções 14, 18, 24, 25 e 26
+
+**Batches:** 11 e 14
+
 **Substitui:** ADR 0008 quanto à exigência de assinatura para releases públicas
 
 ## Contexto
