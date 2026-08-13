@@ -191,6 +191,7 @@ async function bootstrap(): Promise<void> {
     integrationConfig: {
       twitchClientId: process.env.STREAMKIT_TWITCH_CLIENT_ID?.trim() || null,
       youtubeClientId: process.env.STREAMKIT_YOUTUBE_CLIENT_ID?.trim() || null,
+      youtubeClientSecret: process.env.STREAMKIT_YOUTUBE_CLIENT_SECRET?.trim() || null,
     },
   })
   const connection = BackendConnectionSchema.parse({ baseUrl: backend.baseUrl, token })

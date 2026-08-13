@@ -49,6 +49,14 @@ describe('chat integration controlled soak', () => {
     expect(deliveries).toBe(750)
     expect(await database.orm.$count(integrationEvents)).toBe(750)
 
+    adapters.get('youtube')!.fail('provider response '.repeat(20))
+    await waitForStatus(repository, connections.get('youtube')!, 'reconnecting')
+    expect((await repository.getConnection(connections.get('youtube')!))?.lastErrorCode).toBe(
+      'INTEGRATION_CONNECTION_FAILED',
+    )
+    await jest.runOnlyPendingTimersAsync()
+    expect((await repository.getConnection(connections.get('youtube')!))?.status).toBe('connected')
+
     adapters.get('youtube')!.fail('NETWORK_LOST')
     await waitForStatus(repository, connections.get('youtube')!, 'reconnecting')
     expect((await repository.getConnection(connections.get('youtube')!))?.status).toBe(
@@ -63,6 +71,12 @@ describe('chat integration controlled soak', () => {
         [...connections.values()].map(async (id) => (await repository.getConnection(id))?.status),
       ),
     ).toEqual(['connected', 'connected', 'connected'])
+    adapters.get('youtube')!.fail('YOUTUBE_CHAT_ENDED')
+    await waitForStatus(repository, connections.get('youtube')!, 'disconnected')
+    await jest.runOnlyPendingTimersAsync()
+    expect((await repository.getConnection(connections.get('youtube')!))?.status).toBe(
+      'disconnected',
+    )
     await manager.onModuleDestroy()
     jest.useRealTimers()
     database.close()
@@ -73,7 +87,7 @@ describe('chat integration controlled soak', () => {
 async function waitForStatus(
   repository: IntegrationRepository,
   connectionId: string,
-  expected: 'reconnecting',
+  expected: 'disconnected' | 'reconnecting',
 ): Promise<void> {
   for (let attempt = 0; attempt < 20; attempt += 1) {
     if ((await repository.getConnection(connectionId))?.status === expected) return

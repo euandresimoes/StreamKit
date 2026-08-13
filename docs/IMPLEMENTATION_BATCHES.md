@@ -444,7 +444,7 @@ limite e restart; o teste frontend cobre landmarks e labels acessíveis. O gate 
 
 **Referências:** seções 8, 10, 17, 21 e ADR 0014.
 
-- [ ] **Dependência externa:** criar projeto Google, habilitar YouTube Data API e configurar Client ID desktop.
+- [x] **Dependência externa:** criar projeto Google, habilitar YouTube Data API e configurar Client ID desktop.
 - [x] Implementar OAuth de aplicativo instalado com PKCE, browser do sistema e callback loopback.
 - [x] Guardar refresh/access tokens somente no cofre e implementar revogação/desconexão.
 - [x] Descobrir/selecionar transmissão e `liveChatId` sem exigir IDs técnicos na UX comum.
@@ -463,8 +463,14 @@ oficial. Como o runtime não inclui transporte gRPC, o fallback `liveChatMessage
 documentado em `CHAT_INTEGRATIONS.md`, junto de quota/privacidade/suporte. Testes controlados cobrem
 PKCE completo, cofre, refresh, descoberta, normalização, leitura e escrita; as suítes compartilhadas
 cobrem fontes e chat focado. O gate passou com 1 teste frontend, 38 unitários do backend, 32
-integrações, 18 testes do desktop e 8 E2E. A batch permanece aberta somente para criar/configurar um
-Client ID Google e executar a autorização real controlada.
+integrações, 18 testes do desktop e 8 E2E. A validação externa ainda estava pendente nessa etapa.
+
+**Evidência real registrada em 2026-08-13:** o Client OAuth desktop foi configurado com PKCE e
+autenticação opcional do token endpoint; uma conta real autorizou o aplicativo, uma transmissão
+ativa foi descoberta e selecionada, e mensagens `!entrar` de participantes reais foram capturadas no
+Giveaway. A validação revelou e corrigiu filtros incompatíveis em `liveBroadcasts.list`, intervalos de
+polling abaixo de 1 segundo, timestamps com nanossegundos, eventos de sistema sem autor e recuperação
+de erros antigos. A Batch 17 está concluída.
 
 ## Batch 18 — Kick Chat
 

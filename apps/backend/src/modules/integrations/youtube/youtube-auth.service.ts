@@ -28,6 +28,10 @@ const TokenResponseSchema = z.object({
   refresh_token: z.string().min(1).optional(),
   scope: z.string().default(YOUTUBE_SCOPE),
 })
+const OAuthErrorResponseSchema = z.object({
+  error: z.string().min(1),
+  error_description: z.string().optional(),
+})
 const StoredTokenSchema = z.object({
   accessToken: z.string().min(1),
   expiresAt: z.iso.datetime(),
@@ -187,7 +191,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
     else {
       try {
         const response = await fetch('https://oauth2.googleapis.com/token', {
-          body: new URLSearchParams({
+          body: this.tokenRequest({
             client_id: this.requireClientId(),
             code,
             code_verifier: flow.codeVerifier,
@@ -197,7 +201,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
           headers: { 'content-type': 'application/x-www-form-urlencoded' },
           method: 'POST',
         })
-        if (!response.ok) throw new Error('YouTube rejected the authorization code')
+        if (!response.ok) throw new Error(await this.oauthError(response))
         const token = TokenResponseSchema.parse(await response.json())
         if (!token.refresh_token) throw new Error('YouTube did not return an offline refresh token')
         flow.token = StoredTokenSchema.parse({
@@ -231,7 +235,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
 
   private async refresh(stored: z.infer<typeof StoredTokenSchema>) {
     const response = await fetch('https://oauth2.googleapis.com/token', {
-      body: new URLSearchParams({
+      body: this.tokenRequest({
         client_id: this.requireClientId(),
         grant_type: 'refresh_token',
         refresh_token: stored.refreshToken,
@@ -263,5 +267,25 @@ export class YouTubeAuthService implements OnModuleDestroy {
         503,
       )
     return this.config.youtubeClientId
+  }
+
+  private tokenRequest(parameters: Record<string, string>): URLSearchParams {
+    return new URLSearchParams({
+      ...parameters,
+      ...(this.config.youtubeClientSecret
+        ? { client_secret: this.config.youtubeClientSecret }
+        : {}),
+    })
+  }
+
+  private async oauthError(response: Response): Promise<string> {
+    try {
+      const parsed = OAuthErrorResponseSchema.safeParse(await response.json())
+      if (parsed.success)
+        return `YouTube OAuth: ${parsed.data.error}${parsed.data.error_description ? ` · ${parsed.data.error_description}` : ''}`
+    } catch {
+      // The provider may return an empty or non-JSON response.
+    }
+    return `YouTube OAuth rejected the request (HTTP ${response.status})`
   }
 }

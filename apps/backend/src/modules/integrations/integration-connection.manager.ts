@@ -93,10 +93,12 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
       }
       active.session = session
       await this.service.updateState(id, 'connected')
-      void session.closed.then(
-        () => this.handleUnexpectedClose(id, null),
-        (cause: unknown) => this.handleUnexpectedClose(id, this.errorCode(cause)),
-      )
+      void session.closed
+        .then(
+          () => this.handleUnexpectedClose(id, null),
+          (cause: unknown) => this.handleUnexpectedClose(id, this.errorCode(cause)),
+        )
+        .catch(() => undefined)
     } catch (cause) {
       await this.handleUnexpectedClose(id, this.errorCode(cause))
     }
@@ -149,6 +151,11 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
       this.active.delete(id)
       return
     }
+    if (errorCode === 'YOUTUBE_CHAT_ENDED') {
+      await this.service.updateState(id, 'disconnected', errorCode)
+      this.active.delete(id)
+      return
+    }
     const connection = await this.service.updateState(id, 'reconnecting', errorCode)
     if (!connection) return
     const delay = Math.max(0, Date.parse(connection.nextRetryAt ?? '') - Date.now())
@@ -170,8 +177,14 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
   }
 
   private errorCode(cause: unknown): string {
-    if (cause && typeof cause === 'object' && 'code' in cause && typeof cause.code === 'string')
-      return cause.code
-    return cause instanceof Error ? cause.message : 'INTEGRATION_CONNECTION_FAILED'
+    const candidate =
+      cause && typeof cause === 'object' && 'code' in cause && typeof cause.code === 'string'
+        ? cause.code
+        : cause instanceof Error
+          ? cause.message
+          : null
+    return candidate && /^[A-Z][A-Z0-9_]{0,99}$/.test(candidate)
+      ? candidate
+      : 'INTEGRATION_CONNECTION_FAILED'
   }
 }

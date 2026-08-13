@@ -90,7 +90,7 @@ describe('Twitch integration', () => {
       )
     const integrations = { saveConnection: jest.fn().mockResolvedValue(undefined) }
     const service = new TwitchAuthService(
-      { twitchClientId: 'client-id', youtubeClientId: null },
+      { twitchClientId: 'client-id', youtubeClientId: null, youtubeClientSecret: null },
       credentials,
       integrations as never,
     )

@@ -2,6 +2,7 @@ import type { ChatMessageReceived } from '@streamkit/contracts'
 
 import { IntegrationEventBus } from '../src/modules/integrations/integration-event.bus'
 import { IntegrationRetryPolicy } from '../src/modules/integrations/integration-retry-policy'
+import { normalizeIntegrationErrorCode } from '../src/modules/integrations/integration.repository'
 
 const event: ChatMessageReceived = {
   author: {
@@ -45,5 +46,12 @@ describe('integration core', () => {
     expect(new IntegrationRetryPolicy(() => 0).delayMs(1)).toBe(800)
     expect(new IntegrationRetryPolicy(() => 1).delayMs(1)).toBe(1200)
     expect(new IntegrationRetryPolicy(() => 0.5).delayMs(99)).toBe(60_000)
+  })
+
+  it('recovers malformed provider messages stored as connection error codes', () => {
+    expect(normalizeIntegrationErrorCode('YOUTUBE_CHAT_ENDED')).toBe('YOUTUBE_CHAT_ENDED')
+    expect(normalizeIntegrationErrorCode('provider response '.repeat(20))).toBe(
+      'INTEGRATION_CONNECTION_FAILED',
+    )
   })
 })

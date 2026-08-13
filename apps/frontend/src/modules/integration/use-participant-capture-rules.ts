@@ -33,7 +33,13 @@ export function useParticipantCaptureRules(
         integrationApi.listConnections(),
       ]);
       setRules(nextRules.items);
-      setConnections(nextConnections.filter((item) => item.capabilities.includes("chat.read")));
+      setConnections(
+        nextConnections.filter(
+          (item) =>
+            ["connected", "connecting", "reconnecting"].includes(item.status) &&
+            item.capabilities.includes("chat.read"),
+        ),
+      );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível carregar a captura.");
     }

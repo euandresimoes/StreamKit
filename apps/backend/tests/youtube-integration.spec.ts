@@ -28,7 +28,7 @@ describe('YouTube integration', () => {
 
   it('creates a desktop PKCE authorization using an IPv4 loopback callback and no client secret', async () => {
     const service = new YouTubeAuthService(
-      { twitchClientId: null, youtubeClientId: 'youtube-client-id' },
+      { twitchClientId: null, youtubeClientId: 'youtube-client-id', youtubeClientSecret: null },
       new MemoryCredentials(),
       { updateProviderState: jest.fn() } as never,
     )
@@ -58,7 +58,7 @@ describe('YouTube integration', () => {
       ),
     )
     const service = new YouTubeAuthService(
-      { twitchClientId: null, youtubeClientId: 'youtube-client-id' },
+      { twitchClientId: null, youtubeClientId: 'youtube-client-id', youtubeClientSecret: null },
       credentials,
       { updateProviderState: jest.fn() } as never,
     )
@@ -81,6 +81,80 @@ describe('YouTube integration', () => {
     const tokenBody = fetchMock.mock.calls[0]?.[1]?.body as URLSearchParams
     expect(tokenBody.get('code_verifier')).toBeTruthy()
     expect(tokenBody.has('client_secret')).toBe(false)
+  })
+
+  it('authenticates the token exchange when a desktop client secret is configured', async () => {
+    const fetchMock = jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          access_token: 'private-access-token',
+          expires_in: 3600,
+          refresh_token: 'private-refresh-token',
+          scope: 'https://www.googleapis.com/auth/youtube.force-ssl',
+        }),
+        { status: 200 },
+      ),
+    )
+    const service = new YouTubeAuthService(
+      {
+        twitchClientId: null,
+        youtubeClientId: 'youtube-client-id',
+        youtubeClientSecret: 'private-desktop-client-secret',
+      },
+      new MemoryCredentials(),
+      { updateProviderState: jest.fn() } as never,
+    )
+    const flow = await service.begin()
+    const authorizationUrl = new URL(flow.authorizationUrl)
+    const callback = new URL(authorizationUrl.searchParams.get('redirect_uri')!)
+    callback.searchParams.set('code', 'private-authorization-code')
+    callback.searchParams.set('state', authorizationUrl.searchParams.get('state')!)
+    await new Promise<void>((resolve, reject) => {
+      get(callback, (response) => {
+        response.resume()
+        response.on('end', resolve)
+      }).on('error', reject)
+    })
+    expect(await service.poll(flow.flowId)).toMatchObject({ status: 'authorized' })
+    const tokenBody = fetchMock.mock.calls[0]?.[1]?.body as URLSearchParams
+    expect(tokenBody.get('client_secret')).toBe('private-desktop-client-secret')
+    expect(authorizationUrl.searchParams.has('client_secret')).toBe(false)
+  })
+
+  it('returns the safe provider error without exposing the authorization code', async () => {
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: 'invalid_client',
+          error_description: 'The OAuth client was not authenticated',
+        }),
+        { status: 401 },
+      ),
+    )
+    const service = new YouTubeAuthService(
+      { twitchClientId: null, youtubeClientId: 'youtube-client-id', youtubeClientSecret: null },
+      new MemoryCredentials(),
+      { updateProviderState: jest.fn() } as never,
+    )
+    const flow = await service.begin()
+    const authorizationUrl = new URL(flow.authorizationUrl)
+    const callback = new URL(authorizationUrl.searchParams.get('redirect_uri')!)
+    callback.searchParams.set('code', 'private-authorization-code')
+    callback.searchParams.set('state', authorizationUrl.searchParams.get('state')!)
+    const callbackBody = await new Promise<string>((resolve, reject) => {
+      get(callback, (response) => {
+        let body = ''
+        response.setEncoding('utf8')
+        response.on('data', (chunk: string) => (body += chunk))
+        response.on('end', () => resolve(body))
+      }).on('error', reject)
+    })
+    expect(callbackBody).toContain('invalid_client')
+    expect(callbackBody).not.toContain('private-authorization-code')
+    expect(await service.poll(flow.flowId)).toMatchObject({
+      error: expect.stringContaining('invalid_client'),
+      status: 'failed',
+    })
   })
 
   it('normalizes stable channel identity, member and moderator roles', () => {
@@ -109,6 +183,91 @@ describe('YouTube integration', () => {
     })
   })
 
+  it('ignores YouTube system events that have no capturable author', () => {
+    expect(
+      normalizeYouTubeChatMessage('live-chat-id', {
+        authorDetails: undefined,
+        id: 'system-event-id',
+        snippet: { type: 'messageDeletedEvent' },
+      }),
+    ).toBeNull()
+  })
+
+  it('maps a closed live chat to a stable terminal error code', async () => {
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            code: 403,
+            errors: [{ reason: 'liveChatEnded' }],
+            message: 'The live chat is no longer live.',
+          },
+        }),
+        { status: 403 },
+      ),
+    )
+    const adapter = new YouTubeChatAdapter(
+      { getAccessToken: jest.fn().mockResolvedValue({ accessToken: 'token' }) } as never,
+      { register: jest.fn(() => jest.fn()) } as never,
+    )
+    const session = await adapter.connect({
+      channelId: 'ended-live-chat-id',
+      cursor: null,
+      onCursor: jest.fn(),
+      onEvent: jest.fn(),
+      signal: new AbortController().signal,
+    })
+    await expect(session.closed).rejects.toThrow('YOUTUBE_CHAT_ENDED')
+  })
+
+  it('accepts the provider polling interval and high precision timestamp', async () => {
+    const fetchMock = jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          items: [
+            {
+              authorDetails: {
+                channelId: 'author-id',
+                displayName: '@viewer',
+                isChatModerator: false,
+                isChatOwner: false,
+                isChatSponsor: false,
+                profileImageUrl: null,
+              },
+              id: 'message-id',
+              snippet: {
+                displayMessage: '!entrar',
+                publishedAt: '2026-08-13T22:09:51.123456789Z',
+                type: 'textMessageEvent',
+              },
+            },
+          ],
+          nextPageToken: 'next-page',
+          pollingIntervalMillis: 0,
+        }),
+        { status: 200 },
+      ),
+    )
+    const adapter = new YouTubeChatAdapter(
+      { getAccessToken: jest.fn().mockResolvedValue({ accessToken: 'token' }) } as never,
+      { register: jest.fn(() => jest.fn()) } as never,
+    )
+    const abort = new AbortController()
+    const onEvent = jest.fn(async () => abort.abort())
+    const session = await adapter.connect({
+      channelId: 'live-chat-id',
+      cursor: null,
+      onCursor: jest.fn(),
+      onEvent,
+      signal: abort.signal,
+    })
+    await session.closed
+    expect(onEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ message: '!entrar', occurredAt: '2026-08-13T22:09:51.123Z' }),
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it('discovers active broadcasts and stores the selected live chat without technical input', async () => {
     jest.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
@@ -135,6 +294,9 @@ describe('YouTube integration', () => {
     )
 
     const broadcasts = await service.list()
+    const requestUrl = new URL(String((globalThis.fetch as jest.Mock).mock.calls[0]?.[0]))
+    expect(requestUrl.searchParams.get('broadcastStatus')).toBe('active')
+    expect(requestUrl.searchParams.has('mine')).toBe(false)
     expect(broadcasts).toEqual([
       expect.objectContaining({ liveChatId: 'live-chat-id', title: 'Live agora' }),
     ])
@@ -166,7 +328,7 @@ describe('YouTube integration', () => {
       ),
     )
     const service = new YouTubeAuthService(
-      { twitchClientId: null, youtubeClientId: 'youtube-client-id' },
+      { twitchClientId: null, youtubeClientId: 'youtube-client-id', youtubeClientSecret: null },
       credentials,
       { updateProviderState: jest.fn() } as never,
     )

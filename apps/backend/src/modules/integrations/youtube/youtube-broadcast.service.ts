@@ -7,7 +7,10 @@ import type { z } from 'zod'
 
 import { ApiApplicationError } from '../../../application/api-error'
 import { IntegrationRepository } from '../integration.repository'
-import { YouTubeBroadcastListResponseSchema } from './youtube-api.schemas'
+import {
+  YouTubeApiErrorResponseSchema,
+  YouTubeBroadcastListResponseSchema,
+} from './youtube-api.schemas'
 import { YouTubeAuthService } from './youtube-auth.service'
 
 @Injectable()
@@ -24,13 +27,12 @@ export class YouTubeBroadcastService {
       broadcastStatus: 'active',
       broadcastType: 'all',
       maxResults: '25',
-      mine: 'true',
       part: 'id,snippet',
     }).toString()
     const response = await fetch(url, {
       headers: { authorization: `Bearer ${token.accessToken}` },
     })
-    if (!response.ok) throw this.apiError(response.status)
+    if (!response.ok) throw await this.apiError(response)
     const payload = YouTubeBroadcastListResponseSchema.parse(await response.json())
     return payload.items.flatMap((item) =>
       item.snippet.liveChatId
@@ -56,22 +58,33 @@ export class YouTubeBroadcastService {
     })
   }
 
-  private apiError(status: number): ApiApplicationError {
+  private async apiError(response: Response): Promise<ApiApplicationError> {
+    const status = response.status
+    let providerReason: string | null = null
+    try {
+      const parsed = YouTubeApiErrorResponseSchema.safeParse(await response.json())
+      if (parsed.success) {
+        const reason = parsed.data.error.errors[0]?.reason
+        providerReason = [reason, parsed.data.error.message].filter(Boolean).join(' · ')
+      }
+    } catch {
+      // The provider may return an empty or non-JSON response.
+    }
     if (status === 401)
       return new ApiApplicationError(
         'INTEGRATION_AUTH_REVOKED',
-        'YouTube authorization expired',
+        providerReason ?? 'YouTube authorization expired',
         401,
       )
     if (status === 403)
       return new ApiApplicationError(
         'INTEGRATION_PROVIDER_ERROR',
-        'YouTube quota or API access does not allow listing live broadcasts',
+        providerReason ?? 'YouTube quota or API access does not allow listing live broadcasts',
         503,
       )
     return new ApiApplicationError(
       'INTEGRATION_PROVIDER_ERROR',
-      'Could not list active YouTube broadcasts',
+      providerReason ?? 'Could not list active YouTube broadcasts',
       503,
     )
   }

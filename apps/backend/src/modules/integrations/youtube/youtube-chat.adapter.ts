@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common'
 
 import type { ChatMessageReceived } from '@streamkit/contracts'
+import type { z } from 'zod'
 
+import {
+  SilentStreamKitLogger,
+  STREAMKIT_LOGGER,
+  type StreamKitLogger,
+} from '../../../infrastructure/logging/streamkit-logger'
 import type {
   ChatProviderAdapter,
   ChatProviderConnectionContext,
@@ -14,7 +20,11 @@ import type {
 } from '../chat-provider.adapter'
 import { downloadAvatarDataUrl } from '../avatar-data-url'
 import { ChatProviderRegistry } from '../chat-provider.registry'
-import { YouTubeLiveChatResponseSchema } from './youtube-api.schemas'
+import {
+  YouTubeApiErrorResponseSchema,
+  YouTubeLiveChatItemSchema,
+  YouTubeLiveChatResponseSchema,
+} from './youtube-api.schemas'
 import { YouTubeAuthService } from './youtube-auth.service'
 
 @Injectable()
@@ -29,6 +39,8 @@ export class YouTubeChatAdapter
   public constructor(
     @Inject(YouTubeAuthService) private readonly auth: YouTubeAuthService,
     @Inject(ChatProviderRegistry) private readonly registry: ChatProviderRegistry,
+    @Inject(STREAMKIT_LOGGER)
+    private readonly logger: StreamKitLogger = new SilentStreamKitLogger(),
   ) {}
 
   public async connect(context: ChatProviderConnectionContext): Promise<ChatProviderSession> {
@@ -54,10 +66,20 @@ export class YouTubeChatAdapter
           const response = await fetch(url, {
             headers: { authorization: `Bearer ${token.accessToken}` },
           })
-          if (!response.ok) throw new Error(this.errorCode(response.status))
+          if (!response.ok) throw new Error(await this.errorCode(response))
           const payload = YouTubeLiveChatResponseSchema.parse(await response.json())
-          for (const item of payload.items) {
-            const event = normalizeYouTubeChatMessage(context.channelId, item)
+          for (const rawItem of payload.items) {
+            const parsedItem = YouTubeLiveChatItemSchema.safeParse(rawItem)
+            if (!parsedItem.success) {
+              await this.logger.log('warn', 'youtube.chat.item_ignored', {
+                issues: parsedItem.error.issues.map((issue) => ({
+                  code: issue.code,
+                  path: issue.path.join('.'),
+                })),
+              })
+              continue
+            }
+            const event = normalizeYouTubeChatMessage(context.channelId, parsedItem.data)
             if (event) {
               const avatarUrl = await this.avatar(
                 event.author.providerUserId,
@@ -68,9 +90,23 @@ export class YouTubeChatAdapter
           }
           cursor = payload.nextPageToken ?? cursor
           if (cursor) await context.onCursor(cursor)
-          await this.delay(payload.pollingIntervalMillis, context.signal)
+          await this.delay(Math.max(1_000, payload.pollingIntervalMillis), context.signal)
         } catch (cause) {
           if (stopped || context.signal.aborted) break
+          await this.logger.log('error', 'youtube.chat.connection_failed', {
+            errorCode:
+              cause instanceof Error && /^[A-Z][A-Z0-9_]{0,99}$/.test(cause.message)
+                ? cause.message
+                : 'YOUTUBE_CONNECTION_FAILURE',
+            errorName: cause instanceof Error ? cause.name : 'UnknownError',
+            issues:
+              cause && typeof cause === 'object' && 'issues' in cause && Array.isArray(cause.issues)
+                ? cause.issues.map((issue: { code?: unknown; path?: unknown }) => ({
+                    code: issue.code,
+                    path: Array.isArray(issue.path) ? issue.path.join('.') : '',
+                  }))
+                : [],
+          })
           rejectClosed(cause instanceof Error ? cause : new Error('YOUTUBE_CHAT_FAILED'))
           return
         }
@@ -121,7 +157,7 @@ export class YouTubeChatAdapter
       },
       method: 'POST',
     })
-    if (!response.ok) throw new Error(this.errorCode(response.status))
+    if (!response.ok) throw new Error(await this.errorCode(response))
   }
 
   private delay(milliseconds: number, signal: AbortSignal): Promise<void> {
@@ -138,31 +174,35 @@ export class YouTubeChatAdapter
     })
   }
 
-  private errorCode(status: number): string {
+  private async errorCode(response: Response): Promise<string> {
+    const status = response.status
+    let reason: string | null = null
+    try {
+      const parsed = YouTubeApiErrorResponseSchema.safeParse(await response.json())
+      if (parsed.success) reason = parsed.data.error.errors[0]?.reason ?? null
+    } catch {
+      // The provider may return an empty or non-JSON response.
+    }
     if (status === 401) return 'INTEGRATION_AUTH_REVOKED'
+    if (status === 404 || reason === 'liveChatEnded' || reason === 'liveChatNotFound')
+      return 'YOUTUBE_CHAT_ENDED'
     if (status === 403) return 'YOUTUBE_QUOTA_OR_PERMISSION_ERROR'
-    if (status === 404) return 'YOUTUBE_CHAT_ENDED'
     return 'YOUTUBE_PROVIDER_ERROR'
   }
 }
 
 export function normalizeYouTubeChatMessage(
   channelId: string,
-  item: {
-    authorDetails: {
-      channelId: string
-      displayName: string
-      isChatModerator: boolean
-      isChatOwner: boolean
-      isChatSponsor: boolean
-      profileImageUrl: string | null
-    }
-    id: string
-    snippet: { displayMessage: string; publishedAt: string; type: string }
-  },
+  item: z.infer<typeof YouTubeLiveChatItemSchema>,
 ): ChatMessageReceived | null {
-  if (!['textMessageEvent', 'superChatEvent', 'superStickerEvent'].includes(item.snippet.type))
+  if (
+    !item.authorDetails ||
+    !item.snippet.publishedAt ||
+    !['textMessageEvent', 'superChatEvent', 'superStickerEvent'].includes(item.snippet.type)
+  )
     return null
+  const occurredAt = new Date(item.snippet.publishedAt)
+  if (Number.isNaN(occurredAt.getTime())) return null
   return {
     author: {
       avatarUrl: item.authorDetails.profileImageUrl,
@@ -178,8 +218,8 @@ export function normalizeYouTubeChatMessage(
     ],
     channelId,
     externalEventId: item.id,
-    message: item.snippet.displayMessage,
-    occurredAt: item.snippet.publishedAt,
+    message: item.snippet.displayMessage ?? '',
+    occurredAt: occurredAt.toISOString(),
     provider: 'youtube',
     roles: {
       isBot: false,

@@ -18,7 +18,10 @@ usa Device Authorization, EventSub WebSocket e os escopos mínimos de leitura/es
 
 1. Crie um projeto no Google Cloud, habilite **YouTube Data API v3** e configure uma credencial OAuth
    do tipo aplicativo para computador.
-2. Defina `STREAMKIT_YOUTUBE_CLIENT_ID` antes de iniciar o StreamKit.
+2. Defina `STREAMKIT_YOUTUBE_CLIENT_ID` antes de iniciar o StreamKit. Para clientes do Google que
+   exigem autenticação na troca do code, defina também `STREAMKIT_YOUTUBE_CLIENT_SECRET` com o valor
+   baixado no JSON do cliente desktop. Ele permanece somente no processo principal e nunca é enviado
+   ao renderer, SQLite ou logs.
 3. Em Configurações > Integrações, conecte o YouTube, autorize no navegador e escolha uma transmissão
    ativa pelo título. O usuário não precisa copiar `videoId` ou `liveChatId`.
 

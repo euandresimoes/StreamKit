@@ -54,7 +54,11 @@ export class IntegrationRepository {
   ): Promise<void> {
     await this.database.orm
       .update(integrationConnections)
-      .set({ lastErrorCode, status, updatedAt: new Date().toISOString() })
+      .set({
+        lastErrorCode: normalizeIntegrationErrorCode(lastErrorCode),
+        status,
+        updatedAt: new Date().toISOString(),
+      })
       .where(eq(integrationConnections.provider, provider))
   }
 
@@ -155,7 +159,11 @@ export class IntegrationRepository {
   public async updateConnectionState(id: string, update: ConnectionStateUpdate) {
     await this.database.orm
       .update(integrationConnections)
-      .set({ ...update, updatedAt: new Date().toISOString() })
+      .set({
+        ...update,
+        lastErrorCode: normalizeIntegrationErrorCode(update.lastErrorCode),
+        updatedAt: new Date().toISOString(),
+      })
       .where(eq(integrationConnections.id, id))
     return this.getConnection(id)
   }
@@ -164,6 +172,12 @@ export class IntegrationRepository {
     return IntegrationConnectionSchema.parse({
       ...row,
       capabilities: IntegrationCapabilitySchema.array().parse(JSON.parse(row.capabilitiesJson)),
+      lastErrorCode: normalizeIntegrationErrorCode(row.lastErrorCode),
     })
   }
+}
+
+export function normalizeIntegrationErrorCode(value: string | null): string | null {
+  if (value === null) return null
+  return /^[A-Z][A-Z0-9_]{0,99}$/.test(value) ? value : 'INTEGRATION_CONNECTION_FAILED'
 }
