@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { BaseBrandIcon, brandName } from "@/components/base/BaseBrandIcon";
 import { useIntegrations } from "@/modules/integration/use-integrations";
 import { useSettings } from "@/modules/settings/use-settings";
 
@@ -190,8 +191,8 @@ export function SettingsDialog({
                 </p>
 
                 <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-surface-2/60 p-4">
-                  <div className="flex size-9 items-center justify-center rounded-xl bg-[#9146ff]/15 text-[#a970ff]">
-                    <Plug className="size-4" />
+                  <div className="flex size-9 items-center justify-center rounded-xl bg-[#9146ff]/15">
+                    <BaseBrandIcon provider="twitch" className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-semibold">Twitch Chat</p>
@@ -231,8 +232,8 @@ export function SettingsDialog({
 
                 <div className="mt-3 rounded-2xl border border-border bg-surface-2/60 p-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-red-500/15 text-red-400">
-                      <Plug className="size-4" />
+                    <div className="flex size-9 items-center justify-center rounded-xl bg-red-500/15">
+                      <BaseBrandIcon provider="youtube" className="size-5" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-semibold">YouTube Live Chat</p>
@@ -301,8 +302,8 @@ export function SettingsDialog({
                 <div className="mt-4 space-y-2">
                   <div className="rounded-2xl border border-border bg-surface-2/40 p-4">
                     <div className="flex items-start gap-3">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
-                        <Plug className="size-4" />
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15">
+                        <BaseBrandIcon provider="kick" className="size-5" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-semibold">Kick Chat</p>
@@ -325,12 +326,13 @@ export function SettingsDialog({
                       key={connection.id}
                       className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
                     >
+                      <BaseBrandIcon provider={connection.provider} className="size-5" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[13px] font-medium">
                           {connection.channelDisplayName}
                         </p>
                         <p className="text-[11px] capitalize text-muted-foreground">
-                          {connection.provider} · {connection.status}
+                          {brandName(connection.provider)} · {connection.status}
                         </p>
                         {connection.lastErrorCode && (
                           <p className="text-[10px] text-destructive">

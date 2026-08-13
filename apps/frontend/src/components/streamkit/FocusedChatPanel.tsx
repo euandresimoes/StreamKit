@@ -3,6 +3,7 @@ import { Check, Copy, MessageCircle, Send, User, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { BaseBrandIcon } from "@/components/base/BaseBrandIcon";
 import { Input } from "@/components/ui/input";
 import { copyText } from "@/infrastructure/clipboard";
 import { integrationApi } from "@/modules/integration/integration-api";
@@ -152,7 +153,7 @@ export function FocusedChatPanel({
           <div key={item.id} className="rounded-xl border border-border bg-card p-2.5">
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <span className="font-medium text-foreground">{item.displayName}</span>
-              <span>{item.provider}</span>
+              <BaseBrandIcon provider={item.provider} className="size-3" />
               <time className="ml-auto">{new Date(item.occurredAt).toLocaleTimeString()}</time>
             </div>
             <p className="mt-1 whitespace-pre-wrap break-words text-xs">{item.message}</p>

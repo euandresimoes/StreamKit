@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
 import { BaseColorPicker } from "@/components/base/BaseColorPicker";
+import { BaseBrandIcon } from "@/components/base/BaseBrandIcon";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -234,8 +235,16 @@ export function GamesTab() {
                               {participant.displayName}
                             </span>
                             {participant.source === "chat" && (
-                              <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[9px] uppercase text-muted-foreground">
-                                {participant.provider}
+                              <span
+                                className="rounded-md bg-surface-2 p-1"
+                                title={participant.provider ?? undefined}
+                              >
+                                {participant.provider && (
+                                  <BaseBrandIcon
+                                    provider={participant.provider}
+                                    className="size-3"
+                                  />
+                                )}
                               </span>
                             )}
                             <Button
@@ -535,8 +544,10 @@ export function GamesTab() {
                           </span>
                           <span className="truncate">{participant.displayName}</span>
                           {participant.source === "chat" && (
-                            <span className="ml-auto text-[9px] uppercase text-muted-foreground">
-                              {participant.provider}
+                            <span className="ml-auto" title={participant.provider ?? undefined}>
+                              {participant.provider && (
+                                <BaseBrandIcon provider={participant.provider} className="size-3" />
+                              )}
                             </span>
                           )}
                         </div>
