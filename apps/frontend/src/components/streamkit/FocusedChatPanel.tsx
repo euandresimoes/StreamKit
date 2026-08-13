@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { copyText } from "@/infrastructure/clipboard";
 import { integrationApi } from "@/modules/integration/integration-api";
 
 export function FocusedChatPanel({
@@ -57,9 +58,14 @@ export function FocusedChatPanel({
   if (!open) return null;
 
   const copyHandle = async (handle: string) => {
-    await navigator.clipboard.writeText(handle);
-    setCopied(handle);
-    setTimeout(() => setCopied(null), 1_500);
+    setError(null);
+    try {
+      await copyText(handle);
+      setCopied(handle);
+      setTimeout(() => setCopied(null), 1_500);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível copiar o handle.");
+    }
   };
   const send = async () => {
     if (!writer || !message.trim()) return;
@@ -119,6 +125,7 @@ export function FocusedChatPanel({
               variant="ghost"
               size="icon-sm"
               aria-label={`Copiar ${identity.handle}`}
+              title={copied === identity.handle ? "Copiado" : "Copiar handle"}
               onClick={() => void copyHandle(identity.handle)}
             >
               {copied === identity.handle ? <Check /> : <Copy />}

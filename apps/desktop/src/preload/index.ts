@@ -8,6 +8,7 @@ import type {
 import { contextBridge, ipcRenderer } from 'electron'
 
 export type StreamKitBridge = {
+  copyText: (text: string) => Promise<void>
   getBackendConnection: () => Promise<BackendConnection>
   getPlatform: () => Promise<NodeJS.Platform>
   applySettings: (settings: UpdateAppSettingsRequest) => Promise<void>
@@ -21,6 +22,7 @@ export type StreamKitBridge = {
 }
 
 const streamKitBridge: StreamKitBridge = {
+  copyText: async (text) => ipcRenderer.invoke('streamkit:copy-text', text),
   applySettings: async (settings) => ipcRenderer.invoke('streamkit:apply-settings', settings),
   getBackendConnection: async () => ipcRenderer.invoke('streamkit:get-backend-connection'),
   getPlatform: async () => ipcRenderer.invoke('streamkit:get-platform'),

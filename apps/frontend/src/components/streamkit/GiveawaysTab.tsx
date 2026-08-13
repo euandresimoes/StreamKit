@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BaseSegmentedControl } from "@/components/base/BaseSegmentedControl";
 import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
 import { useGiveaways } from "@/modules/giveaway/use-giveaways";
+import { shouldShowGiveawayFocusedChat } from "@/modules/giveaway/giveaway-presentation";
 import { CreateItemDialog } from "./CreateItemDialog";
 import { EntitySelect } from "./EntitySelect";
 import { GiveawayStage } from "./GiveawayStage";
@@ -319,9 +320,14 @@ export function GiveawaysTab() {
           setRemovingParticipant(null);
         }}
       />
-      {detail?.giveaway.status === "completed" && detail.activeRound?.completedAt && (
-        <FocusedChatPanel target="giveaways" targetId={detail.giveaway.id} />
-      )}
+      {detail &&
+        shouldShowGiveawayFocusedChat(drawPhase, winner, detail.activeRound?.completedAt) && (
+          <FocusedChatPanel
+            key={detail.activeRound?.id}
+            target="giveaways"
+            targetId={detail.giveaway.id}
+          />
+        )}
     </div>
   );
 }

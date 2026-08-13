@@ -10,6 +10,7 @@ declare global {
   interface Window {
     streamkit?: {
       getBackendConnection(): Promise<BackendConnection>;
+      copyText(text: string): Promise<void>;
       applySettings(settings: UpdateAppSettingsRequest): Promise<void>;
       openExternalAuth(url: string): Promise<void>;
       openLogsDirectory(): Promise<void>;

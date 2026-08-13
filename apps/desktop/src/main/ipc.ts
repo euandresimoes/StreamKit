@@ -5,12 +5,13 @@ import {
 } from '@streamkit/contracts'
 import type { UpdateManager } from './update-manager'
 import type { RenderWindowManager } from '@renderizer/vue/electron'
-import { ipcMain, type IpcMainInvokeEvent, shell } from 'electron'
+import { clipboard, ipcMain, type IpcMainInvokeEvent, shell } from 'electron'
 import { z } from 'zod'
 
 const EmptyArgumentsSchema = z.tuple([])
 const WindowIdSchema = z.string().regex(/^[a-z0-9][a-z0-9:_-]{0,127}$/)
 const WindowActionSchema = z.enum(['minimize', 'toggle-maximize', 'close', 'focus'])
+const ClipboardTextSchema = z.string().max(512)
 const ExternalUrlSchema = z.url().refine((value) => {
   const url = new URL(value)
   return (
@@ -29,6 +30,10 @@ export function registerNativeIpcHandlers(
   },
   updates?: UpdateManager,
 ): void {
+  ipcMain.handle('streamkit:copy-text', (_event, input: unknown, ...rest: unknown[]) => {
+    EmptyArgumentsSchema.parse(rest)
+    clipboard.writeText(ClipboardTextSchema.parse(input))
+  })
   ipcMain.handle('streamkit:update-command', (_event, input: unknown, ...rest: unknown[]) => {
     EmptyArgumentsSchema.parse(rest)
     if (!updates) throw new Error('Updater unavailable')
@@ -107,6 +112,7 @@ export function registerNativeIpcHandlers(
 
 export function removeNativeIpcHandlers(): void {
   for (const channel of [
+    'streamkit:copy-text',
     'streamkit:get-backend-connection',
     'streamkit:get-platform',
     'streamkit:apply-settings',
