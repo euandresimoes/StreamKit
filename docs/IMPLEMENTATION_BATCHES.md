@@ -344,7 +344,7 @@ de todos os workspaces no comando `pnpm validate`.
 
 **Referências:** seções 8, 10, 17, 21 e ADR 0014.
 
-- [ ] **Dependência externa:** cadastrar o aplicativo Twitch e fornecer/configurar o Client ID.
+- [x] **Dependência externa:** cadastrar o aplicativo Twitch e fornecer/configurar o Client ID.
 - [x] Implementar Device Authorization para aplicativo desktop, sem redirect/token no renderer e com escopos mínimos.
 - [x] Guardar tokens somente no cofre e validar a sessão no início e periodicamente.
 - [x] Implementar leitura de mensagens via EventSub/WebSocket, sem usar IRC como núcleo novo.
@@ -355,10 +355,12 @@ de todos os workspaces no comando `pnpm validate`.
 - [x] Testar OAuth sem segredo real, tradução de payloads, revogação e reconexão.
 - [x] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
 
-**Evidência parcial registrada em 2026-08-13:** Device Authorization, cofre multi-provider,
+**Evidência registrada em 2026-08-13:** Device Authorization, cofre multi-provider,
 validação/refresh, EventSub, escrita de chat, UI e adapters passaram no gate completo com 30 testes
-unitários do backend, 25 integrações, 18 testes do desktop e 8 E2E. A batch permanece aberta
-somente para cadastrar/configurar um Client ID e executar o teste real controlado da Twitch.
+unitários do backend, 25 integrações, 18 testes do desktop e 8 E2E. O aplicativo público do StreamKit
+foi cadastrado na Twitch e o teste real controlado concluiu autorização, conexão EventSub e captura por
+`!join`: a conta principal conectada e uma conta secundária em outro navegador foram persistidas como
+participantes distintos no giveaway de roleta. A Batch 13 está concluída.
 
 ## Batch 14 — Fontes de participantes em Giveaways
 
