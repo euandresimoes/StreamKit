@@ -15,7 +15,7 @@ StreamKit local-first MVP under active development.
 
 ### Fixed
 
-- No release fixes recorded yet.
+- Corrigida a inicialização em desenvolvimento do Electron com as dependências de runtime do NestJS.
 
 ### Breaking changes
 
@@ -23,4 +23,4 @@ StreamKit local-first MVP under active development.
 
 ### Special instructions
 
-- Public Windows releases require a configured signing certificate and green release pipeline.
+- Public Windows releases are unsigned initially, require published checksums and a green release pipeline.
