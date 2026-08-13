@@ -397,7 +397,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
     </template>
     <BaseModal :open="Boolean(undoMatch)" title="Desfazer resultado?" @close="undoMatch = null"
       ><p>Resultados dependentes serão invalidados.</p>
-      <template #footer
+      <template #actions
         ><BaseButton variant="ghost" @click="undoMatch = null">Cancelar</BaseButton
         ><BaseButton variant="danger" @click="confirmUndo">Confirmar</BaseButton></template
       ></BaseModal

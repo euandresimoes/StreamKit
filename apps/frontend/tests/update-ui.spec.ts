@@ -11,6 +11,8 @@ describe('update UI', () => {
     expect(app).toContain('Instalar e reiniciar')
   })
   it('keeps update failures recoverable and confirms an active operation', () => {
+    expect(app).toContain('BaseButton, BaseInput, BaseModal, BaseSelect, BaseToggle')
+    expect(app).not.toContain('<template #footer')
     expect(app).toContain('O StreamKit continua disponível')
     expect(app).toContain('Interromper operação ativa?')
     expect(store).toContain("action: 'check'")

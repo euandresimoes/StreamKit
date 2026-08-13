@@ -51,6 +51,37 @@ describe('workspace API vertical slice', () => {
     await expect(access(environment.userDataPath)).rejects.toBeDefined()
   })
 
+  it('allows API preflight only for the configured local renderer origin', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    const rendererOrigin = 'http://127.0.0.1:5173'
+    backend = await startLocalBackend({
+      allowedOrigins: [rendererOrigin],
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+
+    const allowed = await fetch(`${backend.baseUrl}/api/v1/todo/workspaces`, {
+      headers: {
+        'access-control-request-headers': 'authorization,content-type',
+        'access-control-request-method': 'POST',
+        origin: rendererOrigin,
+      },
+      method: 'OPTIONS',
+    })
+    expect(allowed.status).toBe(204)
+    expect(allowed.headers.get('access-control-allow-origin')).toBe(rendererOrigin)
+
+    const rejected = await fetch(`${backend.baseUrl}/api/v1/todo/workspaces`, {
+      headers: { 'access-control-request-method': 'POST', origin: 'https://attacker.example' },
+      method: 'OPTIONS',
+    })
+    expect(rejected.headers.get('access-control-allow-origin')).toBeNull()
+
+    await backend.close()
+    backend = undefined
+    await environment.cleanup()
+  })
+
   it('exposes non-sensitive database infrastructure status', async () => {
     const environment = await createIsolatedTestEnvironment()
     backend = await startLocalBackend({

@@ -10,6 +10,7 @@ import {
   type UpdateAppSettingsRequest,
 } from '@streamkit/contracts'
 import { app, BrowserWindow, Menu, nativeImage, session, shell, Tray } from 'electron'
+import { z } from 'zod'
 
 import { registerNativeIpcHandlers, removeNativeIpcHandlers } from './ipc'
 import { createSecureWebPreferences, isAllowedExternalUrl } from './security-policy'
@@ -36,6 +37,15 @@ let desktopSettings: UpdateAppSettingsRequest = {
   theme: 'system',
   updatePreference: 'notify',
 }
+
+const LocalRendererUrlSchema = z
+  .string()
+  .url()
+  .transform((value) => new URL(value))
+  .refine(
+    (value) => value.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(value.hostname),
+    'Renderer URL must use HTTP loopback',
+  )
 
 function applyDesktopSettings(settings: UpdateAppSettingsRequest): void {
   desktopSettings = settings
@@ -157,6 +167,11 @@ async function bootstrap(): Promise<void> {
   logsDirectory = directories.logs
   const token = randomBytes(32).toString('hex')
   backend = await startLocalBackend({
+    ...(process.env.STREAMKIT_RENDERER_URL
+      ? {
+          allowedOrigins: [LocalRendererUrlSchema.parse(process.env.STREAMKIT_RENDERER_URL).origin],
+        }
+      : {}),
     authenticationToken: token,
     backupDirectory: directories.backups,
     databasePath: directories.database,

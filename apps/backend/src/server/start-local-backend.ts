@@ -17,6 +17,7 @@ import {
 } from '../infrastructure/logging/streamkit-logger'
 
 export type StartLocalBackendOptions = {
+  allowedOrigins?: readonly string[]
   authenticationToken: string
   backupDirectory?: string
   databasePath: string
@@ -54,6 +55,7 @@ export async function startLocalBackend(
 
   app.useGlobalFilters(new ApiExceptionFilter())
   app.useGlobalGuards(new LocalAuthGuard(options.authenticationToken))
+  if (options.allowedOrigins?.length) app.enableCors({ origin: [...options.allowedOrigins] })
   const started = new WeakMap<object, number>()
   adapter.getInstance().addHook('onRequest', async (request) => {
     started.set(request, performance.now())

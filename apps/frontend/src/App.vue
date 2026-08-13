@@ -3,7 +3,7 @@ import { RenderWindow } from '@renderizer/vue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { showSettingsWindow } from './app/settings-window'
-import { BaseButton, BaseInput, BaseSelect, BaseToggle } from './components/base'
+import { BaseButton, BaseInput, BaseModal, BaseSelect, BaseToggle } from './components/base'
 import PrimitiveShowcase from './components/showcase/PrimitiveShowcase.vue'
 import AppSidebar, { type AppModule } from './components/shell/AppSidebar.vue'
 import NotificationCenter from './components/shell/NotificationCenter.vue'
@@ -158,7 +158,7 @@ onMounted(async () => {
           {{ updates.state.error }}. O StreamKit continua disponível.
         </p></template
       >
-      <template #footer
+      <template #actions
         ><BaseButton
           v-if="updates.state?.available"
           variant="ghost"
@@ -185,7 +185,7 @@ onMounted(async () => {
         A instalação fechará o aplicativo. Confirme somente após salvar ou concluir a operação
         atual.
       </p>
-      <template #footer
+      <template #actions
         ><BaseButton variant="ghost" @click="confirmUpdateInstall = false">Cancelar</BaseButton
         ><BaseButton variant="danger" @click="confirmInstall"
           >Instalar mesmo assim</BaseButton
