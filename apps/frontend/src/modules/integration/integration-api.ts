@@ -1,6 +1,7 @@
 import {
   FocusedChatThreadSchema,
   IntegrationConnectionSchema,
+  KickIntegrationSupportSchema,
   type SaveIntegrationConnectionRequest,
   TwitchAuthorizationStatusSchema,
   TwitchDeviceAuthorizationPollSchema,
@@ -17,6 +18,10 @@ export const integrationApi = {
   focusedChat: (target: "giveaways" | "tournaments", id: string) =>
     apiClient.request(`/api/v1/integrations/focused-chat/${target}/${id}`, {
       schema: FocusedChatThreadSchema,
+    }),
+  kickSupport: () =>
+    apiClient.request("/api/v1/integrations/kick/support", {
+      schema: KickIntegrationSupportSchema,
     }),
   sendMessage: (connectionId: string, message: string) =>
     apiClient.request(`/api/v1/integrations/connections/${connectionId}/messages`, {

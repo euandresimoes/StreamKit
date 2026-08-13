@@ -1,5 +1,6 @@
 import type {
   IntegrationConnection,
+  KickIntegrationSupport,
   SaveIntegrationConnectionRequest,
   TwitchAuthorizationStatus,
   TwitchDeviceAuthorization,
@@ -19,17 +20,22 @@ export function useIntegrations(active: boolean) {
   const [twitchDevice, setTwitchDevice] = useState<TwitchDeviceAuthorization | null>(null);
   const [youtubeAuth, setYouTubeAuth] = useState<YouTubeAuthorizationStatus | null>(null);
   const [youtubeBroadcasts, setYouTubeBroadcasts] = useState<YouTubeLiveBroadcast[]>([]);
+  const [kickSupport, setKickSupport] = useState<KickIntegrationSupport | null>(null);
   const load = useCallback(async () => {
     try {
       setError(null);
-      const [nextConnections, nextTwitchAuth, nextYouTubeAuth] = await Promise.all([
-        integrationApi.listConnections(),
-        integrationApi.twitchAuthStatus(),
-        integrationApi.youtubeAuthStatus(),
-      ]);
+      const [nextConnections, nextTwitchAuth, nextYouTubeAuth, nextKickSupport] = await Promise.all(
+        [
+          integrationApi.listConnections(),
+          integrationApi.twitchAuthStatus(),
+          integrationApi.youtubeAuthStatus(),
+          integrationApi.kickSupport(),
+        ],
+      );
       setConnections(nextConnections);
       setTwitchAuth(nextTwitchAuth);
       setYouTubeAuth(nextYouTubeAuth);
+      setKickSupport(nextKickSupport);
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Não foi possível carregar as integrações.",
@@ -59,6 +65,7 @@ export function useIntegrations(active: boolean) {
     twitchDevice,
     youtubeAuth,
     youtubeBroadcasts,
+    kickSupport,
     connectTwitch: async () => {
       setBusy(true);
       setError(null);

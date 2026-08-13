@@ -139,12 +139,20 @@ export const SelectYouTubeBroadcastRequestSchema = z.object({
   title: z.string().min(1),
   videoId: z.string().min(1),
 })
+export const KickIntegrationSupportSchema = z.object({
+  available: z.literal(false),
+  capabilities: z.array(IntegrationCapabilitySchema).length(0),
+  limitations: z.array(z.string().min(1)).min(1),
+  provider: z.literal('kick'),
+  verifiedAt: z.iso.date(),
+})
 
 export type ChatMessageReceived = z.infer<typeof ChatMessageReceivedSchema>
 export type IntegrationCapability = z.infer<typeof IntegrationCapabilitySchema>
 export type IntegrationConnection = z.infer<typeof IntegrationConnectionSchema>
 export type IntegrationConnectionStatus = z.infer<typeof IntegrationConnectionStatusSchema>
 export type IntegrationProvider = z.infer<typeof IntegrationProviderSchema>
+export type KickIntegrationSupport = z.infer<typeof KickIntegrationSupportSchema>
 export type FocusedChatMessage = z.infer<typeof FocusedChatMessageSchema>
 export type FocusedChatThread = z.infer<typeof FocusedChatThreadSchema>
 export type SaveIntegrationConnectionRequest = z.infer<

@@ -41,3 +41,23 @@ Referências oficiais consultadas em 2026-08-13:
 - `YOUTUBE_QUOTA_OR_PERMISSION_ERROR`: verifique a quota, API habilitada e escopo autorizado.
 - `YOUTUBE_CHAT_ENDED`: selecione outra transmissão ativa.
 - `INTEGRATION_CONNECTION_UNAVAILABLE`: inicie/reconecte o chat antes de responder.
+
+## Kick
+
+A documentação oficial foi revalidada em 2026-08-13. Atualmente, a Kick exige `client_secret` tanto
+na troca do authorization code quanto no refresh OAuth. Esse segredo pertence ao aplicativo e não
+pode ser embutido com segurança em um desktop distribuído. Além disso, `chat.message.sent` é entregue
+exclusivamente por webhook público HTTPS; não há WebSocket oficial para um aplicativo totalmente
+local.
+
+Por isso, o StreamKit mostra a Kick como indisponível no modo local e não anuncia `chat.read` nem
+`chat.write`. Não são usados endpoints privados, engenharia reversa ou transportes não documentados.
+Uma integração futura exigirá um relay hospedado e uma decisão explícita de arquitetura, privacidade,
+custo e operação — não apenas um Client ID.
+
+Referências oficiais consultadas:
+
+- <https://docs.kick.com/getting-started/generating-tokens-oauth2-flow>
+- <https://docs.kick.com/events/subscribe-to-events>
+- <https://docs.kick.com/events/event-types>
+- <https://docs.kick.com/apis/chat>

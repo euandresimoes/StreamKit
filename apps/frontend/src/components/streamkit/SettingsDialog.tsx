@@ -296,6 +296,27 @@ export function SettingsDialog({
                 </div>
 
                 <div className="mt-4 space-y-2">
+                  <div className="rounded-2xl border border-border bg-surface-2/40 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                        <Plug className="size-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-semibold">Kick Chat</p>
+                        <p className="text-[11.5px] text-muted-foreground">
+                          Indisponível no modo local com a API oficial atual
+                        </p>
+                        {integrations.kickSupport?.limitations.map((limitation) => (
+                          <p key={limitation} className="mt-1 text-[10px] text-muted-foreground">
+                            · {limitation}
+                          </p>
+                        ))}
+                      </div>
+                      <Button size="sm" variant="secondary" disabled>
+                        Sem suporte local
+                      </Button>
+                    </div>
+                  </div>
                   {integrations.connections.map((connection) => (
                     <div
                       key={connection.id}

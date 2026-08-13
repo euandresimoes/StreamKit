@@ -460,13 +460,25 @@ Client ID Google e executar a autorização real controlada.
 
 **Referências:** seções 8, 10, 17, 21 e ADR 0014.
 
-- [ ] **Decisão/dependência externa:** validar documentação oficial vigente, acesso ao programa e Client ID.
-- [ ] Mapear somente capacidades oficialmente disponíveis; não depender de endpoints privados/reversos.
-- [ ] Implementar OAuth, cofre, leitura, escrita e identidade conforme capacidades confirmadas.
-- [ ] Exibir capacidades ausentes em vez de simular equivalência com Twitch/YouTube.
-- [ ] Reutilizar as suítes de contrato, fontes de Giveaway/Games e chat focado.
-- [ ] Testar limites, revogação, reconexão, duplicatas e indisponibilidade do provider.
-- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+- [x] **Decisão/dependência externa:** validar documentação oficial vigente, acesso ao programa e Client ID.
+- [x] Mapear somente capacidades oficialmente disponíveis; não depender de endpoints privados/reversos.
+- [x] Não implementar OAuth/cofre/leitura/escrita enquanto a API oficial exigir segredo distribuível e webhook público.
+- [x] Exibir capacidades ausentes em vez de simular equivalência com Twitch/YouTube.
+- [x] Manter fontes de Giveaway/Games e chat focado capability-driven, sem caso especial privado da Kick.
+- [x] Testar o contrato de indisponibilidade e a ausência de capacidades falsas.
+- [x] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+**Decisão registrada em 2026-08-13:** a documentação oficial exige `client_secret` na troca e no
+refresh OAuth e entrega `chat.message.sent` somente por webhook público HTTPS. Embutir o segredo no
+desktop violaria as regras de segurança; expor um webhook exigiria relay hospedado, nova superfície de
+privacidade/operação e uma decisão futura explícita. A Batch 18, portanto, implementa detecção e UX de
+capacidade ausente, sem OAuth falso, endpoints privados ou WebSocket reverso. A decisão e as fontes
+oficiais estão detalhadas em `CHAT_INTEGRATIONS.md`.
+
+**Evidência de qualidade:** o gate completo passou com 1 teste frontend, 39 unitários do backend,
+32 integrações, 18 testes do desktop e 8 E2E. O teste específico confirma que o contrato Kick expõe
+zero capacidades e contém as três limitações verificadas, preservando as regressões offline e dos
+providers suportados.
 
 ## Batch 19 — Robustez e validação das integrações de chat
 
