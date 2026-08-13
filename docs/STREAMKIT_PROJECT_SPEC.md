@@ -1261,9 +1261,60 @@ Entradas de usuário exibidas na roleta, times e cards devem ser tratadas como t
 
 ---
 
-## 21. Integração LivePix — arquitetura futura
+## 21. Integrações externas orientadas a capacidades
 
-### 21.1 Adapter do provedor
+### 21.1 Núcleo reutilizável
+
+O backend terá um módulo de integrações independente de Games, Giveaway e TODO. Cada adapter
+declarará capacidades reais, como leitura de chat, escrita de chat e identidade de usuário. Chat e
+pagamentos usam contratos distintos, embora compartilhem conexão, cofre, logs e diagnóstico.
+
+Eventos de chat serão normalizados com:
+
+- `provider`, `externalEventId`, `channelId` e timestamp;
+- `providerUserId` estável, handle, nome e avatar mutáveis;
+- mensagem tratada como texto não confiável;
+- metadados opcionais somente quando a capacidade existir.
+
+O identificador canônico de uma pessoa externa será `provider + providerUserId`, nunca apenas o
+handle. Tokens e refresh tokens ficam exclusivamente no cofre seguro do sistema operacional.
+
+### 21.2 Fontes de participantes por chat
+
+Twitch, YouTube e Kick poderão alimentar Giveaway e Games através de regras persistidas:
+
+- qualquer mensagem, mensagem exata, prefixo ou texto contido;
+- janela de coleta, pausa e retomada;
+- uma entrada por identidade ou múltiplos tickets conforme configuração;
+- filtros por broadcaster, bot, moderador ou membro quando suportados;
+- preservação de participantes após desconexão e reinício.
+
+Entrada manual continua obrigatoriamente disponível e independente de rede.
+
+### 21.3 Chat focado
+
+Após um vencedor de Giveaway ou uma equipe campeã, um painel poderá mostrar somente as mensagens
+das identidades correspondentes. O histórico local será limitado por retenção e indexado por
+`provider + channelId + providerUserId`. Respostas somente serão habilitadas quando o adapter
+declarar `ChatWriter` e a autorização possuir os escopos necessários.
+
+### 21.4 Providers de chat aprovados
+
+- Twitch via APIs oficiais e EventSub/WebSocket;
+- YouTube Live Chat via APIs oficiais, respeitando quota e duração da transmissão;
+- Kick somente através de APIs oficiais disponíveis ao aplicativo, sem endpoints privados.
+
+Cada provider deve mostrar capacidades indisponíveis, revogação, quota, desconexão e erro de forma
+acionável. OAuth de desktop usa browser do sistema, proteção de estado e PKCE quando suportado.
+
+### 21.5 Fora do escopo desta fase
+
+Bots, canvas visual, gateways de pagamento e LivePix não fazem parte das batches de chat. A
+arquitetura preserva pontos de extensão, mas não implementa essas features antecipadamente.
+
+### 21.6 LivePix — arquitetura futura
+
+#### 21.6.1 Adapter do provedor
 
 O domínio não deve depender diretamente do LivePix. Criar uma interface conceitual:
 
@@ -1290,7 +1341,7 @@ type ContributionReceived = {
 }
 ```
 
-### 21.2 Pipeline de evento
+#### 21.6.2 Pipeline de evento
 
 ```text
 Evento externo
@@ -1304,7 +1355,7 @@ Evento externo
 → registro do resultado do processamento
 ```
 
-### 21.3 Requisitos
+#### 21.6.3 Requisitos
 
 - idempotência;
 - reconexão com backoff;
@@ -1385,7 +1436,19 @@ Evento externo
 
 **Saída:** primeira release pública confiável.
 
-### Fase 5 — LivePix
+### Fase 5 — Integrações de chat
+
+- núcleo orientado a capacidades e eventos normalizados;
+- Twitch Chat;
+- fontes de participantes para Giveaway e Games;
+- chat focado em vencedor e equipe campeã;
+- YouTube Live Chat;
+- Kick Chat conforme APIs oficiais disponíveis;
+- segurança, reconexão, retenção e validação no Windows.
+
+**Saída:** participantes entram por chats oficiais sem acoplar os módulos e sem remover o modo manual.
+
+### Fase 6 — LivePix
 
 - validar documentação e acesso do provedor;
 - armazenamento seguro de credenciais;
@@ -1398,7 +1461,7 @@ Evento externo
 
 **Saída:** primeira automação externa sem alterar o núcleo manual.
 
-### Fase 6 — OBS e expansão
+### Fase 7 — OBS e expansão
 
 - overlays transparentes;
 - Browser Source local;

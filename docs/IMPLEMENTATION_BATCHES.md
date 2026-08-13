@@ -295,7 +295,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Aplicar permissões mínimas, secrets somente na CI e lockfile fixado.
 - [x] Proibir release a partir de árvore suja ou pipeline não verde.
 - [x] Testar update disponível, versão pulada, erro de update e continuidade do app.
-- [x] Testar migration/backup/restauração usando banco versionado anterior; repetir entre pacotes publicados na Batch 14.
+- [x] Testar migration/backup/restauração usando banco versionado anterior; repetir entre pacotes publicados na Batch 22.
 - [x] Executar os dez fluxos de sucesso do MVP em Windows e registrar evidências.
 - [ ] Executar teste guiado dos fluxos manuais com o proprietário/streamer e registrar os achados antes de corrigir.
 - [ ] Revisar e melhorar a UI do frontend a partir dos achados do teste manual.
@@ -309,11 +309,131 @@ gerado e passou por instalação silenciosa, abertura com `AppData` isolado e de
 Metadados do updater, blockmap e SHA-256 também foram validados. Por decisão registrada no
 ADR 0012, as releases Windows iniciais não serão assinadas e devem avisar sobre SmartScreen
 e editor desconhecido. A matriz de evidências está em `docs/BATCH_11_VALIDATION.md`. Como não
-existe pacote público anterior, o teste entre instaladores permanece na Batch 14. Por decisão do
+existe pacote público anterior, o teste entre instaladores permanece na Batch 22. Por decisão do
 ADR 0013, a batch foi reaberta para teste manual do proprietário e refinamento da interface antes
 de qualquer integração. Nenhuma tag ou release foi criada sem autorização.
 
-## Batch 12 — LivePix
+## Batch 12 — Núcleo de integrações e capacidades
+
+**Referências:** seções 7, 8, 10, 11, 17, 21 e ADR 0014.
+
+**Independência registrada:** esta batch não altera os fluxos manuais em validação na Batch 11.
+Ela só pode começar sobre o estado atual depois que as mudanças React/backend pendentes forem
+validadas e publicadas, evitando misturar a migração de UI com integrações externas.
+
+- [x] **Decisão do usuário:** separar providers de chat de gateways/providers de pagamento.
+- [x] **Decisão do usuário:** incluir Twitch, YouTube e Kick; manter LivePix, Bots e canvas fora do escopo.
+- [x] Registrar a arquitetura orientada a capacidades no ADR 0014.
+- [ ] Criar contratos Zod de conexão, capacidade, identidade externa e evento normalizado.
+- [ ] Criar módulo `integrations` no backend sem dependência de Giveaway ou Games.
+- [ ] Persistir conexões sem segredos, offsets e eventos necessários com migrations versionadas.
+- [ ] Deduplicar eventos por `provider + externalEventId` e processá-los de forma idempotente.
+- [ ] Implementar event bus local com inscrição/desinscrição e isolamento de falhas entre consumidores.
+- [ ] Implementar estado `disconnected`, `connecting`, `connected`, `reconnecting`, `error` e `revoked`.
+- [ ] Implementar backoff com jitter, cancelamento e recuperação após reinício.
+- [ ] Garantir que payload bruto sensível, tokens e refresh tokens não sejam salvos no SQLite/logs.
+- [ ] Criar adapters simulados e testes de contrato, migrations, duplicatas e reconexão.
+- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+## Batch 13 — Twitch Chat
+
+**Referências:** seções 8, 10, 17, 21 e ADR 0014.
+
+- [ ] **Dependência externa:** cadastrar o aplicativo Twitch e fornecer/configurar o Client ID.
+- [ ] Implementar autorização adequada a aplicativo desktop com estado anti-CSRF e escopos mínimos.
+- [ ] Guardar tokens somente no cofre e validar a sessão no início e periodicamente.
+- [ ] Implementar leitura de mensagens via EventSub/WebSocket, sem usar IRC como núcleo novo.
+- [ ] Normalizar identidade, handle, nome, avatar, badges, mensagem e timestamps.
+- [ ] Implementar escrita de chat somente quando o usuário conceder a capacidade e os escopos.
+- [ ] Tratar keepalive, revogação, reconexão, duplicatas e limites da API.
+- [ ] Criar tela de conectar/desconectar, canal selecionado, capacidades e diagnóstico seguro.
+- [ ] Testar OAuth sem segredo real, tradução de payloads, revogação e reconexão.
+- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+## Batch 14 — Fontes de participantes em Giveaways
+
+**Referências:** seções 7, 11, 17, 21 e ADR 0014.
+
+- [ ] Generalizar `ParticipantSource` para fonte manual ou conexão de chat configurada.
+- [ ] Persistir regra de captura por giveaway e seu estado pausado/ativo/finalizado.
+- [ ] Implementar mensagem exata, prefixo e texto contido, com comparação Unicode definida.
+- [ ] Implementar qualquer mensagem e janela de coleta configurável.
+- [ ] Implementar uma entrada por identidade ou múltiplos tickets conforme política explícita.
+- [ ] Implementar filtros por broadcaster, bot, moderador e membro quando a capacidade existir.
+- [ ] Mostrar preview, total capturado, duplicatas ignoradas, conexão e erro recuperável.
+- [ ] Preservar os capturados após desconexão, reinício ou exclusão da credencial.
+- [ ] Testar concorrência, duplicatas, troca de handle, limite, restart e modo manual offline.
+- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+## Batch 15 — Fontes de participantes em Games
+
+**Referências:** seções 6, 11, 17, 21 e ADR 0014.
+
+- [ ] Reutilizar as mesmas conexões e regras sem duplicar lógica de captura do Giveaway.
+- [ ] Persistir origem e identidade externa dos participantes do torneio.
+- [ ] Adicionar participantes capturados à fila antes da distribuição individual/em equipes.
+- [ ] Respeitar capacidade, duplicatas e torneio já iniciado com feedback observável.
+- [ ] Preservar criação, edição, remoção, drag and drop e sorteio manuais.
+- [ ] Testar torneio individual, equipes, lotação, restart, desconexão e modo offline.
+- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+## Batch 16 — Chat focado em vencedor e equipe campeã
+
+**Referências:** seções 6, 7, 8, 17, 21 e ADR 0014.
+
+- [ ] Persistir um buffer local limitado de mensagens normalizadas, com política de retenção explícita.
+- [ ] Indexar mensagens por `provider + channelId + providerUserId`.
+- [ ] Abrir painel flutuante ao confirmar vencedor de giveaway com mensagens somente do vencedor.
+- [ ] Abrir painel equivalente para os membros da equipe campeã.
+- [ ] Mostrar plataforma, avatar, handle, status, histórico recente e mensagens em tempo real.
+- [ ] Permitir resposta apenas quando `ChatWriter` estiver disponível e autorizado.
+- [ ] Implementar copiar handle, vazio, desconectado, revogado e erro de envio.
+- [ ] Tratar conteúdo externo como texto não confiável e limitar memória/banco/renderização.
+- [ ] Testar isolamento entre usuários/equipes, retenção, restart, XSS e acessibilidade.
+- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+## Batch 17 — YouTube Live Chat
+
+**Referências:** seções 8, 10, 17, 21 e ADR 0014.
+
+- [ ] **Dependência externa:** criar projeto Google, habilitar YouTube Data API e configurar Client ID desktop.
+- [ ] Implementar OAuth de aplicativo instalado com PKCE, browser do sistema e callback loopback.
+- [ ] Guardar refresh/access tokens somente no cofre e implementar revogação/desconexão.
+- [ ] Descobrir/selecionar transmissão e `liveChatId` sem exigir IDs técnicos na UX comum.
+- [ ] Ler mensagens com `streamList` quando disponível e fallback documentado respeitando quota.
+- [ ] Normalizar ID do canal do autor, handle/nome, avatar, papel, mensagem e eventos suportados.
+- [ ] Expor escrita somente com capacidade, escopo e transmissão ativa compatíveis.
+- [ ] Mostrar quota/limitação, chat encerrado e autorização não verificada de forma acionável.
+- [ ] Executar a suíte compartilhada de fontes, chat focado, revogação e reconexão.
+- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+## Batch 18 — Kick Chat
+
+**Referências:** seções 8, 10, 17, 21 e ADR 0014.
+
+- [ ] **Decisão/dependência externa:** validar documentação oficial vigente, acesso ao programa e Client ID.
+- [ ] Mapear somente capacidades oficialmente disponíveis; não depender de endpoints privados/reversos.
+- [ ] Implementar OAuth, cofre, leitura, escrita e identidade conforme capacidades confirmadas.
+- [ ] Exibir capacidades ausentes em vez de simular equivalência com Twitch/YouTube.
+- [ ] Reutilizar as suítes de contrato, fontes de Giveaway/Games e chat focado.
+- [ ] Testar limites, revogação, reconexão, duplicatas e indisponibilidade do provider.
+- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+## Batch 19 — Robustez e validação das integrações de chat
+
+**Referências:** seções 17, 18, 20, 24, 26 e ADR 0014.
+
+- [ ] Executar soak test de conexões simultâneas Twitch, YouTube e Kick com adapters controlados.
+- [ ] Validar restart, perda de rede, suspensão do Windows, refresh, revogação e encerramento de live.
+- [ ] Validar quotas, backpressure, retenção, índices SQLite e listas grandes.
+- [ ] Auditar cofre, OAuth/PKCE/state, callback loopback, CSP, logs e exportação de diagnóstico.
+- [ ] Validar acessibilidade, redução de movimento, vazio, loading e erros em todas as telas.
+- [ ] Confirmar que TODO e todos os fluxos manuais continuam funcionando totalmente offline.
+- [ ] Atualizar documentação do usuário, privacidade, diagnóstico e suporte por provider.
+- [ ] Executar gate completo e E2E no instalador Windows.
+- [ ] Marcar tasks comprovadas, fazer commit e push.
+
+## Batch 20 — LivePix
 
 **Referências:** seções 6.10–6.11, 7.2, 7.7, 8.1 (LivePix), 11.4 (`integration_events`), 17.2, 21 e 22 (Fase 5).
 
@@ -343,7 +463,7 @@ constitui início de implementação.
 - [ ] Executar gate completo e verificar o critério de saída da Fase 5.
 - [ ] Marcar as tasks concluídas, fazer commit e push após o gate verde.
 
-## Batch 13 — OBS, overlays e expansão
+## Batch 21 — OBS, overlays e expansão
 
 **Referências:** seções 2.2, 9.5, 20, 22 (Fase 6) e 28.
 
@@ -363,7 +483,7 @@ constitui início de implementação.
 - [ ] Executar gate completo por sub-batch.
 - [ ] Marcar tasks, fazer commit e push somente após cada sub-batch verde.
 
-## Batch 14 — Validação final do projeto completo
+## Batch 22 — Validação final do projeto completo
 
 **Referências:** seções 1–29, com ênfase em 2.3, 17, 18, 24, 26 e 29.
 
@@ -399,22 +519,22 @@ constitui início de implementação.
 | 8     | Configurações globais        | 3, 4, 10, 12                          |
 | 9     | Arquitetura de alto nível    | 1, 2, 13                              |
 | 10    | Estrutura do repositório     | 1, 4                                  |
-| 11    | SQLite                       | 4, 5, 6, 8, 9, 12                     |
+| 11    | SQLite                       | 4, 5, 6, 8, 9, 12, 14–16, 20          |
 | 12    | API e Scalar                 | 2, 4, 5, 6, 8, 9, 10                  |
 | 13    | Estado do frontend           | 3, 5, 7, 8                            |
 | 14    | Auto update e releases       | 11                                    |
 | 15    | Debug e observabilidade      | 10                                    |
 | 16    | Scripts raiz                 | 1, 11                                 |
-| 17    | Estratégia de testes         | todas as batches de implementação, 14 |
-| 18    | CI/CD                        | 1, 11, 14                             |
-| 19    | Segurança do Electron        | 2, 10, 14                             |
-| 20    | Performance e confiabilidade | 3, 4, 7, 11, 13, 14                   |
-| 21    | Arquitetura LivePix          | 12                                    |
-| 22    | Roadmap                      | 0–13                                  |
+| 17    | Estratégia de testes         | todas as batches de implementação, 22 |
+| 18    | CI/CD                        | 1, 11, 22                             |
+| 19    | Segurança do Electron        | 2, 10, 12–19, 22                      |
+| 20    | Performance e confiabilidade | 3, 4, 7, 11, 12–19, 21, 22            |
+| 21    | Integrações externas         | 12–20                                 |
+| 22    | Roadmap                      | 0–21                                  |
 | 23    | Primeiro vertical slice      | 2                                     |
 | 24    | Definition of Done           | todas as batches                      |
-| 25    | Decisões pendentes           | 0, 12, 13                             |
-| 26    | Riscos e mitigação           | 0, 14                                 |
+| 25    | Decisões pendentes           | 0, 12, 13, 17, 18, 20, 21             |
+| 26    | Riscos e mitigação           | 0, 19, 22                             |
 | 27    | Princípios de implementação  | 0, 1 e todas as implementações        |
-| 28    | Visão futura                 | 0, 13                                 |
-| 29    | Resumo executivo             | 0, 14                                 |
+| 28    | Visão futura                 | 0, 21                                 |
+| 29    | Resumo executivo             | 0, 22                                 |
