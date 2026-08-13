@@ -5,13 +5,19 @@ import {
   ImportParticipantsRequestSchema,
   NextGiveawayRoundRequestSchema,
   ParseParticipantsRequestSchema,
+  SaveGiveawayCaptureRuleRequestSchema,
+  UpdateGiveawayCaptureStatusRequestSchema,
   UpdateGiveawayRequestSchema,
 } from '@streamkit/contracts'
 import { GiveawayService } from './giveaway.service'
+import { GiveawayChatCaptureService } from './giveaway-chat-capture.service'
 
 @Controller('api/v1/giveaways')
 export class GiveawayController {
-  public constructor(@Inject(GiveawayService) private readonly service: GiveawayService) {}
+  public constructor(
+    @Inject(GiveawayService) private readonly service: GiveawayService,
+    @Inject(GiveawayChatCaptureService) private readonly captures: GiveawayChatCaptureService,
+  ) {}
   @Get() public list() {
     return this.service.list()
   }
@@ -34,6 +40,32 @@ export class GiveawayController {
   @Post(':id/participants/import') public import(@Param('id') id: unknown, @Body() body: unknown) {
     const input = ImportParticipantsRequestSchema.parse(body)
     return this.service.import(EntityIdSchema.parse(id), input.input, input.policy)
+  }
+  @Get(':id/capture-rules') public captureRules(@Param('id') id: unknown) {
+    return this.captures.list(EntityIdSchema.parse(id))
+  }
+  @Post(':id/capture-rules') public saveCaptureRule(
+    @Param('id') id: unknown,
+    @Body() body: unknown,
+  ) {
+    return this.captures.save(
+      EntityIdSchema.parse(id),
+      SaveGiveawayCaptureRuleRequestSchema.parse(body),
+    )
+  }
+  @Patch(':id/capture-rules/:ruleId') public updateCaptureRuleStatus(
+    @Param('ruleId') ruleId: unknown,
+    @Body() body: unknown,
+  ) {
+    return this.captures.updateStatus(
+      EntityIdSchema.parse(ruleId),
+      UpdateGiveawayCaptureStatusRequestSchema.parse(body).status,
+    )
+  }
+  @Delete(':id/capture-rules/:ruleId') @HttpCode(204) public deleteCaptureRule(
+    @Param('ruleId') ruleId: unknown,
+  ) {
+    return this.captures.delete(EntityIdSchema.parse(ruleId))
   }
   @Delete(':id/participants/:participantId') @HttpCode(204) public removeParticipant(
     @Param('id') id: unknown,

@@ -161,4 +161,40 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
         ON integration_events(provider, channel_id, provider_user_id, occurred_at);
     `,
   },
+  {
+    destructive: false,
+    name: 'giveaway_chat_capture_rules',
+    version: 8,
+    sql: `
+      CREATE TABLE giveaway_capture_rules (
+        id TEXT PRIMARY KEY NOT NULL,
+        giveaway_id TEXT NOT NULL REFERENCES giveaways(id) ON DELETE CASCADE,
+        connection_id TEXT NOT NULL REFERENCES integration_connections(id) ON DELETE CASCADE,
+        match_type TEXT NOT NULL,
+        match_value TEXT,
+        entry_policy TEXT NOT NULL,
+        exclude_bots INTEGER NOT NULL,
+        exclude_broadcaster INTEGER NOT NULL,
+        exclude_moderators INTEGER NOT NULL,
+        members_only INTEGER NOT NULL,
+        starts_at TEXT,
+        ends_at TEXT,
+        status TEXT NOT NULL,
+        captured_count INTEGER NOT NULL DEFAULT 0,
+        duplicate_count INTEGER NOT NULL DEFAULT 0,
+        rejected_count INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(giveaway_id, connection_id)
+      );
+      CREATE INDEX giveaway_capture_rules_active_index
+        ON giveaway_capture_rules(connection_id, status, starts_at, ends_at);
+      ALTER TABLE giveaway_participants ADD COLUMN source TEXT NOT NULL DEFAULT 'manual';
+      ALTER TABLE giveaway_participants ADD COLUMN provider TEXT;
+      ALTER TABLE giveaway_participants ADD COLUMN provider_user_id TEXT;
+      CREATE UNIQUE INDEX giveaway_participants_external_identity_unique
+        ON giveaway_participants(giveaway_id, provider, provider_user_id)
+        WHERE provider IS NOT NULL AND provider_user_id IS NOT NULL;
+    `,
+  },
 ]

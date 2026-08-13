@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const ParticipantSourceSchema = z.enum(['manual', 'livepix'])
+export const ParticipantSourceSchema = z.enum(['chat', 'manual', 'livepix'])
 export const GiveawayStatusSchema = z.enum([
   'draft',
   'ready',
@@ -54,6 +54,9 @@ export const GiveawayParticipantSchema = z.object({
   giveawayId: z.uuid(),
   id: z.uuid(),
   normalizedName: z.string().min(1),
+  provider: z.enum(['kick', 'twitch', 'youtube']).nullable().default(null),
+  providerUserId: z.string().nullable().default(null),
+  source: ParticipantSourceSchema.default('manual'),
   ticketCount: z.number().int().positive(),
 })
 export const ImportParticipantsRequestSchema = ParseParticipantsRequestSchema
@@ -83,6 +86,50 @@ export const GiveawayDetailSchema = z.object({
 })
 export const GiveawayListSchema = z.object({ items: z.array(GiveawaySchema) })
 export const GiveawayHistorySchema = z.object({ items: z.array(GiveawayRoundSchema) })
+export const GiveawayCaptureMatchSchema = z.enum(['any', 'contains', 'exact', 'prefix'])
+export const GiveawayCaptureEntryPolicySchema = z.enum(['tickets', 'unique'])
+export const GiveawayCaptureStatusSchema = z.enum(['active', 'completed', 'paused'])
+export const SaveGiveawayCaptureRuleRequestSchema = z
+  .object({
+    connectionId: z.uuid(),
+    endsAt: z.iso.datetime().nullable().default(null),
+    entryPolicy: GiveawayCaptureEntryPolicySchema,
+    excludeBots: z.boolean().default(true),
+    excludeBroadcaster: z.boolean().default(true),
+    excludeModerators: z.boolean().default(false),
+    match: GiveawayCaptureMatchSchema,
+    matchValue: z.string().trim().max(200).nullable().default(null),
+    membersOnly: z.boolean().default(false),
+    startsAt: z.iso.datetime().nullable().default(null),
+  })
+  .superRefine((value, context) => {
+    if (value.match !== 'any' && !value.matchValue)
+      context.addIssue({
+        code: 'custom',
+        message: 'A match value is required',
+        path: ['matchValue'],
+      })
+    if (value.startsAt && value.endsAt && value.startsAt >= value.endsAt)
+      context.addIssue({
+        code: 'custom',
+        message: 'The capture window is invalid',
+        path: ['endsAt'],
+      })
+  })
+export const GiveawayCaptureRuleSchema = SaveGiveawayCaptureRuleRequestSchema.safeExtend({
+  capturedCount: z.number().int().nonnegative(),
+  createdAt: z.iso.datetime(),
+  duplicateCount: z.number().int().nonnegative(),
+  giveawayId: z.uuid(),
+  id: z.uuid(),
+  rejectedCount: z.number().int().nonnegative(),
+  status: GiveawayCaptureStatusSchema,
+  updatedAt: z.iso.datetime(),
+})
+export const GiveawayCaptureRuleListSchema = z.object({ items: z.array(GiveawayCaptureRuleSchema) })
+export const UpdateGiveawayCaptureStatusRequestSchema = z.object({
+  status: GiveawayCaptureStatusSchema,
+})
 export type ParticipantSource = z.infer<typeof ParticipantSourceSchema>
 export type DuplicatePolicy = z.infer<typeof DuplicatePolicySchema>
 export type ParsedParticipant = z.infer<typeof ParsedParticipantSchema>
@@ -96,3 +143,7 @@ export type GiveawayRound = z.infer<typeof GiveawayRoundSchema>
 export type GiveawayRoundEntry = z.infer<typeof GiveawayRoundEntrySchema>
 export type GiveawayDetail = z.infer<typeof GiveawayDetailSchema>
 export type GiveawayHistory = z.infer<typeof GiveawayHistorySchema>
+export type GiveawayCaptureRule = z.infer<typeof GiveawayCaptureRuleSchema>
+export type GiveawayCaptureMatch = z.infer<typeof GiveawayCaptureMatchSchema>
+export type GiveawayCaptureEntryPolicy = z.infer<typeof GiveawayCaptureEntryPolicySchema>
+export type SaveGiveawayCaptureRuleRequest = z.infer<typeof SaveGiveawayCaptureRuleRequestSchema>

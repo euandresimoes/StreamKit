@@ -14,6 +14,7 @@ import { todoWorkspaces } from '../src/infrastructure/database/schema'
 
 const expectedTables = [
   'app_settings',
+  'giveaway_capture_rules',
   'giveaway_participants',
   'giveaway_round_entries',
   'giveaway_rounds',

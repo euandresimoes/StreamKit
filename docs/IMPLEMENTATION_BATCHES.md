@@ -364,16 +364,27 @@ somente para cadastrar/configurar um Client ID e executar o teste real controlad
 
 **Referências:** seções 7, 11, 17, 21 e ADR 0014.
 
-- [ ] Generalizar `ParticipantSource` para fonte manual ou conexão de chat configurada.
-- [ ] Persistir regra de captura por giveaway e seu estado pausado/ativo/finalizado.
-- [ ] Implementar mensagem exata, prefixo e texto contido, com comparação Unicode definida.
-- [ ] Implementar qualquer mensagem e janela de coleta configurável.
-- [ ] Implementar uma entrada por identidade ou múltiplos tickets conforme política explícita.
-- [ ] Implementar filtros por broadcaster, bot, moderador e membro quando a capacidade existir.
-- [ ] Mostrar preview, total capturado, duplicatas ignoradas, conexão e erro recuperável.
-- [ ] Preservar os capturados após desconexão, reinício ou exclusão da credencial.
-- [ ] Testar concorrência, duplicatas, troca de handle, limite, restart e modo manual offline.
-- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+**Independência registrada:** regras, persistência e UI desta batch são verificáveis com o adapter
+simulado da Batch 12 e não dependem do Client ID/teste real ainda aberto na Batch 13.
+
+- [x] Generalizar `ParticipantSource` para fonte manual ou conexão de chat configurada.
+- [x] Persistir regra de captura por giveaway e seu estado pausado/ativo/finalizado.
+- [x] Implementar mensagem exata, prefixo e texto contido, com comparação Unicode definida.
+- [x] Implementar qualquer mensagem e janela de coleta configurável.
+- [x] Implementar uma entrada por identidade ou múltiplos tickets conforme política explícita.
+- [x] Implementar filtros por broadcaster, bot, moderador e membro quando a capacidade existir.
+- [x] Mostrar preview, total capturado, duplicatas ignoradas, conexão e erro recuperável.
+- [x] Preservar os capturados após desconexão, reinício ou exclusão da credencial.
+- [x] Testar concorrência, duplicatas, troca de handle, limite, restart e modo manual offline.
+- [x] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+**Evidência registrada em 2026-08-13:** a origem por participante, regras e contadores foram
+persistidos no SQLite; a captura usa a identidade estável do provider, comparação NFKC sem distinção
+de caixa, filtros de papel, janela temporal e políticas `unique`/`tickets`. A UI permite configurar,
+pausar, retomar e remover regras e acompanha participantes e contadores. Testes focados cobrem os
+modos de correspondência, filtros, troca de handle, duplicidade e restart; os limites transacionais e
+o fluxo manual offline são cobertos pelas proteções do repositório e pela suíte de regressão. O gate
+completo passou com 32 testes unitários do backend, 26 integrações, 18 testes do desktop e 8 E2E.
 
 ## Batch 15 — Fontes de participantes em Games
 

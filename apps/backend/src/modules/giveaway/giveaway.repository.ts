@@ -66,7 +66,9 @@ export class GiveawayRepository {
     const persisted = await this.database.orm
       .select()
       .from(giveawayParticipants)
-      .where(eq(giveawayParticipants.giveawayId, id))
+      .where(
+        and(eq(giveawayParticipants.giveawayId, id), eq(giveawayParticipants.source, 'manual')),
+      )
     this.database.transaction(() => {
       const createdAt = new Date().toISOString()
       const pending = new Map(entries.map((entry) => [entry.normalizedName, entry]))
@@ -94,6 +96,9 @@ export class GiveawayRepository {
               externalRef: null,
               giveawayId: id,
               id: randomUUID(),
+              provider: null,
+              providerUserId: null,
+              source: 'manual',
             })),
           )
           .run()

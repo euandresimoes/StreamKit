@@ -3,7 +3,9 @@ import {
   Box,
   Gift,
   ListPlus,
+  MessageCircle,
   Plus,
+  Radio,
   RotateCw,
   Settings2,
   Trash2,
@@ -20,6 +22,7 @@ import { CreateItemDialog } from "./CreateItemDialog";
 import { EntitySelect } from "./EntitySelect";
 import { GiveawayStage } from "./GiveawayStage";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
+import { GiveawayChatCapturePanel } from "./GiveawayChatCapturePanel";
 
 export function GiveawaysTab() {
   const giveaways = useGiveaways();
@@ -29,6 +32,7 @@ export function GiveawaysTab() {
   const [drawPhase, setDrawPhase] = useState<"idle" | "drawing" | "revealed">("idle");
   const [creating, setCreating] = useState(false);
   const [configuring, setConfiguring] = useState(false);
+  const [participantSource, setParticipantSource] = useState<"chat" | "manual">("manual");
   const [removingParticipant, setRemovingParticipant] = useState<{
     id: string;
     name: string;
@@ -143,32 +147,62 @@ export function GiveawaysTab() {
                 }}
               />
             </div>
+            <div className="mb-3">
+              <BaseSegmentedControl
+                ariaLabel="Fonte dos participantes"
+                value={participantSource}
+                options={[
+                  { value: "manual", label: "Manual", icon: <ListPlus className="size-3.5" /> },
+                  { value: "chat", label: "Chat", icon: <MessageCircle className="size-3.5" /> },
+                ]}
+                onChange={(source) => {
+                  if (source === "manual" || source === "chat") setParticipantSource(source);
+                }}
+              />
+            </div>
             <div className="flex items-center gap-2 pb-3">
-              <ListPlus className="size-4" />
-              <h3 className="flex-1 text-[13px] font-semibold">Importar participantes</h3>
+              {participantSource === "manual" ? (
+                <ListPlus className="size-4" />
+              ) : (
+                <Radio className="size-4" />
+              )}
+              <h3 className="flex-1 text-[13px] font-semibold">
+                {participantSource === "manual" ? "Importar participantes" : "Capturar do chat"}
+              </h3>
               <span className="rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-muted-foreground">
                 {detail.giveaway.status === "completed" ? "Concluído" : "Pronto"}
               </span>
             </div>
-            <Textarea
-              value={input}
-              disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder={"Um nome por linha\nMaria\nJoão\nAna"}
-              className="min-h-40 flex-1 resize-none text-[13px]"
-            />
-            <Button
-              className="mt-3"
-              disabled={!input.trim() || giveaways.busy || !canModify || drawPhase === "drawing"}
-              onClick={async () => {
-                if (!input.trim()) return;
-                clearCompletedPresentation();
-                const saved = await giveaways.importParticipants(input);
-                if (saved) setInput("");
-              }}
-            >
-              <Users /> Salvar participantes
-            </Button>
+            {participantSource === "manual" ? (
+              <>
+                <Textarea
+                  value={input}
+                  disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
+                  onChange={(event) => setInput(event.target.value)}
+                  placeholder={"Um nome por linha\nMaria\nJoão\nAna"}
+                  className="min-h-40 flex-1 resize-none text-[13px]"
+                />
+                <Button
+                  className="mt-3"
+                  disabled={
+                    !input.trim() || giveaways.busy || !canModify || drawPhase === "drawing"
+                  }
+                  onClick={async () => {
+                    if (!input.trim()) return;
+                    clearCompletedPresentation();
+                    const saved = await giveaways.importParticipants(input);
+                    if (saved) setInput("");
+                  }}
+                >
+                  <Users /> Salvar participantes
+                </Button>
+              </>
+            ) : (
+              <GiveawayChatCapturePanel
+                giveawayId={detail.giveaway.id}
+                onRefresh={giveaways.refresh}
+              />
+            )}
             <div className="mt-4 space-y-1.5 overflow-y-auto">
               {detail.participants.map((participant) => (
                 <div

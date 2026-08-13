@@ -6,6 +6,8 @@ import { HealthController } from '../modules/health/health.controller'
 import { GiveawayController } from '../modules/giveaway/giveaway.controller'
 import { GiveawayRepository } from '../modules/giveaway/giveaway.repository'
 import { GiveawayService } from '../modules/giveaway/giveaway.service'
+import { GiveawayCaptureRepository } from '../modules/giveaway/giveaway-capture.repository'
+import { GiveawayChatCaptureService } from '../modules/giveaway/giveaway-chat-capture.service'
 import { DatabaseStatusController } from '../modules/system/controllers/database-status.controller'
 import { DiagnosticsController } from '../modules/system/controllers/diagnostics.controller'
 import {
@@ -75,6 +77,8 @@ export class AppModule {
         ManageTodoService,
         GiveawayRepository,
         GiveawayService,
+        GiveawayCaptureRepository,
+        GiveawayChatCaptureService,
         ChatProviderRegistry,
         IntegrationConnectionManager,
         IntegrationEventBus,

@@ -28,6 +28,14 @@ export const ChatMessageReceivedSchema = z.object({
   occurredAt: z.iso.datetime(),
   provider: IntegrationProviderSchema,
   type: z.literal('chat.message'),
+  roles: z
+    .object({
+      isBot: z.boolean(),
+      isBroadcaster: z.boolean(),
+      isMember: z.boolean(),
+      isModerator: z.boolean(),
+    })
+    .default({ isBot: false, isBroadcaster: false, isMember: false, isModerator: false }),
 })
 
 export const IntegrationConnectionSchema = z.object({

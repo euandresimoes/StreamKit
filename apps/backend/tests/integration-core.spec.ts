@@ -17,6 +17,7 @@ const event: ChatMessageReceived = {
   message: '!participar',
   occurredAt: '2026-08-13T10:00:00.000Z',
   provider: 'twitch',
+  roles: { isBot: false, isBroadcaster: false, isMember: false, isModerator: false },
   type: 'chat.message',
 }
 

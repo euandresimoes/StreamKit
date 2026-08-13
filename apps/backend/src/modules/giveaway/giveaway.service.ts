@@ -40,6 +40,7 @@ export class GiveawayService {
         409,
       )
     const existingInput = current.participants
+      .filter((participant) => participant.source === 'manual')
       .flatMap((participant) => Array(participant.ticketCount).fill(participant.displayName))
       .join('\n')
     const preview = this.parse([existingInput, input].filter(Boolean).join('\n'), policy)

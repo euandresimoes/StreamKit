@@ -1,17 +1,37 @@
 import {
   type CreateGiveawayRequest,
   type DuplicatePolicy,
+  GiveawayCaptureRuleListSchema,
+  GiveawayCaptureRuleSchema,
   GiveawayDetailSchema,
   GiveawayHistorySchema,
   GiveawayListSchema,
   GiveawayRoundSchema,
   GiveawaySchema,
+  type SaveGiveawayCaptureRuleRequest,
   type UpdateGiveawayRequest,
 } from "@streamkit/contracts";
 
 import { apiClient } from "@/infrastructure/api-client";
 
 export const giveawayApi = {
+  captureRules: (id: string) =>
+    apiClient.request(`/api/v1/giveaways/${id}/capture-rules`, {
+      schema: GiveawayCaptureRuleListSchema,
+    }),
+  saveCaptureRule: (id: string, input: SaveGiveawayCaptureRuleRequest) =>
+    apiClient.request(`/api/v1/giveaways/${id}/capture-rules`, {
+      body: input,
+      method: "POST",
+      schema: GiveawayCaptureRuleSchema,
+    }),
+  updateCaptureRule: (id: string, ruleId: string, status: "active" | "completed" | "paused") =>
+    apiClient.request(`/api/v1/giveaways/${id}/capture-rules/${ruleId}`, {
+      body: { status },
+      method: "PATCH",
+    }),
+  deleteCaptureRule: (id: string, ruleId: string) =>
+    apiClient.request(`/api/v1/giveaways/${id}/capture-rules/${ruleId}`, { method: "DELETE" }),
   list: () => apiClient.request("/api/v1/giveaways", { schema: GiveawayListSchema }),
   detail: (id: string) =>
     apiClient.request(`/api/v1/giveaways/${id}`, { schema: GiveawayDetailSchema }),

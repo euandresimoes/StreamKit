@@ -191,10 +191,41 @@ export const giveawayParticipants = sqliteTable('giveaway_participants', {
     .references(() => giveaways.id, { onDelete: 'cascade' }),
   displayName: text('display_name').notNull(),
   normalizedName: text('normalized_name').notNull(),
+  provider: text('provider'),
+  providerUserId: text('provider_user_id'),
+  source: text('source').notNull().default('manual'),
   ticketCount: integer('ticket_count').notNull(),
   externalRef: text('external_ref'),
   createdAt: text('created_at').notNull(),
 })
+export const giveawayCaptureRules = sqliteTable(
+  'giveaway_capture_rules',
+  {
+    capturedCount: integer('captured_count').notNull().default(0),
+    connectionId: text('connection_id')
+      .notNull()
+      .references(() => integrationConnections.id, { onDelete: 'cascade' }),
+    createdAt: text('created_at').notNull(),
+    duplicateCount: integer('duplicate_count').notNull().default(0),
+    endsAt: text('ends_at'),
+    entryPolicy: text('entry_policy').notNull(),
+    excludeBots: integer('exclude_bots', { mode: 'boolean' }).notNull(),
+    excludeBroadcaster: integer('exclude_broadcaster', { mode: 'boolean' }).notNull(),
+    excludeModerators: integer('exclude_moderators', { mode: 'boolean' }).notNull(),
+    giveawayId: text('giveaway_id')
+      .notNull()
+      .references(() => giveaways.id, { onDelete: 'cascade' }),
+    id: text('id').primaryKey(),
+    match: text('match_type').notNull(),
+    matchValue: text('match_value'),
+    membersOnly: integer('members_only', { mode: 'boolean' }).notNull(),
+    rejectedCount: integer('rejected_count').notNull().default(0),
+    startsAt: text('starts_at'),
+    status: text('status').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [unique().on(table.giveawayId, table.connectionId)],
+)
 export const giveawayRounds = sqliteTable('giveaway_rounds', {
   id: text('id').primaryKey(),
   giveawayId: text('giveaway_id')

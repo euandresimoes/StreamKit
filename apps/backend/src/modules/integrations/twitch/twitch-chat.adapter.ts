@@ -204,6 +204,12 @@ export function normalizeTwitchChatNotification(input: z.infer<typeof EnvelopeSc
     message: event.message.text,
     occurredAt: input.metadata.message_timestamp,
     provider: 'twitch',
+    roles: {
+      isBot: false,
+      isBroadcaster: event.badges.some((badge) => badge.set_id === 'broadcaster'),
+      isMember: event.badges.some((badge) => badge.set_id === 'subscriber'),
+      isModerator: event.badges.some((badge) => badge.set_id === 'moderator'),
+    },
     type: 'chat.message',
   })
 }

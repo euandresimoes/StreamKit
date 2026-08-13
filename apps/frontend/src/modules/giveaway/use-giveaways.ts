@@ -65,6 +65,7 @@ export function useGiveaways() {
     history,
     busy,
     error,
+    refresh: () => load(detail?.giveaway.id),
     select: load,
     create: async (input: CreateGiveawayRequest) => {
       setBusy(true);
