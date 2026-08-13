@@ -80,6 +80,36 @@ describe('giveaway chat capture persistence', () => {
       duplicateCount: 1,
     })
 
+    const round = await giveaways.draw(giveaway.id)
+    expect(round).not.toBeNull()
+    await integrationService.ingest({
+      ...message,
+      author: {
+        ...message.author,
+        displayName: 'Durante o giro',
+        providerUserId: 'drawing-user',
+      },
+      externalEventId: 'message-drawing',
+    })
+    expect((await giveaways.detail(giveaway.id))?.participants).toHaveLength(1)
+    await giveaways.complete(giveaway.id, round!.id)
+    await integrationService.ingest({
+      ...message,
+      author: {
+        ...message.author,
+        displayName: 'Entre rodadas',
+        providerUserId: 'between-rounds-user',
+      },
+      externalEventId: 'message-between-rounds',
+    })
+    expect(await giveaways.detail(giveaway.id)).toMatchObject({
+      giveaway: { status: 'ready' },
+      participants: [
+        expect.objectContaining({ providerUserId: 'stable-user-id' }),
+        expect.objectContaining({ providerUserId: 'between-rounds-user' }),
+      ],
+    })
+
     await captureService.save(giveaway.id, { ...input, entryPolicy: 'tickets' })
     await integrationService.ingest({ ...message, externalEventId: 'message-3' })
     expect((await giveaways.detail(giveaway.id))?.participants[0]?.ticketCount).toBe(2)

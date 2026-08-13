@@ -45,6 +45,22 @@ describe('focused chat buffer', () => {
     ])
     expect(thread.messages.map((item) => item.message)).toEqual(['<img src=x onerror=alert(1)>'])
     expect(thread.connections).toHaveLength(1)
+    await ingestion.ingest(message('four', 'channel-a', 'winner', 'segunda mensagem'))
+    const persistedWinnerRows = await database.orm
+      .select({
+        avatarUrl: chatMessageBuffer.avatarUrl,
+        channelId: chatMessageBuffer.channelId,
+        providerUserId: chatMessageBuffer.providerUserId,
+      })
+      .from(chatMessageBuffer)
+    expect(
+      persistedWinnerRows.filter(
+        (row) =>
+          row.channelId === 'channel-a' &&
+          row.providerUserId === 'winner' &&
+          row.avatarUrl?.startsWith('data:image/'),
+      ),
+    ).toHaveLength(1)
     database.close()
 
     database = await SqliteDatabase.open(environment.databasePath)
@@ -57,7 +73,7 @@ describe('focused chat buffer', () => {
         providerUserId: 'winner',
       },
     ])
-    expect(thread.messages).toHaveLength(1)
+    expect(thread.messages).toHaveLength(2)
     await chat.prune(new Date(Date.now() + CHAT_BUFFER_RETENTION_MS + 1))
     expect(await chat.count()).toBe(0)
     database.close()
@@ -242,7 +258,7 @@ function message(
 ): ChatMessageReceived {
   return {
     author: {
-      avatarUrl: 'https://example.com/avatar.png',
+      avatarUrl: 'data:image/png;base64,iVBORw==',
       displayName: providerUserId,
       handle: `@${providerUserId}`,
       provider: 'twitch',

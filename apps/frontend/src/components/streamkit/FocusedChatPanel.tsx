@@ -55,7 +55,7 @@ export function FocusedChatPanel({
       ) ?? null,
     [thread],
   );
-  if (!open) return null;
+  const identity = thread?.identities[0] ?? null;
 
   const copyHandle = async (handle: string) => {
     setError(null);
@@ -81,18 +81,58 @@ export function FocusedChatPanel({
     }
   };
 
+  if (!open) {
+    return (
+      <Button
+        className="fixed bottom-5 right-5 z-40 rounded-full shadow-2xl"
+        size="icon"
+        aria-label="Reabrir chat do vencedor"
+        title="Reabrir chat do vencedor"
+        onClick={() => setOpen(true)}
+      >
+        <MessageCircle />
+      </Button>
+    );
+  }
+
   return (
     <aside
       aria-label="Chat focado"
       className="glass-panel fixed bottom-5 right-5 z-40 flex max-h-[70vh] w-[360px] flex-col overflow-hidden rounded-3xl border border-border-strong bg-popover/95 shadow-2xl"
     >
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
-        <MessageCircle className="size-4 text-primary" />
+        {identity?.avatarUrl ? (
+          <img
+            className="size-9 shrink-0 rounded-full object-cover"
+            src={identity.avatarUrl}
+            alt={`Avatar de ${identity.displayName}`}
+          />
+        ) : (
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-2">
+            <User className="size-4" />
+          </span>
+        )}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{thread?.subject ?? "Chat do vencedor"}</p>
-          <p className="text-[10px] text-muted-foreground">
-            Tempo real · histórico local das últimas 24h
-          </p>
+          <div className="flex min-w-0 items-center gap-1">
+            <p className="truncate text-sm font-semibold">
+              {identity?.displayName ?? thread?.subject ?? "Chat do vencedor"}
+            </p>
+            {identity && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="shrink-0"
+                aria-label={`Copiar ${identity.handle}`}
+                title={copied === identity.handle ? "Copiado" : "Copiar handle"}
+                onClick={() => void copyHandle(identity.handle)}
+              >
+                {copied === identity.handle ? <Check /> : <Copy />}
+              </Button>
+            )}
+          </div>
+          {identity && (
+            <p className="truncate text-[10px] text-muted-foreground">{identity.handle}</p>
+          )}
         </div>
         <Button
           variant="ghost"
@@ -103,41 +143,6 @@ export function FocusedChatPanel({
           <X />
         </Button>
       </header>
-
-      <div className="flex gap-2 overflow-x-auto border-b border-border p-3">
-        {thread?.identities.map((identity) => (
-          <div
-            key={`${identity.provider}:${identity.providerUserId}`}
-            className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-card px-2 py-2"
-          >
-            {identity.avatarUrl ? (
-              <img className="size-7 rounded-full object-cover" src={identity.avatarUrl} alt="" />
-            ) : (
-              <span className="flex size-7 items-center justify-center rounded-full bg-surface-2">
-                <User className="size-3.5" />
-              </span>
-            )}
-            <div className="min-w-0">
-              <p className="max-w-32 truncate text-xs font-medium">{identity.displayName}</p>
-              <p className="text-[9px] uppercase text-muted-foreground">{identity.provider}</p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Copiar ${identity.handle}`}
-              title={copied === identity.handle ? "Copiado" : "Copiar handle"}
-              onClick={() => void copyHandle(identity.handle)}
-            >
-              {copied === identity.handle ? <Check /> : <Copy />}
-            </Button>
-          </div>
-        ))}
-        {thread && !thread.identities.length && (
-          <p className="px-1 text-xs text-muted-foreground">
-            O vencedor não possui identidade de chat vinculada.
-          </p>
-        )}
-      </div>
 
       <div role="log" aria-live="polite" className="min-h-32 flex-1 space-y-2 overflow-y-auto p-3">
         {loading && (

@@ -724,6 +724,7 @@ export function GamesTab() {
               <ParticipantChatCapturePanel
                 target="tournament"
                 targetId={detail.tournament.id}
+                participantCount={detail.participants.length}
                 onRefresh={async () => {
                   await tournaments.reload(detail.tournament.id);
                 }}

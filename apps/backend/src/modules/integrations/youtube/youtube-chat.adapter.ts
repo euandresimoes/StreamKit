@@ -12,6 +12,7 @@ import type {
   ChatProviderConnectionContext,
   ChatProviderSession,
 } from '../chat-provider.adapter'
+import { downloadAvatarDataUrl } from '../avatar-data-url'
 import { ChatProviderRegistry } from '../chat-provider.registry'
 import { YouTubeLiveChatResponseSchema } from './youtube-api.schemas'
 import { YouTubeAuthService } from './youtube-auth.service'
@@ -23,6 +24,7 @@ export class YouTubeChatAdapter
   public readonly capabilities = ['chat.read', 'chat.write', 'user.identity'] as const
   public readonly provider = 'youtube' as const
   private unregister: (() => void) | null = null
+  private readonly avatars = new Map<string, Promise<string | null>>()
 
   public constructor(
     @Inject(YouTubeAuthService) private readonly auth: YouTubeAuthService,
@@ -56,7 +58,13 @@ export class YouTubeChatAdapter
           const payload = YouTubeLiveChatResponseSchema.parse(await response.json())
           for (const item of payload.items) {
             const event = normalizeYouTubeChatMessage(context.channelId, item)
-            if (event) await context.onEvent(event)
+            if (event) {
+              const avatarUrl = await this.avatar(
+                event.author.providerUserId,
+                event.author.avatarUrl,
+              )
+              await context.onEvent({ ...event, author: { ...event.author, avatarUrl } })
+            }
           }
           cursor = payload.nextPageToken ?? cursor
           if (cursor) await context.onCursor(cursor)
@@ -77,6 +85,14 @@ export class YouTubeChatAdapter
         resolveClosed()
       },
     }
+  }
+
+  private avatar(userId: string, url: string | null) {
+    const cached = this.avatars.get(userId)
+    if (cached) return cached
+    const pending = downloadAvatarDataUrl(url)
+    this.avatars.set(userId, pending)
+    return pending
   }
 
   public onApplicationBootstrap(): void {

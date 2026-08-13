@@ -6,7 +6,7 @@ import {
   FocusedChatThreadSchema,
   type IntegrationProvider,
 } from '@streamkit/contracts'
-import { and, desc, eq, lt, or, sql } from 'drizzle-orm'
+import { and, desc, eq, isNotNull, lt, or, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import { chatMessageBuffer, integrationConnections } from '../../infrastructure/database/schema'
@@ -29,10 +29,26 @@ export class FocusedChatRepository {
 
   public async append(event: ChatMessageReceived): Promise<void> {
     const now = new Date().toISOString()
+    const [latestAvatar] = event.author.avatarUrl
+      ? await this.database.orm
+          .select({ avatarUrl: chatMessageBuffer.avatarUrl })
+          .from(chatMessageBuffer)
+          .where(
+            and(
+              eq(chatMessageBuffer.provider, event.provider),
+              eq(chatMessageBuffer.channelId, event.channelId),
+              eq(chatMessageBuffer.providerUserId, event.author.providerUserId),
+              isNotNull(chatMessageBuffer.avatarUrl),
+            ),
+          )
+          .orderBy(desc(chatMessageBuffer.occurredAt))
+          .limit(1)
+      : []
     await this.database.orm
       .insert(chatMessageBuffer)
       .values({
-        avatarUrl: event.author.avatarUrl,
+        avatarUrl:
+          latestAvatar?.avatarUrl === event.author.avatarUrl ? null : event.author.avatarUrl,
         badgesJson: JSON.stringify(event.badges),
         channelId: event.channelId,
         displayName: event.author.displayName,
@@ -100,6 +116,28 @@ export class FocusedChatRepository {
           ),
         ),
       )
+    const avatarRows = await Promise.all(
+      keys.map(async (key) => {
+        const [row] = await this.database.orm
+          .select({ avatarUrl: chatMessageBuffer.avatarUrl })
+          .from(chatMessageBuffer)
+          .where(
+            and(
+              eq(chatMessageBuffer.provider, key.provider),
+              eq(chatMessageBuffer.channelId, key.channelId),
+              eq(chatMessageBuffer.providerUserId, key.providerUserId),
+              isNotNull(chatMessageBuffer.avatarUrl),
+            ),
+          )
+          .orderBy(desc(chatMessageBuffer.occurredAt))
+          .limit(1)
+        return [
+          `${key.provider}:${key.channelId}:${key.providerUserId}`,
+          row?.avatarUrl ?? null,
+        ] as const
+      }),
+    )
+    const avatars = new Map(avatarRows)
     const connections = connectionRows.map((row) => ({
       ...row,
       capabilities: JSON.parse(row.capabilitiesJson) as unknown,
@@ -114,7 +152,7 @@ export class FocusedChatRepository {
       identities: keys.map((key) => {
         const row = latest.get(`${key.provider}:${key.channelId}:${key.providerUserId}`)
         return {
-          avatarUrl: row?.avatarUrl ?? null,
+          avatarUrl: avatars.get(`${key.provider}:${key.channelId}:${key.providerUserId}`) ?? null,
           channelId: key.channelId,
           displayName: row?.displayName ?? key.displayName,
           handle: row?.handle ?? key.displayName,

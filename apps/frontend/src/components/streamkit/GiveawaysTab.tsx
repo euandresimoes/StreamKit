@@ -79,8 +79,11 @@ export function GiveawaysTab() {
         ? 9000
         : 6500;
     revealTimer.current = setTimeout(() => {
-      setWinner(selectedWinner);
-      setDrawPhase("revealed");
+      void Promise.resolve(giveaways.completeRound(round.id)).then((completed) => {
+        if (!completed) return;
+        setWinner(selectedWinner);
+        setDrawPhase("revealed");
+      });
     }, revealDelay);
   };
 
@@ -203,6 +206,7 @@ export function GiveawaysTab() {
               <ParticipantChatCapturePanel
                 target="giveaway"
                 targetId={detail.giveaway.id}
+                participantCount={detail.participants.length}
                 onRefresh={giveaways.refresh}
               />
             )}

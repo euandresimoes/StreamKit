@@ -102,11 +102,11 @@ export function useGiveaways() {
       return mutate(async () => {
         await continueCompletedRound(detail.giveaway.id);
         if (detail.giveaway.status === "draft") await giveawayApi.prepare(detail.giveaway.id);
-        const round = await giveawayApi.draw(detail.giveaway.id);
-        await giveawayApi.complete(detail.giveaway.id, round.id);
-        return round;
+        return giveawayApi.draw(detail.giveaway.id);
       });
     },
+    completeRound: (roundId: string) =>
+      detail ? mutate(() => giveawayApi.complete(detail.giveaway.id, roundId)) : undefined,
     nextRound: () =>
       detail ? mutate(() => giveawayApi.nextRound(detail.giveaway.id, true)) : undefined,
     update: (name: string, mode: "wheel" | "case-opening") =>

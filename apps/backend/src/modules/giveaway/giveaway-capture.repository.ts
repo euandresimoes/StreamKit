@@ -31,7 +31,7 @@ export class GiveawayCaptureRepository {
         .from(giveaways)
         .where(eq(giveaways.id, rule.giveawayId))
         .get()
-      if (!giveaway || !['draft', 'ready'].includes(giveaway.status)) return false
+      if (!giveaway || !['completed', 'draft', 'ready'].includes(giveaway.status)) return false
       const existing = this.database.orm
         .select()
         .from(giveawayParticipants)

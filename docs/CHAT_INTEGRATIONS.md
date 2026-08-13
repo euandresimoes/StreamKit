@@ -4,8 +4,10 @@
 
 O StreamKit guarda conexões sem credenciais no SQLite. Access tokens e refresh tokens ficam somente
 no cofre seguro do sistema operacional. Mensagens necessárias ao chat focado são mantidas localmente
-por no máximo 24 horas e o buffer global é limitado a 10.000 mensagens. Excluir uma credencial não
-remove participantes ou resultados já persistidos.
+por no máximo 24 horas e o buffer global é limitado a 10.000 mensagens. Avatares retornados pelos
+providers são baixados com limite de tamanho, convertidos em `data:` base64 e persistidos uma única
+vez por identidade nesse buffer, evitando dependência futura da URL remota e repetição por mensagem.
+Excluir uma credencial não remove participantes ou resultados já persistidos.
 
 ## Twitch
 

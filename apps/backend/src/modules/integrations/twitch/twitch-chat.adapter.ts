@@ -7,6 +7,7 @@ import type {
   ChatProviderConnectionContext,
   ChatProviderSession,
 } from '../chat-provider.adapter'
+import { downloadAvatarDataUrl } from '../avatar-data-url'
 import { ChatProviderRegistry } from '../chat-provider.registry'
 import {
   INTEGRATION_RUNTIME_CONFIG,
@@ -38,11 +39,15 @@ const NotificationSchema = z.object({
   }),
   subscription: z.object({ type: z.literal('channel.chat.message') }),
 })
+const TwitchUsersSchema = z.object({
+  data: z.array(z.object({ id: z.string(), profile_image_url: z.url().nullable() })),
+})
 
 @Injectable()
 export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBootstrap {
   public readonly capabilities = ['chat.read', 'chat.write', 'user.identity'] as const
   public readonly provider = 'twitch' as const
+  private readonly avatars = new Map<string, Promise<string | null>>()
 
   public constructor(
     @Inject(TwitchAuthService) private readonly auth: TwitchAuthService,
@@ -153,12 +158,42 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
     }
     if (envelope.metadata.message_type === 'notification') {
       const event = normalizeTwitchChatNotification(envelope)
-      if (event) await context.onEvent(event)
+      if (event) {
+        const avatarUrl = await this.twitchAvatar(
+          event.author.providerUserId,
+          accessToken,
+          clientId,
+        )
+        await context.onEvent({ ...event, author: { ...event.author, avatarUrl } })
+      }
     }
     if (envelope.metadata.message_type === 'revocation') throw new Error('TWITCH_EVENTSUB_REVOKED')
     if (envelope.metadata.message_type === 'session_reconnect')
       throw new Error('TWITCH_EVENTSUB_RECONNECT_REQUESTED')
     return null
+  }
+
+  private twitchAvatar(userId: string, accessToken: string, clientId: string) {
+    const cached = this.avatars.get(userId)
+    if (cached) return cached
+    const pending = this.fetchTwitchAvatar(userId, accessToken, clientId)
+    this.avatars.set(userId, pending)
+    return pending
+  }
+
+  private async fetchTwitchAvatar(userId: string, accessToken: string, clientId: string) {
+    try {
+      const url = new URL('https://api.twitch.tv/helix/users')
+      url.searchParams.set('id', userId)
+      const response = await fetch(url, {
+        headers: { authorization: `Bearer ${accessToken}`, 'client-id': clientId },
+      })
+      if (!response.ok) return null
+      const users = TwitchUsersSchema.parse(await response.json())
+      return downloadAvatarDataUrl(users.data[0]?.profile_image_url ?? null)
+    } catch {
+      return null
+    }
   }
 
   private async subscribe(

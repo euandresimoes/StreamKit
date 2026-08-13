@@ -1,8 +1,8 @@
 import type { GiveawayCaptureEntryPolicy, GiveawayCaptureMatch } from "@streamkit/contracts";
-import { Pause, Play, Radio, Trash2 } from "lucide-react";
+import { Radio } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
+import { BaseDateTimePicker } from "@/components/base/BaseDateTimePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,10 +18,12 @@ import { useParticipantCaptureRules } from "@/modules/integration/use-participan
 export function ParticipantChatCapturePanel({
   target,
   targetId,
+  participantCount,
   onRefresh,
 }: {
   target: "giveaway" | "tournament";
   targetId: string;
+  participantCount: number;
   onRefresh: () => Promise<void>;
 }) {
   const captures = useParticipantCaptureRules(target, targetId, onRefresh);
@@ -35,7 +37,6 @@ export function ParticipantChatCapturePanel({
   const [membersOnly, setMembersOnly] = useState(false);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
-  const [deletingRuleId, setDeletingRuleId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!connectionId && captures.connections[0]) setConnectionId(captures.connections[0].id);
@@ -104,19 +105,17 @@ export function ParticipantChatCapturePanel({
             />
           )}
           <div className="grid grid-cols-2 gap-2">
-            <Input
-              type="datetime-local"
-              className="h-8 text-[10px]"
+            <BaseDateTimePicker
               value={startsAt}
-              onChange={(event) => setStartsAt(event.target.value)}
-              aria-label="Início da coleta"
+              onChange={setStartsAt}
+              ariaLabel="Início da coleta"
+              placeholder="Começar agora"
             />
-            <Input
-              type="datetime-local"
-              className="h-8 text-[10px]"
+            <BaseDateTimePicker
               value={endsAt}
-              onChange={(event) => setEndsAt(event.target.value)}
-              aria-label="Fim da coleta"
+              onChange={setEndsAt}
+              ariaLabel="Fim da coleta"
+              placeholder="Sem término"
             />
           </div>
           <div className="grid grid-cols-2 gap-x-3 text-[11px]">
@@ -157,65 +156,11 @@ export function ParticipantChatCapturePanel({
               })
             }
           >
-            <Radio /> Iniciar captura
+            <Radio /> Capturando ({participantCount} participantes)
           </Button>
         </div>
       )}
-
-      <div className="mt-3 min-h-0 space-y-2 overflow-y-auto">
-        {captures.rules.map((rule) => {
-          const connection = captures.connections.find((item) => item.id === rule.connectionId);
-          return (
-            <div key={rule.id} className="rounded-xl border border-border bg-card p-2.5">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`size-2 rounded-full ${rule.status === "active" ? "bg-success" : "bg-muted-foreground"}`}
-                />
-                <span className="min-w-0 flex-1 truncate text-xs font-medium">
-                  {connection?.channelDisplayName ?? "Canal removido"}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={rule.status === "active" ? "Pausar captura" : "Retomar captura"}
-                  onClick={() =>
-                    void captures.setStatus(rule.id, rule.status === "active" ? "paused" : "active")
-                  }
-                >
-                  {rule.status === "active" ? <Pause /> : <Play />}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Excluir regra de captura"
-                  onClick={() => setDeletingRuleId(rule.id)}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-              <p className="mt-1 text-[10.5px] text-muted-foreground">
-                {rule.capturedCount} capturados · {rule.duplicateCount} duplicados ·{" "}
-                {rule.rejectedCount} rejeitados
-              </p>
-            </div>
-          );
-        })}
-      </div>
       {captures.error && <p className="mt-2 text-xs text-destructive">{captures.error}</p>}
-      <BaseConfirmDialog
-        open={deletingRuleId !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeletingRuleId(null);
-        }}
-        title="Excluir regra de captura?"
-        description="Os participantes já capturados serão preservados. Somente a coleta automática será removida."
-        busy={captures.busy}
-        onConfirm={async () => {
-          if (!deletingRuleId) return;
-          await captures.remove(deletingRuleId);
-          setDeletingRuleId(null);
-        }}
-      />
     </div>
   );
 }

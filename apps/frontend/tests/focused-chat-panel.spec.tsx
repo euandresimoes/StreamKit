@@ -17,6 +17,7 @@ describe("FocusedChatPanel accessibility", () => {
     expect(markup).toContain('aria-label="Responder no chat"');
     expect(markup).toContain('aria-label="Enviar mensagem"');
     expect(markup).toContain("Carregando mensagens");
+    expect(markup).not.toContain("Tempo real · histórico local das últimas 24h");
   });
 
   it("supports both system and persisted reduced-motion preferences", async () => {
