@@ -1,5 +1,8 @@
 import {
   type CreateTournamentRequest,
+  type SaveTournamentCaptureRuleRequest,
+  TournamentCaptureRuleListSchema,
+  TournamentCaptureRuleSchema,
   TournamentDetailSchema,
   TournamentListSchema,
   TournamentSchema,
@@ -12,6 +15,25 @@ export const tournamentApi = {
   list: () => apiClient.request("/api/v1/tournaments", { schema: TournamentListSchema }),
   detail: (id: string) =>
     apiClient.request(`/api/v1/tournaments/${id}`, { schema: TournamentDetailSchema }),
+  captureRules: (id: string) =>
+    apiClient.request(`/api/v1/tournaments/${id}/capture-rules`, {
+      schema: TournamentCaptureRuleListSchema,
+    }),
+  saveCaptureRule: (id: string, input: SaveTournamentCaptureRuleRequest) =>
+    apiClient.request(`/api/v1/tournaments/${id}/capture-rules`, {
+      method: "POST",
+      body: input,
+      schema: TournamentCaptureRuleSchema,
+    }),
+  updateCaptureRule: (id: string, ruleId: string, status: "active" | "completed" | "paused") =>
+    apiClient.request(`/api/v1/tournaments/${id}/capture-rules/${ruleId}`, {
+      method: "PATCH",
+      body: { status },
+    }),
+  deleteCaptureRule: (id: string, ruleId: string) =>
+    apiClient.request(`/api/v1/tournaments/${id}/capture-rules/${ruleId}`, {
+      method: "DELETE",
+    }),
   create: (input: CreateTournamentRequest) =>
     apiClient.request("/api/v1/tournaments", { method: "POST", body: input }),
   update: (id: string, input: UpdateTournamentRequest) =>

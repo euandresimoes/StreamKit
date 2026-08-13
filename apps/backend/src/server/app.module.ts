@@ -22,6 +22,8 @@ import { CreateWorkspaceService } from '../modules/todo/services/create-workspac
 import { ListWorkspacesService } from '../modules/todo/services/list-workspaces.service'
 import { ManageTodoService } from '../modules/todo/services/manage-todo.service'
 import { TournamentController } from '../modules/tournament/tournament.controller'
+import { TournamentCaptureRepository } from '../modules/tournament/tournament-capture.repository'
+import { TournamentChatCaptureService } from '../modules/tournament/tournament-chat-capture.service'
 import { TournamentRepository } from '../modules/tournament/tournament.repository'
 import { TournamentService } from '../modules/tournament/tournament.service'
 import { SettingsController } from '../modules/settings/settings.controller'
@@ -87,6 +89,8 @@ export class AppModule {
         { provide: INTEGRATION_RUNTIME_CONFIG, useValue: integrationConfig },
         TwitchAuthService,
         TwitchChatAdapter,
+        TournamentCaptureRepository,
+        TournamentChatCaptureService,
         TournamentRepository,
         TournamentService,
         { provide: SECURE_CREDENTIAL_REPOSITORY, useValue: secureCredentials },

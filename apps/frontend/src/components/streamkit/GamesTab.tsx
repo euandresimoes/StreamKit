@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   GripVertical,
+  MessageCircle,
   Minus,
   Plus,
   Settings2,
@@ -15,6 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
 import { BaseColorPicker } from "@/components/base/BaseColorPicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -31,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { CreateItemDialog } from "./CreateItemDialog";
 import { EntitySelect } from "./EntitySelect";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
+import { ParticipantChatCapturePanel } from "./GiveawayChatCapturePanel";
 
 function getParticipantInitials(displayName: string) {
   return Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
@@ -42,6 +45,7 @@ export function GamesTab() {
   const [participantName, setParticipantName] = useState("");
   const [creating, setCreating] = useState(false);
   const [configuring, setConfiguring] = useState(false);
+  const [capturing, setCapturing] = useState(false);
   const [draggedParticipantId, setDraggedParticipantId] = useState<string | null>(null);
   const [draggedMemberId, setDraggedMemberId] = useState<string | null>(null);
   const [teamNames, setTeamNames] = useState<Record<string, string>>({});
@@ -85,6 +89,11 @@ export function GamesTab() {
         <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>
           <Plus /> Novo torneio
         </Button>
+        {detail && (
+          <Button variant="secondary" size="sm" onClick={() => setCapturing(true)}>
+            <MessageCircle /> Capturar do chat
+          </Button>
+        )}
         {detail && (
           <Button
             variant="ghost"
@@ -223,6 +232,11 @@ export function GamesTab() {
                             <span className="min-w-0 flex-1 truncate text-xs">
                               {participant.displayName}
                             </span>
+                            {participant.source === "chat" && (
+                              <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[9px] uppercase text-muted-foreground">
+                                {participant.provider}
+                              </span>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon-sm"
@@ -235,7 +249,7 @@ export function GamesTab() {
                       </div>
                       {!queued.length && (
                         <p className="mt-4 text-center text-xs text-muted-foreground">
-                          Adicione participantes ou aguarde entradas do LivePix.
+                          Adicione participantes manualmente ou capture entradas do chat.
                         </p>
                       )}
                     </>
@@ -519,6 +533,11 @@ export function GamesTab() {
                             {participant.displayName.slice(0, 2).toUpperCase()}
                           </span>
                           <span className="truncate">{participant.displayName}</span>
+                          {participant.source === "chat" && (
+                            <span className="ml-auto text-[9px] uppercase text-muted-foreground">
+                              {participant.provider}
+                            </span>
+                          )}
                         </div>
                       ))}
                 </div>
@@ -694,6 +713,24 @@ export function GamesTab() {
           setDeletingTeam(null);
         }}
       />
+      <Dialog open={capturing} onOpenChange={setCapturing}>
+        <DialogContent className="glass-panel max-h-[85vh] max-w-lg border-border-strong bg-popover/95">
+          <DialogHeader>
+            <DialogTitle>Capturar participantes do chat</DialogTitle>
+          </DialogHeader>
+          {detail && (
+            <div className="min-h-0 overflow-y-auto py-2">
+              <ParticipantChatCapturePanel
+                target="tournament"
+                targetId={detail.tournament.id}
+                onRefresh={async () => {
+                  await tournaments.reload(detail.tournament.id);
+                }}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

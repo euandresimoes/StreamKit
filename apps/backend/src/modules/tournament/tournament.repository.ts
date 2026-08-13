@@ -196,7 +196,10 @@ export class TournamentRepository {
               displayName: tournamentParticipants.displayName,
               entryId: tournamentEntries.id,
               id: tournamentParticipants.id,
+              provider: tournamentParticipants.provider,
+              providerUserId: tournamentParticipants.providerUserId,
               seed: tournamentEntries.seed,
+              source: tournamentParticipants.source,
               tournamentId: tournamentParticipants.tournamentId,
             })
             .from(tournamentParticipants)
@@ -217,7 +220,10 @@ export class TournamentRepository {
             displayName: row.displayName,
             entryId: null,
             id: row.id,
+            provider: row.provider,
+            providerUserId: row.providerUserId,
             seed: null,
+            source: row.source,
             tournamentId: row.tournamentId,
           }))
     const teamRows = await this.database.orm

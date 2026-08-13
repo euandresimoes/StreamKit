@@ -197,4 +197,39 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
         WHERE provider IS NOT NULL AND provider_user_id IS NOT NULL;
     `,
   },
+  {
+    destructive: false,
+    name: 'tournament_chat_capture_rules',
+    version: 9,
+    sql: `
+      CREATE TABLE tournament_capture_rules (
+        id TEXT PRIMARY KEY NOT NULL,
+        tournament_id TEXT NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+        connection_id TEXT NOT NULL REFERENCES integration_connections(id) ON DELETE CASCADE,
+        match_type TEXT NOT NULL,
+        match_value TEXT,
+        entry_policy TEXT NOT NULL,
+        exclude_bots INTEGER NOT NULL,
+        exclude_broadcaster INTEGER NOT NULL,
+        exclude_moderators INTEGER NOT NULL,
+        members_only INTEGER NOT NULL,
+        starts_at TEXT,
+        ends_at TEXT,
+        status TEXT NOT NULL,
+        captured_count INTEGER NOT NULL DEFAULT 0,
+        duplicate_count INTEGER NOT NULL DEFAULT 0,
+        rejected_count INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(tournament_id, connection_id)
+      );
+      CREATE INDEX tournament_capture_rules_active_index
+        ON tournament_capture_rules(connection_id, status, starts_at, ends_at);
+      ALTER TABLE tournament_participants ADD COLUMN provider TEXT;
+      ALTER TABLE tournament_participants ADD COLUMN provider_user_id TEXT;
+      CREATE UNIQUE INDEX tournament_participants_external_identity_unique
+        ON tournament_participants(tournament_id, provider, provider_user_id)
+        WHERE provider IS NOT NULL AND provider_user_id IS NOT NULL;
+    `,
+  },
 ]

@@ -1,5 +1,12 @@
 import { z } from 'zod'
 
+import {
+  GiveawayCaptureEntryPolicySchema,
+  GiveawayCaptureMatchSchema,
+  GiveawayCaptureStatusSchema,
+  SaveGiveawayCaptureRuleRequestSchema,
+} from './giveaway'
+
 export const TournamentStatusSchema = z.enum([
   'draft',
   'ready',
@@ -99,7 +106,10 @@ export const TournamentParticipantSchema = z.object({
   displayName: TournamentParticipantNameSchema,
   entryId: z.uuid().nullable(),
   id: z.uuid(),
+  provider: z.enum(['kick', 'twitch', 'youtube']).nullable().default(null),
+  providerUserId: z.string().nullable().default(null),
   seed: z.number().int().positive().nullable(),
+  source: z.enum(['chat', 'manual', 'livepix']).default('manual'),
   tournamentId: z.uuid(),
 })
 export const TournamentTeamMemberSchema = z.object({
@@ -151,6 +161,29 @@ export const TournamentDetailSchema = z.object({
   tournament: TournamentSchema,
 })
 export const TournamentListSchema = z.object({ items: z.array(TournamentSchema) })
+export const TournamentCaptureMatchSchema = GiveawayCaptureMatchSchema
+export const TournamentCaptureEntryPolicySchema = GiveawayCaptureEntryPolicySchema
+export const TournamentCaptureStatusSchema = GiveawayCaptureStatusSchema
+export const SaveTournamentCaptureRuleRequestSchema = SaveGiveawayCaptureRuleRequestSchema.refine(
+  (value) => value.entryPolicy === 'unique',
+  { message: 'Tournament chat capture only supports unique identities', path: ['entryPolicy'] },
+)
+export const TournamentCaptureRuleSchema = SaveTournamentCaptureRuleRequestSchema.safeExtend({
+  capturedCount: z.number().int().nonnegative(),
+  createdAt: z.iso.datetime(),
+  duplicateCount: z.number().int().nonnegative(),
+  id: z.uuid(),
+  rejectedCount: z.number().int().nonnegative(),
+  status: TournamentCaptureStatusSchema,
+  tournamentId: z.uuid(),
+  updatedAt: z.iso.datetime(),
+})
+export const TournamentCaptureRuleListSchema = z.object({
+  items: z.array(TournamentCaptureRuleSchema),
+})
+export const UpdateTournamentCaptureStatusRequestSchema = z.object({
+  status: TournamentCaptureStatusSchema,
+})
 export type CreateTournamentRequest = z.infer<typeof CreateTournamentRequestSchema>
 export type UpdateTournamentRequest = z.infer<typeof UpdateTournamentRequestSchema>
 export type Tournament = z.infer<typeof TournamentSchema>
@@ -159,3 +192,7 @@ export type TournamentMatch = z.infer<typeof TournamentMatchSchema>
 export type TournamentParticipant = z.infer<typeof TournamentParticipantSchema>
 export type TournamentTeam = z.infer<typeof TournamentTeamSchema>
 export type TournamentTeamMember = z.infer<typeof TournamentTeamMemberSchema>
+export type SaveTournamentCaptureRuleRequest = z.infer<
+  typeof SaveTournamentCaptureRuleRequestSchema
+>
+export type TournamentCaptureRule = z.infer<typeof TournamentCaptureRuleSchema>

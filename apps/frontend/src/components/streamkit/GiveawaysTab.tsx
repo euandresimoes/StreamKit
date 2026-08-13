@@ -22,7 +22,7 @@ import { CreateItemDialog } from "./CreateItemDialog";
 import { EntitySelect } from "./EntitySelect";
 import { GiveawayStage } from "./GiveawayStage";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
-import { GiveawayChatCapturePanel } from "./GiveawayChatCapturePanel";
+import { ParticipantChatCapturePanel } from "./GiveawayChatCapturePanel";
 
 export function GiveawaysTab() {
   const giveaways = useGiveaways();
@@ -198,8 +198,9 @@ export function GiveawaysTab() {
                 </Button>
               </>
             ) : (
-              <GiveawayChatCapturePanel
-                giveawayId={detail.giveaway.id}
+              <ParticipantChatCapturePanel
+                target="giveaway"
+                targetId={detail.giveaway.id}
                 onRefresh={giveaways.refresh}
               />
             )}

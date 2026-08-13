@@ -27,6 +27,7 @@ const expectedTables = [
   'todo_columns',
   'todo_workspaces',
   'tournament_audit_log',
+  'tournament_capture_rules',
   'tournament_entries',
   'tournament_matches',
   'tournament_participants',

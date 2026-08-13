@@ -390,13 +390,21 @@ completo passou com 32 testes unitários do backend, 26 integrações, 18 testes
 
 **Referências:** seções 6, 11, 17, 21 e ADR 0014.
 
-- [ ] Reutilizar as mesmas conexões e regras sem duplicar lógica de captura do Giveaway.
-- [ ] Persistir origem e identidade externa dos participantes do torneio.
-- [ ] Adicionar participantes capturados à fila antes da distribuição individual/em equipes.
-- [ ] Respeitar capacidade, duplicatas e torneio já iniciado com feedback observável.
-- [ ] Preservar criação, edição, remoção, drag and drop e sorteio manuais.
-- [ ] Testar torneio individual, equipes, lotação, restart, desconexão e modo offline.
-- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+- [x] Reutilizar as mesmas conexões e regras sem duplicar lógica de captura do Giveaway.
+- [x] Persistir origem e identidade externa dos participantes do torneio.
+- [x] Adicionar participantes capturados à fila antes da distribuição individual/em equipes.
+- [x] Respeitar capacidade, duplicatas e torneio já iniciado com feedback observável.
+- [x] Preservar criação, edição, remoção, drag and drop e sorteio manuais.
+- [x] Testar torneio individual, equipes, lotação, restart, desconexão e modo offline.
+- [x] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+**Evidência registrada em 2026-08-13:** Giveaways e Games passaram a compor o mesmo matcher de
+captura e o mesmo hook/painel de conexões, mantendo repositórios próprios apenas para invariantes de
+cada domínio. A migração 9 persiste regras e identidade `provider + providerUserId`; a origem aparece
+na fila e participantes de equipes aguardam distribuição manual ou aleatória. Testes de integração
+cobrem torneio individual, equipes, troca de handle, duplicidade, capacidade, torneio iniciado,
+restart e participante manual offline. O gate completo passou com 32 testes unitários do backend,
+28 integrações, 18 testes do desktop e 8 E2E.
 
 ## Batch 16 — Chat focado em vencedor e equipe campeã
 

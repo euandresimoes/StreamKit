@@ -13,16 +13,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useGiveawayCaptureRules } from "@/modules/giveaway/use-giveaway-capture-rules";
+import { useParticipantCaptureRules } from "@/modules/integration/use-participant-capture-rules";
 
-export function GiveawayChatCapturePanel({
-  giveawayId,
+export function ParticipantChatCapturePanel({
+  target,
+  targetId,
   onRefresh,
 }: {
-  giveawayId: string;
+  target: "giveaway" | "tournament";
+  targetId: string;
   onRefresh: () => Promise<void>;
 }) {
-  const captures = useGiveawayCaptureRules(giveawayId, onRefresh);
+  const captures = useParticipantCaptureRules(target, targetId, onRefresh);
   const [connectionId, setConnectionId] = useState("");
   const [match, setMatch] = useState<GiveawayCaptureMatch>("exact");
   const [matchValue, setMatchValue] = useState("!participar");
@@ -74,18 +76,24 @@ export function GiveawayChatCapturePanel({
                 <SelectItem value="contains">Contém texto</SelectItem>
               </SelectContent>
             </Select>
-            <Select
-              value={entryPolicy}
-              onValueChange={(value) => setEntryPolicy(value as GiveawayCaptureEntryPolicy)}
-            >
-              <SelectTrigger className="h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unique">Uma entrada</SelectItem>
-                <SelectItem value="tickets">Mensagem vira ticket</SelectItem>
-              </SelectContent>
-            </Select>
+            {target === "giveaway" ? (
+              <Select
+                value={entryPolicy}
+                onValueChange={(value) => setEntryPolicy(value as GiveawayCaptureEntryPolicy)}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unique">Uma entrada</SelectItem>
+                  <SelectItem value="tickets">Mensagem vira ticket</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="flex h-8 items-center rounded-md border border-border px-3 text-xs text-muted-foreground">
+                Uma entrada por pessoa
+              </div>
+            )}
           </div>
           {match !== "any" && (
             <Input

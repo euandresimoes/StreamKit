@@ -11,14 +11,20 @@ import {
   RenameTournamentTeamRequestSchema,
   ReorderTournamentParticipantRequestSchema,
   ReorderTournamentTeamRequestSchema,
+  SaveTournamentCaptureRuleRequestSchema,
   SetTournamentWinnerRequestSchema,
+  UpdateTournamentCaptureStatusRequestSchema,
   UpdateTournamentRequestSchema,
 } from '@streamkit/contracts'
+import { TournamentChatCaptureService } from './tournament-chat-capture.service'
 import { TournamentService } from './tournament.service'
 
 @Controller('api/v1/tournaments')
 export class TournamentController {
-  public constructor(@Inject(TournamentService) private readonly service: TournamentService) {}
+  public constructor(
+    @Inject(TournamentService) private readonly service: TournamentService,
+    @Inject(TournamentChatCaptureService) private readonly capture: TournamentChatCaptureService,
+  ) {}
   @Get() public list() {
     return this.service.list()
   }
@@ -33,6 +39,32 @@ export class TournamentController {
   }
   @Delete(':id') @HttpCode(204) public delete(@Param('id') id: unknown): Promise<void> {
     return this.service.delete(EntityIdSchema.parse(id))
+  }
+  @Get(':id/capture-rules') public captureRules(@Param('id') id: unknown) {
+    return this.capture.list(EntityIdSchema.parse(id))
+  }
+  @Post(':id/capture-rules') public saveCaptureRule(
+    @Param('id') id: unknown,
+    @Body() body: unknown,
+  ) {
+    return this.capture.save(
+      EntityIdSchema.parse(id),
+      SaveTournamentCaptureRuleRequestSchema.parse(body),
+    )
+  }
+  @Patch(':id/capture-rules/:ruleId') public updateCaptureRule(
+    @Param('ruleId') ruleId: unknown,
+    @Body() body: unknown,
+  ) {
+    return this.capture.updateStatus(
+      EntityIdSchema.parse(ruleId),
+      UpdateTournamentCaptureStatusRequestSchema.parse(body).status,
+    )
+  }
+  @Delete(':id/capture-rules/:ruleId') @HttpCode(204) public deleteCaptureRule(
+    @Param('ruleId') ruleId: unknown,
+  ) {
+    return this.capture.delete(EntityIdSchema.parse(ruleId))
   }
   @Post(':id/participants') public add(@Param('id') id: unknown, @Body() body: unknown) {
     return this.service.add(

@@ -110,11 +110,41 @@ export const tournamentParticipants = sqliteTable('tournament_participants', {
   externalRef: text('external_ref'),
   id: text('id').primaryKey(),
   identityKey: text('identity_key'),
+  provider: text('provider'),
+  providerUserId: text('provider_user_id'),
   source: text('source').notNull(),
   tournamentId: text('tournament_id')
     .notNull()
     .references(() => tournaments.id, { onDelete: 'cascade' }),
 })
+export const tournamentCaptureRules = sqliteTable(
+  'tournament_capture_rules',
+  {
+    capturedCount: integer('captured_count').notNull().default(0),
+    connectionId: text('connection_id')
+      .notNull()
+      .references(() => integrationConnections.id, { onDelete: 'cascade' }),
+    createdAt: text('created_at').notNull(),
+    duplicateCount: integer('duplicate_count').notNull().default(0),
+    endsAt: text('ends_at'),
+    entryPolicy: text('entry_policy').notNull(),
+    excludeBots: integer('exclude_bots', { mode: 'boolean' }).notNull(),
+    excludeBroadcaster: integer('exclude_broadcaster', { mode: 'boolean' }).notNull(),
+    excludeModerators: integer('exclude_moderators', { mode: 'boolean' }).notNull(),
+    id: text('id').primaryKey(),
+    match: text('match_type').notNull(),
+    matchValue: text('match_value'),
+    membersOnly: integer('members_only', { mode: 'boolean' }).notNull(),
+    rejectedCount: integer('rejected_count').notNull().default(0),
+    startsAt: text('starts_at'),
+    status: text('status').notNull(),
+    tournamentId: text('tournament_id')
+      .notNull()
+      .references(() => tournaments.id, { onDelete: 'cascade' }),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [unique().on(table.tournamentId, table.connectionId)],
+)
 export const tournamentEntries = sqliteTable('tournament_entries', {
   createdAt: text('created_at').notNull(),
   id: text('id').primaryKey(),
