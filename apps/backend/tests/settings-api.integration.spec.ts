@@ -15,6 +15,9 @@ import {
 class MockSecureCredentials implements SecureCredentialRepository {
   private configured = false
   public savedValue: string | null = null
+  public async read() {
+    return this.savedValue
+  }
   public async remove() {
     this.configured = false
     this.savedValue = null

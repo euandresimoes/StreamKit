@@ -5,12 +5,19 @@ import {
 } from '@streamkit/contracts'
 import type { UpdateManager } from './update-manager'
 import type { RenderWindowManager } from '@renderizer/vue/electron'
-import { ipcMain, type IpcMainInvokeEvent } from 'electron'
+import { ipcMain, type IpcMainInvokeEvent, shell } from 'electron'
 import { z } from 'zod'
 
 const EmptyArgumentsSchema = z.tuple([])
 const WindowIdSchema = z.string().regex(/^[a-z0-9][a-z0-9:_-]{0,127}$/)
 const WindowActionSchema = z.enum(['minimize', 'toggle-maximize', 'close', 'focus'])
+const ExternalUrlSchema = z.url().refine((value) => {
+  const url = new URL(value)
+  return (
+    url.protocol === 'https:' &&
+    ['accounts.google.com', 'id.kick.com', 'www.twitch.tv'].includes(url.hostname)
+  )
+}, 'External authentication URL is not allowed')
 
 export function registerNativeIpcHandlers(
   connection: BackendConnection,
@@ -47,6 +54,13 @@ export function registerNativeIpcHandlers(
     EmptyArgumentsSchema.parse(arguments_)
     await actions.openLogsDirectory()
   })
+  ipcMain.handle(
+    'streamkit:open-external-auth',
+    async (_event, input: unknown, ...rest: unknown[]) => {
+      EmptyArgumentsSchema.parse(rest)
+      await shell.openExternal(ExternalUrlSchema.parse(input))
+    },
+  )
   ipcMain.handle('streamkit:get-backend-connection', (_event, ...arguments_: unknown[]) => {
     EmptyArgumentsSchema.parse(arguments_)
     return connection
@@ -98,6 +112,7 @@ export function removeNativeIpcHandlers(): void {
     'streamkit:apply-settings',
     'streamkit:open-devtools',
     'streamkit:open-logs-directory',
+    'streamkit:open-external-auth',
     'streamkit:update-command',
     'streamkit:update-state',
     'streamkit:update-activity',

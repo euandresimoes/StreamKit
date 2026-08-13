@@ -21,4 +21,5 @@ export interface ChatProviderAdapter {
   readonly capabilities: readonly IntegrationCapability[]
   readonly provider: IntegrationProvider
   connect(context: ChatProviderConnectionContext): Promise<ChatProviderSession>
+  sendMessage?(channelId: string, message: string): Promise<void>
 }

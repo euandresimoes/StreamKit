@@ -15,6 +15,7 @@ import {
   SilentStreamKitLogger,
   type StreamKitLogger,
 } from '../infrastructure/logging/streamkit-logger'
+import type { IntegrationRuntimeConfig } from '../modules/integrations/integration-runtime.config'
 
 export type StartLocalBackendOptions = {
   allowedOrigins?: readonly string[]
@@ -24,6 +25,7 @@ export type StartLocalBackendOptions = {
   enableDocumentation?: boolean
   secureCredentialRepository?: SecureCredentialRepository
   logPath?: string
+  integrationConfig?: IntegrationRuntimeConfig
 }
 
 export type LocalBackendHandle = {
@@ -45,7 +47,12 @@ export async function startLocalBackend(
     ? new RotatingFileLogger(options.logPath)
     : new SilentStreamKitLogger()
   const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule.register(database, options.secureCredentialRepository, logger),
+    AppModule.register(
+      database,
+      options.secureCredentialRepository,
+      logger,
+      options.integrationConfig,
+    ),
     adapter,
     {
       abortOnError: false,

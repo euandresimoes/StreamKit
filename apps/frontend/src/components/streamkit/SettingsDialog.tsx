@@ -1,18 +1,9 @@
 import { useState } from "react";
-import type { IntegrationProvider } from "@streamkit/contracts";
 import { Check, Download, MonitorCog, Palette, Plug, RefreshCw, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useIntegrations } from "@/modules/integration/use-integrations";
 import { useSettings } from "@/modules/settings/use-settings";
@@ -62,9 +53,6 @@ export function SettingsDialog({
   const [section, setSection] = useState<Section>("appearance");
   const [density, setDensity] = useState(true);
   const [hardware, setHardware] = useState(true);
-  const [provider, setProvider] = useState<IntegrationProvider>("twitch");
-  const [channelId, setChannelId] = useState("");
-  const [channelName, setChannelName] = useState("");
   const [checking, setChecking] = useState(false);
   const [checked, setChecked] = useState(false);
   const [beta, setBeta] = useState(false);
@@ -198,56 +186,44 @@ export function SettingsDialog({
                   Cadastre canais que poderão fornecer participantes para sorteios e torneios.
                 </p>
 
-                <div className="mt-4 rounded-2xl border border-border bg-surface-2/60 p-4">
-                  <h4 className="text-[13px] font-semibold">Novo canal</h4>
-                  <div className="mt-3 grid grid-cols-[130px_1fr_1fr_auto] gap-2">
-                    <Select
-                      value={provider}
-                      onValueChange={(value) => setProvider(value as IntegrationProvider)}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="twitch">Twitch</SelectItem>
-                        <SelectItem value="youtube">YouTube</SelectItem>
-                        <SelectItem value="kick">Kick</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      value={channelName}
-                      onChange={(event) => setChannelName(event.target.value)}
-                      placeholder="Nome do canal"
-                      className="h-9 text-[12.5px]"
-                    />
-                    <Input
-                      value={channelId}
-                      onChange={(event) => setChannelId(event.target.value)}
-                      placeholder="ID do canal"
-                      className="h-9 text-[12.5px]"
-                    />
-                    <Button
-                      loading={integrations.busy}
-                      disabled={!channelId.trim() || !channelName.trim()}
-                      onClick={() => {
-                        if (!channelId.trim() || !channelName.trim()) return;
-                        void integrations.save({
-                          capabilities: [],
-                          channelDisplayName: channelName.trim(),
-                          channelId: channelId.trim(),
-                          provider,
-                        });
-                        setChannelId("");
-                        setChannelName("");
-                      }}
-                    >
-                      Adicionar
-                    </Button>
+                <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-surface-2/60 p-4">
+                  <div className="flex size-9 items-center justify-center rounded-xl bg-[#9146ff]/15 text-[#a970ff]">
+                    <Plug className="size-4" />
                   </div>
-                  <p className="mt-2 text-[11.5px] text-muted-foreground">
-                    Tokens OAuth serão guardados no cofre do sistema quando o provider for
-                    conectado.
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold">Twitch Chat</p>
+                    <p className="truncate text-[11.5px] text-muted-foreground">
+                      {integrations.twitchAuth?.configured
+                        ? `Conectado como ${integrations.twitchAuth.login}`
+                        : integrations.twitchAuth?.available
+                          ? "Pronto para conectar"
+                          : "Client ID da Twitch não configurado no build"}
+                    </p>
+                    {integrations.twitchDevice && (
+                      <p className="mt-1 text-xs font-semibold tracking-widest text-primary">
+                        Código: {integrations.twitchDevice.userCode}
+                      </p>
+                    )}
+                  </div>
+                  {integrations.twitchAuth?.configured ? (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      loading={integrations.busy}
+                      onClick={() => void integrations.disconnectTwitch()}
+                    >
+                      Desconectar
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      loading={integrations.busy}
+                      disabled={!integrations.twitchAuth?.available}
+                      onClick={() => void integrations.connectTwitch()}
+                    >
+                      Conectar
+                    </Button>
+                  )}
                 </div>
 
                 <div className="mt-4 space-y-2">
@@ -264,6 +240,26 @@ export function SettingsDialog({
                           {connection.provider} · {connection.status}
                         </p>
                       </div>
+                      {connection.status === "connected" ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => void integrations.stop(connection.id)}
+                        >
+                          Parar
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={
+                            connection.provider === "twitch" && !integrations.twitchAuth?.configured
+                          }
+                          onClick={() => void integrations.start(connection.id)}
+                        >
+                          Iniciar
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon-sm"

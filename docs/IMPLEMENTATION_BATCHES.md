@@ -345,15 +345,20 @@ de todos os workspaces no comando `pnpm validate`.
 **Referências:** seções 8, 10, 17, 21 e ADR 0014.
 
 - [ ] **Dependência externa:** cadastrar o aplicativo Twitch e fornecer/configurar o Client ID.
-- [ ] Implementar autorização adequada a aplicativo desktop com estado anti-CSRF e escopos mínimos.
-- [ ] Guardar tokens somente no cofre e validar a sessão no início e periodicamente.
-- [ ] Implementar leitura de mensagens via EventSub/WebSocket, sem usar IRC como núcleo novo.
-- [ ] Normalizar identidade, handle, nome, avatar, badges, mensagem e timestamps.
-- [ ] Implementar escrita de chat somente quando o usuário conceder a capacidade e os escopos.
-- [ ] Tratar keepalive, revogação, reconexão, duplicatas e limites da API.
-- [ ] Criar tela de conectar/desconectar, canal selecionado, capacidades e diagnóstico seguro.
-- [ ] Testar OAuth sem segredo real, tradução de payloads, revogação e reconexão.
-- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+- [x] Implementar Device Authorization para aplicativo desktop, sem redirect/token no renderer e com escopos mínimos.
+- [x] Guardar tokens somente no cofre e validar a sessão no início e periodicamente.
+- [x] Implementar leitura de mensagens via EventSub/WebSocket, sem usar IRC como núcleo novo.
+- [x] Normalizar identidade, handle, nome, avatar, badges, mensagem e timestamps.
+- [x] Implementar escrita de chat somente quando o usuário conceder a capacidade e os escopos.
+- [x] Tratar keepalive, revogação, reconexão, duplicatas e limites da API.
+- [x] Criar tela de conectar/desconectar, canal selecionado, capacidades e diagnóstico seguro.
+- [x] Testar OAuth sem segredo real, tradução de payloads, revogação e reconexão.
+- [x] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+**Evidência parcial registrada em 2026-08-13:** Device Authorization, cofre multi-provider,
+validação/refresh, EventSub, escrita de chat, UI e adapters passaram no gate completo com 30 testes
+unitários do backend, 25 integrações, 18 testes do desktop e 8 E2E. A batch permanece aberta
+somente para cadastrar/configurar um Client ID e executar o teste real controlado da Twitch.
 
 ## Batch 14 — Fontes de participantes em Giveaways
 

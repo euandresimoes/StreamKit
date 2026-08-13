@@ -36,6 +36,14 @@ import { IntegrationConnectionManager } from '../modules/integrations/integratio
 import { IntegrationEventBus } from '../modules/integrations/integration-event.bus'
 import { IntegrationRepository } from '../modules/integrations/integration.repository'
 import { IntegrationService } from '../modules/integrations/integration.service'
+import {
+  DEFAULT_INTEGRATION_RUNTIME_CONFIG,
+  INTEGRATION_RUNTIME_CONFIG,
+  type IntegrationRuntimeConfig,
+} from '../modules/integrations/integration-runtime.config'
+import { TwitchAuthController } from '../modules/integrations/twitch/twitch-auth.controller'
+import { TwitchAuthService } from '../modules/integrations/twitch/twitch-auth.service'
+import { TwitchChatAdapter } from '../modules/integrations/twitch/twitch-chat.adapter'
 
 @Module({})
 export class AppModule {
@@ -43,6 +51,7 @@ export class AppModule {
     database: SqliteDatabase,
     secureCredentials: SecureCredentialRepository = new UnavailableSecureCredentialRepository(),
     logger: StreamKitLogger = new SilentStreamKitLogger(),
+    integrationConfig: IntegrationRuntimeConfig = DEFAULT_INTEGRATION_RUNTIME_CONFIG,
   ): DynamicModule {
     return {
       controllers: [
@@ -51,6 +60,7 @@ export class AppModule {
         GiveawayController,
         HealthController,
         IntegrationController,
+        TwitchAuthController,
         WorkspaceController,
         TournamentController,
         SettingsController,
@@ -70,6 +80,9 @@ export class AppModule {
         IntegrationEventBus,
         IntegrationRepository,
         IntegrationService,
+        { provide: INTEGRATION_RUNTIME_CONFIG, useValue: integrationConfig },
+        TwitchAuthService,
+        TwitchChatAdapter,
         TournamentRepository,
         TournamentService,
         { provide: SECURE_CREDENTIAL_REPOSITORY, useValue: secureCredentials },

@@ -186,10 +186,11 @@ async function bootstrap(): Promise<void> {
     databasePath: directories.database,
     enableDocumentation:
       !app.isPackaged || process.env.STREAMKIT_DEBUG === 'true' || process.argv.includes('--debug'),
-    secureCredentialRepository: new ElectronSecureCredentialRepository(
-      join(directories.data, 'livepix.credential'),
-    ),
+    secureCredentialRepository: new ElectronSecureCredentialRepository(directories.data),
     logPath: join(directories.logs, 'streamkit.log'),
+    integrationConfig: {
+      twitchClientId: process.env.STREAMKIT_TWITCH_CLIENT_ID?.trim() || null,
+    },
   })
   const connection = BackendConnectionSchema.parse({ baseUrl: backend.baseUrl, token })
 

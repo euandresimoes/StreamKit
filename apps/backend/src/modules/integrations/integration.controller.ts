@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Inject, Param, Patch, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Put } from '@nestjs/common'
 import {
   SaveIntegrationConnectionRequestSchema,
+  SendChatMessageRequestSchema,
   UpdateIntegrationConnectionStateRequestSchema,
 } from '@streamkit/contracts'
 
@@ -16,6 +17,13 @@ export class IntegrationController {
 
   @Put('connections/:id/start') public start(@Param('id') id: string) {
     return this.manager.start(id)
+  }
+
+  @Post('connections/:id/messages') public sendMessage(
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.manager.sendMessage(id, SendChatMessageRequestSchema.parse(body).message)
   }
 
   @Put('connections/:id/stop') public stop(@Param('id') id: string) {

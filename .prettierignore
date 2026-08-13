@@ -6,3 +6,4 @@ node_modules/
 out/
 pnpm-lock.yaml
 style-template/
+apps/frontend/src/routeTree.gen.ts

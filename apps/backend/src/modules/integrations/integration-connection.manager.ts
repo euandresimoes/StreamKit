@@ -83,18 +83,19 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
       await this.service.updateState(id, 'connected')
       void session.closed.then(
         () => this.handleUnexpectedClose(id, null),
-        (cause: unknown) =>
-          this.handleUnexpectedClose(
-            id,
-            cause instanceof Error ? cause.message : 'INTEGRATION_CONNECTION_FAILED',
-          ),
+        (cause: unknown) => this.handleUnexpectedClose(id, this.errorCode(cause)),
       )
     } catch (cause) {
-      await this.handleUnexpectedClose(
-        id,
-        cause instanceof Error ? cause.message : 'INTEGRATION_CONNECTION_FAILED',
-      )
+      await this.handleUnexpectedClose(id, this.errorCode(cause))
     }
+  }
+
+  public async sendMessage(id: string, message: string): Promise<void> {
+    const connection = await this.repository.getConnection(id)
+    if (!connection) throw new Error('INTEGRATION_CONNECTION_NOT_FOUND')
+    const adapter = this.registry.get(connection.provider)
+    if (!adapter?.sendMessage) throw new Error('INTEGRATION_CAPABILITY_UNAVAILABLE')
+    await adapter.sendMessage(connection.channelId, message)
   }
 
   public async stop(id: string, persist = true): Promise<void> {
@@ -111,6 +112,15 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
   private async handleUnexpectedClose(id: string, errorCode: string | null): Promise<void> {
     const active = this.active.get(id)
     if (!active || active.abortController.signal.aborted) return
+    if (
+      errorCode?.includes('REVOKED') ||
+      errorCode === 'INTEGRATION_AUTH_REQUIRED' ||
+      errorCode === 'INTEGRATION_AUTH_REVOKED'
+    ) {
+      await this.service.updateState(id, 'revoked', errorCode)
+      this.active.delete(id)
+      return
+    }
     const connection = await this.service.updateState(id, 'reconnecting', errorCode)
     if (!connection) return
     const delay = Math.max(0, Date.parse(connection.nextRetryAt ?? '') - Date.now())
@@ -129,5 +139,11 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
       } satisfies ActiveConnection)
     active.timer = setTimeout(() => void this.start(id), Number.isFinite(delay) ? delay : 0)
     this.active.set(id, active)
+  }
+
+  private errorCode(cause: unknown): string {
+    if (cause && typeof cause === 'object' && 'code' in cause && typeof cause.code === 'string')
+      return cause.code
+    return cause instanceof Error ? cause.message : 'INTEGRATION_CONNECTION_FAILED'
   }
 }

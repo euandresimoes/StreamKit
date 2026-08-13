@@ -1,16 +1,29 @@
-import type { IntegrationConnection, SaveIntegrationConnectionRequest } from "@streamkit/contracts";
+import type {
+  IntegrationConnection,
+  SaveIntegrationConnectionRequest,
+  TwitchAuthorizationStatus,
+  TwitchDeviceAuthorization,
+} from "@streamkit/contracts";
 import { useCallback, useEffect, useState } from "react";
 
+import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 import { integrationApi } from "./integration-api";
 
 export function useIntegrations(active: boolean) {
   const [connections, setConnections] = useState<IntegrationConnection[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [twitchAuth, setTwitchAuth] = useState<TwitchAuthorizationStatus | null>(null);
+  const [twitchDevice, setTwitchDevice] = useState<TwitchDeviceAuthorization | null>(null);
   const load = useCallback(async () => {
     try {
       setError(null);
-      setConnections(await integrationApi.listConnections());
+      const [nextConnections, nextTwitchAuth] = await Promise.all([
+        integrationApi.listConnections(),
+        integrationApi.twitchAuthStatus(),
+      ]);
+      setConnections(nextConnections);
+      setTwitchAuth(nextTwitchAuth);
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Não foi possível carregar as integrações.",
@@ -22,6 +35,7 @@ export function useIntegrations(active: boolean) {
   }, [active, load]);
   const execute = async (operation: () => Promise<unknown>) => {
     setBusy(true);
+    setError(null);
     try {
       await operation();
       await load();
@@ -35,8 +49,41 @@ export function useIntegrations(active: boolean) {
     busy,
     connections,
     error,
+    twitchAuth,
+    twitchDevice,
+    connectTwitch: async () => {
+      setBusy(true);
+      setError(null);
+      try {
+        const device = await integrationApi.beginTwitchAuth();
+        setTwitchDevice(device);
+        await getDesktopBridge().openExternalAuth(device.verificationUri);
+        while (Date.parse(device.expiresAt) > Date.now()) {
+          await new Promise((resolve) => setTimeout(resolve, device.intervalSeconds * 1_000));
+          const result = await integrationApi.pollTwitchAuth(device.flowId);
+          if (result.status === "pending") continue;
+          if (result.status === "expired") throw new Error("A autorização da Twitch expirou.");
+          setTwitchAuth(result.authorization);
+          setTwitchDevice(null);
+          await load();
+          return;
+        }
+        throw new Error("A autorização da Twitch expirou.");
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Não foi possível conectar a Twitch.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    disconnectTwitch: () =>
+      execute(async () => {
+        setTwitchAuth(await integrationApi.disconnectTwitch());
+        setTwitchDevice(null);
+      }),
     remove: (id: string) => execute(() => integrationApi.deleteConnection(id)),
     save: (input: SaveIntegrationConnectionRequest) =>
       execute(() => integrationApi.saveConnection(input)),
+    start: (id: string) => execute(() => integrationApi.startConnection(id)),
+    stop: (id: string) => execute(() => integrationApi.stopConnection(id)),
   };
 }

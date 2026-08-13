@@ -11,6 +11,7 @@ declare global {
     streamkit?: {
       getBackendConnection(): Promise<BackendConnection>;
       applySettings(settings: UpdateAppSettingsRequest): Promise<void>;
+      openExternalAuth(url: string): Promise<void>;
       openLogsDirectory(): Promise<void>;
       updateCommand(command: UpdateCommand): Promise<UpdateState>;
       updateState(): Promise<UpdateState | undefined>;

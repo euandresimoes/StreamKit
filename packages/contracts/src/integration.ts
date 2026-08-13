@@ -50,11 +50,36 @@ export const SaveIntegrationConnectionRequestSchema = z.object({
   channelId: z.string().trim().min(1).max(200),
   provider: IntegrationProviderSchema,
 })
+export const SendChatMessageRequestSchema = z.object({
+  message: z.string().trim().min(1).max(500),
+})
 
 export const UpdateIntegrationConnectionStateRequestSchema = z.object({
   lastErrorCode: z.string().trim().min(1).max(100).nullable().optional(),
   status: IntegrationConnectionStatusSchema,
 })
+
+export const TwitchAuthorizationStatusSchema = z.object({
+  available: z.boolean(),
+  configured: z.boolean(),
+  expiresAt: z.iso.datetime().nullable(),
+  login: z.string().nullable(),
+  scopes: z.array(z.string()),
+})
+
+export const TwitchDeviceAuthorizationSchema = z.object({
+  expiresAt: z.iso.datetime(),
+  flowId: z.uuid(),
+  intervalSeconds: z.number().int().positive(),
+  userCode: z.string().min(1),
+  verificationUri: z.url(),
+})
+
+export const TwitchDeviceAuthorizationPollSchema = z.discriminatedUnion('status', [
+  z.object({ status: z.literal('pending') }),
+  z.object({ status: z.literal('authorized'), authorization: TwitchAuthorizationStatusSchema }),
+  z.object({ status: z.literal('expired') }),
+])
 
 export type ChatMessageReceived = z.infer<typeof ChatMessageReceivedSchema>
 export type IntegrationCapability = z.infer<typeof IntegrationCapabilitySchema>
@@ -64,3 +89,5 @@ export type IntegrationProvider = z.infer<typeof IntegrationProviderSchema>
 export type SaveIntegrationConnectionRequest = z.infer<
   typeof SaveIntegrationConnectionRequestSchema
 >
+export type TwitchAuthorizationStatus = z.infer<typeof TwitchAuthorizationStatusSchema>
+export type TwitchDeviceAuthorization = z.infer<typeof TwitchDeviceAuthorizationSchema>
