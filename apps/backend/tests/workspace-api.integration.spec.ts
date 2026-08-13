@@ -96,7 +96,7 @@ describe('workspace API vertical slice', () => {
     expect(DatabaseStatusSchema.parse(await response.json())).toEqual({
       foreignKeys: true,
       journalMode: 'wal',
-      schemaVersion: 11,
+      schemaVersion: 12,
     })
     await backend.close()
     backend = undefined

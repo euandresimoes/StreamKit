@@ -266,4 +266,16 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
     version: 11,
     sql: `ALTER TABLE giveaways ADD COLUMN max_participants INTEGER NOT NULL DEFAULT 10000;`,
   },
+  {
+    destructive: false,
+    name: 'operational_tournament_matches',
+    version: 12,
+    sql: `
+      ALTER TABLE tournaments ADD COLUMN current_match_id TEXT;
+      ALTER TABLE tournament_matches ADD COLUMN left_result TEXT NOT NULL DEFAULT 'pending';
+      ALTER TABLE tournament_matches ADD COLUMN right_result TEXT NOT NULL DEFAULT 'pending';
+      ALTER TABLE tournament_matches ADD COLUMN started_at TEXT;
+      ALTER TABLE tournament_matches ADD COLUMN finished_at TEXT;
+    `,
+  },
 ]

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { Inject, Injectable } from '@nestjs/common'
 import {
+  type CompleteTournamentMatchRequest,
   type CreateTournamentRequest,
   type TournamentDetail,
   TournamentDetailSchema,
@@ -36,6 +37,7 @@ export class TournamentRepository {
     const row = {
       ...input,
       createdAt: now,
+      currentMatchId: null,
       id: randomUUID(),
       status: 'draft' as const,
       updatedAt: now,
@@ -774,13 +776,17 @@ export class TournamentRepository {
           .insert(tournamentMatches)
           .values({
             id: ids.get(definition.matchNumber)!,
+            finishedAt: null,
             leftEntryId: definition.leftSeed ? entries[definition.leftSeed - 1]!.id : null,
+            leftResult: 'pending' as const,
             matchNumber: definition.matchNumber,
             nextMatchId: definition.nextMatchNumber ? ids.get(definition.nextMatchNumber)! : null,
             nextSlot: definition.nextSlot,
             rightEntryId: definition.rightSeed ? entries[definition.rightSeed - 1]!.id : null,
+            rightResult: 'pending' as const,
             roundNumber: definition.roundNumber,
             status: definition.roundNumber === 1 ? 'ready' : 'pending',
+            startedAt: null,
             tournamentId: id,
             updatedAt: now,
             winnerEntryId: null,
@@ -796,21 +802,56 @@ export class TournamentRepository {
     return this.detail(id)
   }
   public async start(id: string) {
-    const detail = await this.transition(id, 'ready', 'in_progress', 'tournament.started')
-    if (!detail) return null
+    return this.transition(id, 'ready', 'in_progress', 'tournament.started')
+  }
+  public async startMatch(id: string, matchId: string) {
+    const [tournament] = await this.database.orm
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, id))
+    const [match] = await this.database.orm
+      .select()
+      .from(tournamentMatches)
+      .where(and(eq(tournamentMatches.id, matchId), eq(tournamentMatches.tournamentId, id)))
+    const [currentMatch] = tournament?.currentMatchId
+      ? await this.database.orm
+          .select()
+          .from(tournamentMatches)
+          .where(eq(tournamentMatches.id, tournament.currentMatchId))
+      : [null]
+    if (
+      !tournament ||
+      tournament.status !== 'in_progress' ||
+      !match ||
+      match.status !== 'ready' ||
+      !match.leftEntryId ||
+      !match.rightEntryId ||
+      (tournament.currentMatchId !== matchId && currentMatch?.status === 'in_progress')
+    )
+      return null
     const now = new Date().toISOString()
-    await this.database.orm
-      .update(tournamentMatches)
-      .set({ status: 'in_progress', updatedAt: now })
-      .where(and(eq(tournamentMatches.tournamentId, id), eq(tournamentMatches.status, 'ready')))
+    this.database.transaction(() => {
+      this.database.orm
+        .update(tournamentMatches)
+        .set({
+          leftResult: 'pending',
+          rightResult: 'pending',
+          startedAt: now,
+          status: 'in_progress',
+          updatedAt: now,
+        })
+        .where(eq(tournamentMatches.id, matchId))
+        .run()
+      this.database.orm
+        .update(tournaments)
+        .set({ currentMatchId: matchId, updatedAt: now })
+        .where(eq(tournaments.id, id))
+        .run()
+      this.audit(id, 'match.started', { matchId })
+    })
     return this.detail(id)
   }
-  public async archive(id: string) {
-    const [row] = await this.database.orm.select().from(tournaments).where(eq(tournaments.id, id))
-    if (!row || row.status !== 'finished') return null
-    return this.transition(id, 'finished', 'archived', 'tournament.archived')
-  }
-  public async winner(id: string, matchId: string, winnerEntryId: string) {
+  public async completeMatch(id: string, matchId: string, result: CompleteTournamentMatchRequest) {
     const [tournament] = await this.database.orm
       .select()
       .from(tournaments)
@@ -822,16 +863,36 @@ export class TournamentRepository {
     if (
       !tournament ||
       tournament.status !== 'in_progress' ||
+      tournament.currentMatchId !== matchId ||
       !match ||
       match.status !== 'in_progress' ||
-      ![match.leftEntryId, match.rightEntryId].includes(winnerEntryId)
+      !match.leftEntryId ||
+      !match.rightEntryId
     )
       return null
     const now = new Date().toISOString()
+    if (result.leftResult === 'draw') {
+      this.database.transaction(() => {
+        this.database.orm
+          .update(tournamentMatches)
+          .set({ ...result, updatedAt: now })
+          .where(eq(tournamentMatches.id, matchId))
+          .run()
+        this.audit(id, 'match.draw_recorded', { matchId })
+      })
+      return this.detail(id)
+    }
+    const winnerEntryId = result.leftResult === 'won' ? match.leftEntryId : match.rightEntryId
     this.database.transaction(() => {
       this.database.orm
         .update(tournamentMatches)
-        .set({ status: 'finished', updatedAt: now, winnerEntryId })
+        .set({
+          ...result,
+          finishedAt: now,
+          status: 'finished',
+          updatedAt: now,
+          winnerEntryId,
+        })
         .where(eq(tournamentMatches.id, matchId))
         .run()
       if (match.nextMatchId && match.nextSlot) {
@@ -862,9 +923,41 @@ export class TournamentRepository {
           .set({ status: 'finished', updatedAt: now })
           .where(eq(tournaments.id, id))
           .run()
+      this.audit(id, 'match.completed', { matchId, ...result, winnerEntryId })
       this.audit(id, 'match.winner_set', { matchId, winnerEntryId })
     })
     return this.detail(id)
+  }
+  public async archive(id: string) {
+    const [row] = await this.database.orm.select().from(tournaments).where(eq(tournaments.id, id))
+    if (!row || row.status !== 'finished') return null
+    return this.transition(id, 'finished', 'archived', 'tournament.archived')
+  }
+  public async winner(id: string, matchId: string, winnerEntryId: string) {
+    const [tournament] = await this.database.orm
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, id))
+    const [match] = await this.database.orm
+      .select()
+      .from(tournamentMatches)
+      .where(and(eq(tournamentMatches.id, matchId), eq(tournamentMatches.tournamentId, id)))
+    if (
+      !tournament ||
+      tournament.status !== 'in_progress' ||
+      !match ||
+      !['ready', 'in_progress'].includes(match.status) ||
+      ![match.leftEntryId, match.rightEntryId].includes(winnerEntryId)
+    )
+      return null
+    if (match.status === 'ready' && !(await this.startMatch(id, matchId))) return null
+    return this.completeMatch(
+      id,
+      matchId,
+      winnerEntryId === match.leftEntryId
+        ? { leftResult: 'won', rightResult: 'lost' }
+        : { leftResult: 'lost', rightResult: 'won' },
+    )
   }
   public async undo(id: string, matchId: string) {
     const [tournament] = await this.database.orm
@@ -886,7 +979,15 @@ export class TournamentRepository {
       let current = match
       this.database.orm
         .update(tournamentMatches)
-        .set({ status: 'in_progress', updatedAt: now, winnerEntryId: null })
+        .set({
+          finishedAt: null,
+          leftResult: 'pending',
+          rightResult: 'pending',
+          startedAt: now,
+          status: 'in_progress',
+          updatedAt: now,
+          winnerEntryId: null,
+        })
         .where(eq(tournamentMatches.id, matchId))
         .run()
       while (current.nextMatchId) {
@@ -899,14 +1000,23 @@ export class TournamentRepository {
         const slot = current.nextSlot === 'left' ? { leftEntryId: null } : { rightEntryId: null }
         this.database.orm
           .update(tournamentMatches)
-          .set({ ...slot, status: 'cancelled', updatedAt: now, winnerEntryId: null })
+          .set({
+            ...slot,
+            finishedAt: null,
+            leftResult: 'pending',
+            rightResult: 'pending',
+            startedAt: null,
+            status: 'cancelled',
+            updatedAt: now,
+            winnerEntryId: null,
+          })
           .where(eq(tournamentMatches.id, next.id))
           .run()
         current = next
       }
       this.database.orm
         .update(tournaments)
-        .set({ status: 'in_progress', updatedAt: now })
+        .set({ currentMatchId: matchId, status: 'in_progress', updatedAt: now })
         .where(eq(tournaments.id, id))
         .run()
       this.audit(id, 'match.result_undone', { matchId })

@@ -3,6 +3,7 @@ import {
   AddTournamentParticipantRequestSchema,
   AddTournamentTeamMemberRequestSchema,
   AssignTournamentParticipantRequestSchema,
+  CompleteTournamentMatchRequestSchema,
   CreateTournamentRequestSchema,
   CreateTournamentTeamRequestSchema,
   EntityIdSchema,
@@ -190,6 +191,23 @@ export class TournamentController {
   }
   @Post(':id/start') public start(@Param('id') id: unknown) {
     return this.service.start(EntityIdSchema.parse(id))
+  }
+  @Post(':id/matches/:matchId/start') public startMatch(
+    @Param('id') id: unknown,
+    @Param('matchId') matchId: unknown,
+  ) {
+    return this.service.startMatch(EntityIdSchema.parse(id), EntityIdSchema.parse(matchId))
+  }
+  @Post(':id/matches/:matchId/result') public completeMatch(
+    @Param('id') id: unknown,
+    @Param('matchId') matchId: unknown,
+    @Body() body: unknown,
+  ) {
+    return this.service.completeMatch(
+      EntityIdSchema.parse(id),
+      EntityIdSchema.parse(matchId),
+      CompleteTournamentMatchRequestSchema.parse(body),
+    )
   }
   @Post(':id/matches/:matchId/winner') public winner(
     @Param('id') id: unknown,

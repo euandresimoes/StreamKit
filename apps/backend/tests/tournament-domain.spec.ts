@@ -15,7 +15,7 @@ describe('single-elimination bracket', () => {
 
   it('only advances a match when both entries are known', () => {
     expect(advancingMatchStatus(true, false)).toBe('pending')
-    expect(advancingMatchStatus(true, true)).toBe('in_progress')
+    expect(advancingMatchStatus(true, true)).toBe('ready')
   })
 
   it('finds every descendant that must be invalidated', () => {

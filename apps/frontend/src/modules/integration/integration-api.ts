@@ -1,4 +1,5 @@
 import {
+  ChatSimulationStatusSchema,
   FocusedChatThreadSchema,
   IntegrationConnectionSchema,
   KickIntegrationSupportSchema,
@@ -19,9 +20,38 @@ export const integrationApi = {
     apiClient.request(`/api/v1/integrations/focused-chat/${target}/${id}`, {
       schema: FocusedChatThreadSchema,
     }),
+  tournamentMatchChat: (tournamentId: string, matchId: string, side: "left" | "right") =>
+    apiClient.request(
+      `/api/v1/integrations/focused-chat/tournaments/${tournamentId}/matches/${matchId}/${side}`,
+      {
+        schema: FocusedChatThreadSchema,
+      },
+    ),
   kickSupport: () =>
     apiClient.request("/api/v1/integrations/kick/support", {
       schema: KickIntegrationSupportSchema,
+    }),
+  simulationStatus: () =>
+    apiClient.request("/api/v1/integrations/debug/simulation", {
+      schema: ChatSimulationStatusSchema,
+    }),
+  startSimulation: (body: {
+    channelId: string;
+    count: 8 | 16 | 32 | 1000 | 10000;
+    duplicateEvery: number;
+    message: string;
+    mode: "instant" | "gradual" | "burst";
+    provider: "kick" | "twitch" | "youtube";
+  }) =>
+    apiClient.request("/api/v1/integrations/debug/simulation", {
+      body,
+      method: "POST",
+      schema: ChatSimulationStatusSchema,
+    }),
+  stopSimulation: () =>
+    apiClient.request("/api/v1/integrations/debug/simulation", {
+      method: "DELETE",
+      schema: ChatSimulationStatusSchema,
     }),
   sendMessage: (connectionId: string, message: string) =>
     apiClient.request(`/api/v1/integrations/connections/${connectionId}/messages`, {

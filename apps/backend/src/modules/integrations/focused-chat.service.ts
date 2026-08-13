@@ -63,6 +63,30 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
     return this.chat.thread(team?.name ?? detail.tournament.name, keys)
   }
 
+  public async forTournamentMatch(id: string, matchId: string, side: 'left' | 'right') {
+    const detail = await this.tournaments.detail(id)
+    if (!detail) throw new ApiApplicationError('TOURNAMENT_NOT_FOUND', 'Tournament not found', 404)
+    const match = detail.matches.find((item) => item.id === matchId)
+    if (!match)
+      throw new ApiApplicationError('TOURNAMENT_MATCH_NOT_FOUND', 'Tournament match not found', 404)
+    const entryId = side === 'left' ? match.leftEntryId : match.rightEntryId
+    if (!entryId) return this.chat.thread('A definir', [])
+    if (detail.tournament.mode === 'individual') {
+      const participant = detail.participants.find((item) => item.entryId === entryId)
+      return this.chat.thread(participant?.displayName ?? 'Participante', this.keyFor(participant))
+    }
+    const team = detail.teams.find((item) => item.entryId === entryId)
+    const memberIds = new Set(
+      detail.teamMembers
+        .filter((member) => member.teamId === team?.id)
+        .map((member) => member.participantId),
+    )
+    const keys = detail.participants.flatMap((participant) =>
+      memberIds.has(participant.id) ? this.keyFor(participant) : [],
+    )
+    return this.chat.thread(team?.name ?? 'Equipe', keys)
+  }
+
   private keyFor(
     participant:
       | {

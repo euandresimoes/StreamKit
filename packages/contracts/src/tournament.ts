@@ -21,6 +21,7 @@ export const TournamentMatchStatusSchema = z.enum([
   'finished',
   'cancelled',
 ])
+export const TournamentSideResultSchema = z.enum(['pending', 'won', 'lost', 'forfeit', 'draw'])
 export const TournamentSizeSchema = z.union([
   z.literal(4),
   z.literal(8),
@@ -66,6 +67,18 @@ export const ReorderTournamentParticipantRequestSchema = z.object({
   seed: z.number().int().positive(),
 })
 export const SetTournamentWinnerRequestSchema = z.object({ winnerEntryId: z.uuid() })
+export const CompleteTournamentMatchRequestSchema = z
+  .object({
+    leftResult: TournamentSideResultSchema,
+    rightResult: TournamentSideResultSchema,
+  })
+  .refine(
+    (value) =>
+      (value.leftResult === 'won' && ['lost', 'forfeit'].includes(value.rightResult)) ||
+      (value.rightResult === 'won' && ['lost', 'forfeit'].includes(value.leftResult)) ||
+      (value.leftResult === 'draw' && value.rightResult === 'draw'),
+    { message: 'Match result must be win/loss, win/forfeit or draw/draw' },
+  )
 export const CreateTournamentTeamRequestSchema = z.object({
   capacity: z.number().int().min(1).max(16).optional(),
   color: z
@@ -95,6 +108,7 @@ export const TournamentSchema = z.object({
   createdAt: z.iso.datetime(),
   description: z.string().nullable(),
   id: z.uuid(),
+  currentMatchId: z.uuid().nullable(),
   mode: z.enum(['individual', 'team']),
   name: TournamentNameSchema,
   status: TournamentStatusSchema,
@@ -133,14 +147,18 @@ export const TournamentTeamSchema = z.object({
   updatedAt: z.iso.datetime(),
 })
 export const TournamentMatchSchema = z.object({
+  finishedAt: z.iso.datetime().nullable(),
   id: z.uuid(),
   leftEntryId: z.uuid().nullable(),
+  leftResult: TournamentSideResultSchema,
   matchNumber: z.number().int().positive(),
   nextMatchId: z.uuid().nullable(),
   nextSlot: z.enum(['left', 'right']).nullable(),
   rightEntryId: z.uuid().nullable(),
+  rightResult: TournamentSideResultSchema,
   roundNumber: z.number().int().positive(),
   status: TournamentMatchStatusSchema,
+  startedAt: z.iso.datetime().nullable(),
   tournamentId: z.uuid(),
   updatedAt: z.iso.datetime(),
   winnerEntryId: z.uuid().nullable(),
@@ -186,6 +204,7 @@ export const UpdateTournamentCaptureStatusRequestSchema = z.object({
   status: TournamentCaptureStatusSchema,
 })
 export type CreateTournamentRequest = z.infer<typeof CreateTournamentRequestSchema>
+export type CompleteTournamentMatchRequest = z.infer<typeof CompleteTournamentMatchRequestSchema>
 export type UpdateTournamentRequest = z.infer<typeof UpdateTournamentRequestSchema>
 export type Tournament = z.infer<typeof TournamentSchema>
 export type TournamentDetail = z.infer<typeof TournamentDetailSchema>

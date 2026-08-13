@@ -36,6 +36,8 @@ import { EntitySelect } from "./EntitySelect";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { ParticipantChatCapturePanel } from "./GiveawayChatCapturePanel";
 import { FocusedChatPanel } from "./FocusedChatPanel";
+import { TournamentMatchChat } from "./TournamentMatchChat";
+import { ChatSimulationPanel } from "./ChatSimulationPanel";
 
 function getParticipantInitials(displayName: string) {
   return Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
@@ -54,6 +56,8 @@ export function GamesTab() {
   const [deletingTeam, setDeletingTeam] = useState<{ id: string; name: string } | null>(null);
   const [participantsExpanded, setParticipantsExpanded] = useState(true);
   const [teamsExpanded, setTeamsExpanded] = useState(true);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [correctingMatchId, setCorrectingMatchId] = useState<string | null>(null);
   const detail = tournaments.detail;
   const entrantCount = detail
     ? detail.tournament.mode === "team"
@@ -62,6 +66,21 @@ export function GamesTab() {
     : 0;
   const slotsFilled = entrantCount === detail?.tournament.bracketSize;
   const canChangeStructure = detail ? !detail.matches.length : false;
+  const selectedMatch =
+    detail?.matches.find(
+      (match) => match.id === (selectedMatchId ?? detail.tournament.currentMatchId),
+    ) ?? null;
+  const bracketEntries = detail
+    ? detail.tournament.mode === "team"
+      ? detail.teams.map((team) => ({ id: team.entryId, name: team.name, color: team.color }))
+      : detail.participants
+          .filter((participant) => participant.entryId)
+          .map((participant) => ({
+            id: participant.entryId!,
+            name: participant.displayName,
+            color: null,
+          }))
+    : [];
 
   const createTournament = async (tournamentName: string, option?: string) => {
     const mode = option === "team" ? "team" : "individual";
@@ -621,7 +640,7 @@ export function GamesTab() {
               <Trophy className="size-4 text-primary" />
               <h3 className="text-[13px] font-semibold">Chaveamento real</h3>
             </div>
-            <div className="grid min-w-[650px] grid-cols-3 gap-4">
+            <div className="flex min-w-[720px] gap-5">
               {!detail.matches.length && (
                 <PreviewBracket
                   bracketSize={detail.tournament.bracketSize}
@@ -641,47 +660,195 @@ export function GamesTab() {
                   }}
                 />
               )}
-              {detail.matches.map((match) => {
-                const entries =
-                  detail.tournament.mode === "team"
-                    ? detail.teams.map((team) => ({ id: team.entryId, name: team.name }))
-                    : detail.participants
-                        .filter((participant) => participant.entryId)
-                        .map((participant) => ({
-                          id: participant.entryId!,
-                          name: participant.displayName,
-                        }));
-                const left = entries.find((entry) => entry.id === match.leftEntryId);
-                const right = entries.find((entry) => entry.id === match.rightEntryId);
-                return (
-                  <div
-                    key={match.id}
-                    className={cn(
-                      "rounded-2xl border border-border bg-card p-2",
-                      match.status === "finished" && "opacity-70",
-                    )}
-                  >
-                    <p className="px-2 pb-1 text-[10px] text-muted-foreground">
-                      Rodada {match.roundNumber} · Partida {match.matchNumber}
+              {Array.from(new Set(detail.matches.map((match) => match.roundNumber))).map(
+                (round) => (
+                  <div key={round} className="flex min-w-52 flex-1 flex-col">
+                    <p className="mb-3 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                      Rodada {round}
                     </p>
-                    {[left, right].map((entry, index) => (
-                      <button
-                        key={index}
-                        disabled={!entry || match.status === "finished"}
-                        onClick={() => entry && void tournaments.setWinner(match.id, entry.id)}
-                        className={cn(
-                          "flex w-full px-2 py-2 text-left text-[13px]",
-                          index === 0 && "border-b border-border",
-                          match.winnerEntryId === entry?.id && "text-primary",
-                        )}
-                      >
-                        {entry?.name ?? "A definir"}
-                      </button>
-                    ))}
+                    <div className="flex flex-1 flex-col justify-around gap-4">
+                      {detail.matches
+                        .filter((match) => match.roundNumber === round)
+                        .map((match) => {
+                          const left = bracketEntries.find(
+                            (entry) => entry.id === match.leftEntryId,
+                          );
+                          const right = bracketEntries.find(
+                            (entry) => entry.id === match.rightEntryId,
+                          );
+                          const active =
+                            detail.tournament.currentMatchId === match.id &&
+                            match.status === "in_progress";
+                          return (
+                            <button
+                              type="button"
+                              key={match.id}
+                              onClick={() => setSelectedMatchId(match.id)}
+                              className={cn(
+                                "rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-accent/40",
+                                active ? "border-primary ring-2 ring-primary/25" : "border-border",
+                                selectedMatch?.id === match.id && !active && "border-border-strong",
+                              )}
+                            >
+                              <p className="px-2 pb-1 text-[10px] text-muted-foreground">
+                                Partida {match.matchNumber}
+                              </p>
+                              {[left, right].map((entry, index) => {
+                                const result = index === 0 ? match.leftResult : match.rightResult;
+                                return (
+                                  <div
+                                    key={index}
+                                    className={cn(
+                                      "flex items-center gap-2 px-2 py-2 text-[13px]",
+                                      index === 0 && "border-b border-border",
+                                    )}
+                                  >
+                                    {entry?.color && (
+                                      <span
+                                        className="size-2.5 rounded-full"
+                                        style={{ backgroundColor: entry.color }}
+                                      />
+                                    )}
+                                    <span
+                                      className={cn(
+                                        "min-w-0 flex-1 truncate",
+                                        result === "won" && "text-primary",
+                                        ["lost", "forfeit"].includes(result) && "opacity-50",
+                                      )}
+                                    >
+                                      {entry?.name ?? "A definir"}
+                                    </span>
+                                    {result !== "pending" && (
+                                      <span className="text-[9px] uppercase text-muted-foreground">
+                                        {result === "won"
+                                          ? "Ganhou"
+                                          : result === "lost"
+                                            ? "Perdeu"
+                                            : result === "forfeit"
+                                              ? "Desistiu"
+                                              : "Empate"}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </button>
+                          );
+                        })}
+                    </div>
                   </div>
-                );
-              })}
+                ),
+              )}
             </div>
+            {selectedMatch && (
+              <div className="mt-5 rounded-2xl border border-border-strong bg-card p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[13px] font-semibold">Partida {selectedMatch.matchNumber}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Rodada {selectedMatch.roundNumber} ·{" "}
+                      {selectedMatch.status === "in_progress"
+                        ? "Em andamento"
+                        : selectedMatch.status === "finished"
+                          ? "Finalizada"
+                          : selectedMatch.status === "ready"
+                            ? "Pronta"
+                            : "Aguardando"}
+                    </p>
+                  </div>
+                  {selectedMatch.status === "ready" &&
+                    detail.tournament.status === "in_progress" && (
+                      <Button
+                        size="sm"
+                        disabled={
+                          tournaments.busy ||
+                          detail.matches.some((match) => match.status === "in_progress")
+                        }
+                        onClick={() => void tournaments.startMatch(selectedMatch.id)}
+                      >
+                        Iniciar partida
+                      </Button>
+                    )}
+                  {selectedMatch.status === "finished" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={tournaments.busy}
+                      onClick={() => setCorrectingMatchId(selectedMatch.id)}
+                    >
+                      Corrigir resultado
+                    </Button>
+                  )}
+                </div>
+                {selectedMatch.status === "in_progress" && (
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    {(["left", "right"] as const).map((side) => {
+                      const entry = bracketEntries.find(
+                        (item) =>
+                          item.id ===
+                          (side === "left"
+                            ? selectedMatch.leftEntryId
+                            : selectedMatch.rightEntryId),
+                      );
+                      return (
+                        <div key={side} className="rounded-xl border border-border p-3">
+                          <p className="mb-3 truncate text-[12px] font-medium">
+                            {entry?.name ?? "A definir"}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              disabled={tournaments.busy}
+                              onClick={() =>
+                                void tournaments.completeMatch(
+                                  selectedMatch.id,
+                                  side === "left" ? "won" : "lost",
+                                  side === "right" ? "won" : "lost",
+                                )
+                              }
+                            >
+                              Ganhou
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={tournaments.busy}
+                              onClick={() =>
+                                void tournaments.completeMatch(
+                                  selectedMatch.id,
+                                  side === "left" ? "won" : "forfeit",
+                                  side === "right" ? "won" : "forfeit",
+                                )
+                              }
+                            >
+                              Adversário desistiu
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <Button
+                      className="col-span-2"
+                      variant="outline"
+                      disabled={tournaments.busy}
+                      onClick={() =>
+                        void tournaments.completeMatch(selectedMatch.id, "draw", "draw")
+                      }
+                    >
+                      Registrar empate
+                    </Button>
+                  </div>
+                )}
+                {(["in_progress", "finished"] as const).includes(
+                  selectedMatch.status as "in_progress" | "finished",
+                ) && (
+                  <TournamentMatchChat
+                    tournamentId={detail.tournament.id}
+                    matchId={selectedMatch.id}
+                  />
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -712,6 +879,20 @@ export function GamesTab() {
         />
       )}
       <BaseConfirmDialog
+        open={correctingMatchId !== null}
+        onOpenChange={(open) => {
+          if (!open) setCorrectingMatchId(null);
+        }}
+        busy={tournaments.busy}
+        title="Corrigir resultado?"
+        description="O resultado será reaberto e toda progressão descendente afetada será invalidada."
+        onConfirm={async () => {
+          if (!correctingMatchId) return;
+          await tournaments.undoMatch(correctingMatchId);
+          setCorrectingMatchId(null);
+        }}
+      />
+      <BaseConfirmDialog
         open={deletingTeam !== null}
         onOpenChange={(open) => {
           if (!open) setDeletingTeam(null);
@@ -740,6 +921,7 @@ export function GamesTab() {
                   await tournaments.reload(detail.tournament.id);
                 }}
               />
+              {import.meta.env.DEV && <ChatSimulationPanel />}
             </div>
           )}
         </DialogContent>

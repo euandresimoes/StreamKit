@@ -102,6 +102,20 @@ export function useTournaments() {
             await tournamentApi.start(detail.tournament.id);
           })
         : undefined,
+    startMatch: (matchId: string) =>
+      detail ? mutate(() => tournamentApi.startMatch(detail.tournament.id, matchId)) : undefined,
+    completeMatch: (
+      matchId: string,
+      leftResult: "won" | "lost" | "forfeit" | "draw",
+      rightResult: "won" | "lost" | "forfeit" | "draw",
+    ) =>
+      detail
+        ? mutate(() =>
+            tournamentApi.completeMatch(detail.tournament.id, matchId, { leftResult, rightResult }),
+          )
+        : undefined,
+    undoMatch: (matchId: string) =>
+      detail ? mutate(() => tournamentApi.undoMatch(detail.tournament.id, matchId)) : undefined,
     setWinner: (matchId: string, entryId: string) =>
       detail
         ? mutate(() => tournamentApi.winner(detail.tournament.id, matchId, entryId))

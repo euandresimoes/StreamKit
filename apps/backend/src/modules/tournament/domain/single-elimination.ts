@@ -44,11 +44,8 @@ export function secureShuffle<T>(values: readonly T[]): T[] {
   return result
 }
 
-export function advancingMatchStatus(
-  hasLeft: boolean,
-  hasRight: boolean,
-): 'in_progress' | 'pending' {
-  return hasLeft && hasRight ? 'in_progress' : 'pending'
+export function advancingMatchStatus(hasLeft: boolean, hasRight: boolean): 'ready' | 'pending' {
+  return hasLeft && hasRight ? 'ready' : 'pending'
 }
 
 export function descendantMatchIds(

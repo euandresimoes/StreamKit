@@ -96,6 +96,7 @@ export const integrationEvents = sqliteTable(
 export const tournaments = sqliteTable('tournaments', {
   bracketSize: integer('bracket_size').notNull(),
   createdAt: text('created_at').notNull(),
+  currentMatchId: text('current_match_id'),
   description: text('description'),
   id: text('id').primaryKey(),
   mode: text('mode').notNull(),
@@ -180,14 +181,18 @@ export const tournamentTeamMembers = sqliteTable('tournament_team_members', {
     .references(() => tournamentTeams.id, { onDelete: 'cascade' }),
 })
 export const tournamentMatches = sqliteTable('tournament_matches', {
+  finishedAt: text('finished_at'),
   id: text('id').primaryKey(),
   leftEntryId: text('left_entry_id').references(() => tournamentEntries.id),
+  leftResult: text('left_result').notNull().default('pending'),
   matchNumber: integer('match_number').notNull(),
   nextMatchId: text('next_match_id'),
   nextSlot: text('next_slot'),
   rightEntryId: text('right_entry_id').references(() => tournamentEntries.id),
+  rightResult: text('right_result').notNull().default('pending'),
   roundNumber: integer('round_number').notNull(),
   status: text('status').notNull(),
+  startedAt: text('started_at'),
   tournamentId: text('tournament_id')
     .notNull()
     .references(() => tournaments.id, { onDelete: 'cascade' }),

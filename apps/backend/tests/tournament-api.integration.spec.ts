@@ -62,7 +62,32 @@ describe('Tournament API', () => {
     detail = TournamentDetailSchema.parse(
       await (await call(`/api/v1/tournaments/${tournament.id}`)).json(),
     )
-    for (const match of detail.matches.filter((item) => item.roundNumber === 1)) {
+    const openingMatches = detail.matches.filter((item) => item.roundNumber === 1)
+    const current = openingMatches[0]!
+    detail = TournamentDetailSchema.parse(
+      await (
+        await call(`/api/v1/tournaments/${tournament.id}/matches/${current.id}/start`, 'POST')
+      ).json(),
+    )
+    expect(detail.tournament.currentMatchId).toBe(current.id)
+    detail = TournamentDetailSchema.parse(
+      await (
+        await call(`/api/v1/tournaments/${tournament.id}/matches/${current.id}/result`, 'POST', {
+          leftResult: 'draw',
+          rightResult: 'draw',
+        })
+      ).json(),
+    )
+    expect(detail.matches.find((match) => match.id === current.id)?.status).toBe('in_progress')
+    detail = TournamentDetailSchema.parse(
+      await (
+        await call(`/api/v1/tournaments/${tournament.id}/matches/${current.id}/result`, 'POST', {
+          leftResult: 'won',
+          rightResult: 'lost',
+        })
+      ).json(),
+    )
+    for (const match of openingMatches.slice(1)) {
       detail = TournamentDetailSchema.parse(
         await (
           await call(`/api/v1/tournaments/${tournament.id}/matches/${match.id}/winner`, 'POST', {

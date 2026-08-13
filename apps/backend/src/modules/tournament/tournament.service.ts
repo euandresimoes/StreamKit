@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import type {
+  CompleteTournamentMatchRequest,
   CreateTournamentRequest,
   TournamentDetail,
   UpdateTournamentRequest,
@@ -118,6 +119,20 @@ export class TournamentService {
   }
   public start(id: string) {
     return this.resolve(this.repository.start(id))
+  }
+  public startMatch(id: string, matchId: string) {
+    return this.resolve(
+      this.repository.startMatch(id, matchId),
+      matchId,
+      'TOURNAMENT_MATCH_NOT_FOUND',
+    )
+  }
+  public completeMatch(id: string, matchId: string, result: CompleteTournamentMatchRequest) {
+    return this.resolve(
+      this.repository.completeMatch(id, matchId, result),
+      matchId,
+      'TOURNAMENT_MATCH_NOT_FOUND',
+    )
   }
   public archive(id: string) {
     return this.resolve(this.repository.archive(id))

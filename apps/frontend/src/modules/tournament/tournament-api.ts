@@ -1,4 +1,5 @@
 import {
+  type CompleteTournamentMatchRequest,
   type CreateTournamentRequest,
   type SaveTournamentCaptureRuleRequest,
   TournamentCaptureRuleListSchema,
@@ -98,6 +99,15 @@ export const tournamentApi = {
   generate: (id: string) =>
     apiClient.request(`/api/v1/tournaments/${id}/bracket/generate`, { method: "POST" }),
   start: (id: string) => apiClient.request(`/api/v1/tournaments/${id}/start`, { method: "POST" }),
+  startMatch: (id: string, matchId: string) =>
+    apiClient.request(`/api/v1/tournaments/${id}/matches/${matchId}/start`, { method: "POST" }),
+  completeMatch: (id: string, matchId: string, result: CompleteTournamentMatchRequest) =>
+    apiClient.request(`/api/v1/tournaments/${id}/matches/${matchId}/result`, {
+      method: "POST",
+      body: result,
+    }),
+  undoMatch: (id: string, matchId: string) =>
+    apiClient.request(`/api/v1/tournaments/${id}/matches/${matchId}/undo`, { method: "POST" }),
   winner: (id: string, matchId: string, winnerEntryId: string) =>
     apiClient.request(`/api/v1/tournaments/${id}/matches/${matchId}/winner`, {
       method: "POST",

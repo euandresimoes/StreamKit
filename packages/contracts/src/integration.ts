@@ -61,6 +61,24 @@ export const SaveIntegrationConnectionRequestSchema = z.object({
 export const SendChatMessageRequestSchema = z.object({
   message: z.string().trim().min(1).max(500),
 })
+export const StartChatSimulationRequestSchema = z.object({
+  channelId: z.string().trim().min(1).max(200),
+  count: z.union([z.literal(8), z.literal(16), z.literal(32), z.literal(1000), z.literal(10000)]),
+  duplicateEvery: z.number().int().min(0).max(1000).default(0),
+  message: z.string().trim().min(1).max(500).default('!join'),
+  mode: z.enum(['instant', 'gradual', 'burst']).default('instant'),
+  provider: IntegrationProviderSchema,
+})
+export const ChatSimulationStatusSchema = z.object({
+  duplicateCount: z.number().int().nonnegative(),
+  handlerFailures: z.number().int().nonnegative(),
+  id: z.uuid().nullable(),
+  processedCount: z.number().int().nonnegative(),
+  queueDepth: z.number().int().nonnegative(),
+  receivedCount: z.number().int().nonnegative(),
+  running: z.boolean(),
+  startedAt: z.iso.datetime().nullable(),
+})
 export const FocusedChatMessageSchema = z.object({
   avatarUrl: z.url().nullable(),
   badges: z.array(z.string()),
@@ -152,6 +170,8 @@ export type IntegrationCapability = z.infer<typeof IntegrationCapabilitySchema>
 export type IntegrationConnection = z.infer<typeof IntegrationConnectionSchema>
 export type IntegrationConnectionStatus = z.infer<typeof IntegrationConnectionStatusSchema>
 export type IntegrationProvider = z.infer<typeof IntegrationProviderSchema>
+export type StartChatSimulationRequest = z.infer<typeof StartChatSimulationRequestSchema>
+export type ChatSimulationStatus = z.infer<typeof ChatSimulationStatusSchema>
 export type KickIntegrationSupport = z.infer<typeof KickIntegrationSupportSchema>
 export type FocusedChatMessage = z.infer<typeof FocusedChatMessageSchema>
 export type FocusedChatThread = z.infer<typeof FocusedChatThreadSchema>

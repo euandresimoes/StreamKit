@@ -532,59 +532,65 @@ equipes com chats simulados/externos, restaurar todo o estado após reinício e 
 
 ### 20.1 Provider simulado e carga
 
-- [ ] Registrar `SimulatedChatProviderAdapter` somente em desenvolvimento/debug, sem aparecer em produção.
-- [ ] Criar contratos e endpoints de controle sem regra de Games/Giveaway dentro do adapter.
-- [ ] Criar painel de simulação com cenários de 8, 16, 32, 1.000 e 10.000 identidades determinísticas.
-- [ ] Permitir mensagem/prefixo, ritmo instantâneo, gradual ou em rajadas e iniciar/parar emissão.
-- [ ] Simular duplicatas, tickets, bots, broadcaster, moderadores, membros e troca de handle estável.
-- [ ] Simular perda de rede, reconexão e encerramento sem afetar providers reais.
-- [ ] Continuar emitindo mensagens dos participantes depois da inscrição para testar chats de partida.
-- [ ] Medir recebidos, processados, duplicados, rejeitados, fila/latência e persistência no cenário de carga.
-- [ ] Garantir backpressure/fila limitada e nenhuma escrita silenciosamente perdida.
+- [x] Registrar `SimulatedChatProviderAdapter` somente em desenvolvimento/debug, sem aparecer em produção.
+- [x] Criar contratos e endpoints de controle sem regra de Games/Giveaway dentro do adapter.
+- [x] Criar painel de simulação com cenários de 8, 16, 32, 1.000 e 10.000 identidades determinísticas.
+- [x] Permitir mensagem/prefixo, ritmo instantâneo, gradual ou em rajadas e iniciar/parar emissão.
+- [x] Simular duplicatas, tickets, bots, broadcaster, moderadores, membros e troca de handle estável.
+- [x] Simular perda de rede, reconexão e encerramento sem afetar providers reais.
+- [x] Continuar emitindo mensagens dos participantes depois da inscrição para testar chats de partida.
+- [x] Medir recebidos, processados, duplicados, rejeitados, fila/latência e persistência no cenário de carga.
+- [x] Garantir backpressure/fila limitada e nenhuma escrita silenciosamente perdida.
 
 ### 20.2 Modelo e persistência operacional
 
-- [ ] Definir contratos Zod para partida atual, resultado por lado e comandos de iniciar/confirmar/reabrir.
-- [ ] Criar migration não destrutiva para estado por lado, partida atual e timestamps necessários.
-- [ ] Garantir no máximo uma partida atual por torneio e aceitar apenas partidas `ready` completas.
-- [ ] Implementar `pending`, `won`, `lost`, `forfeit` e `draw` com combinações válidas.
-- [ ] Manter empate sem progressão até o operador registrar um desempate.
-- [ ] Confirmar resultado e propagar vencedor para a próxima rodada em uma transação.
-- [ ] Reabrir/corrigir com confirmação, auditoria e invalidação dos descendentes afetados.
-- [ ] Restaurar partida atual, resultados, progressão e campeão após reinício.
+- [x] Definir contratos Zod para partida atual, resultado por lado e comandos de iniciar/confirmar/reabrir.
+- [x] Criar migration não destrutiva para estado por lado, partida atual e timestamps necessários.
+- [x] Garantir no máximo uma partida atual por torneio e aceitar apenas partidas `ready` completas.
+- [x] Implementar `pending`, `won`, `lost`, `forfeit` e `draw` com combinações válidas.
+- [x] Manter empate sem progressão até o operador registrar um desempate.
+- [x] Confirmar resultado e propagar vencedor para a próxima rodada em uma transação.
+- [x] Reabrir/corrigir com confirmação, auditoria e invalidação dos descendentes afetados.
+- [x] Restaurar partida atual, resultados, progressão e campeão após reinício.
 
 ### 20.3 Bracket e painel da partida
 
-- [ ] Refazer o layout do bracket para alinhar rounds, conectores e cards em 4, 8, 16 e 32 entradas.
-- [ ] Preservar zoom/scroll, legibilidade, foco, redução de movimento e alternativa ao drag and drop.
-- [ ] Selecionar/iniciar a partida atual pelo card e destacar com outline e indicador textual.
-- [ ] Mostrar estado, equipes/participantes e resultado de cada lado sem depender somente de cor.
-- [ ] Criar painel operacional bilateral com escalação e ações ganhar, perder, desistir e empatar.
-- [ ] Derivar automaticamente o estado oposto e impedir combinações contraditórias.
-- [ ] Manter o resultado/chat consultável até o início da próxima partida.
-- [ ] Virtualizar ou limitar listas grandes para não degradar a árvore.
+- [x] Refazer o layout do bracket para alinhar rounds, conectores e cards em 4, 8, 16 e 32 entradas.
+- [x] Preservar zoom/scroll, legibilidade, foco, redução de movimento e alternativa ao drag and drop.
+- [x] Selecionar/iniciar a partida atual pelo card e destacar com outline e indicador textual.
+- [x] Mostrar estado, equipes/participantes e resultado de cada lado sem depender somente de cor.
+- [x] Criar painel operacional bilateral com escalação e ações ganhar, perder, desistir e empatar.
+- [x] Derivar automaticamente o estado oposto e impedir combinações contraditórias.
+- [x] Manter o resultado/chat consultável até o início da próxima partida.
+- [x] Virtualizar ou limitar listas grandes para não degradar a árvore.
 
 ### 20.4 Chat bilateral e integração com Games
 
-- [ ] Validar captura simulada, Twitch e YouTube em torneio individual e por equipes.
-- [ ] Preservar atribuição manual, drag and drop e distribuição aleatória dos capturados.
-- [ ] Criar consulta de chat por lado usando somente identidades externas persistidas daquele lado.
-- [ ] Exibir duas colunas/abas com avatar, handle, provider, mensagens e estado da conexão.
-- [ ] Permitir resposta somente por conexão compatível `connected` com `chat.write`.
-- [ ] Informar participantes manuais sem chat e suportar equipes com Twitch e YouTube simultaneamente.
-- [ ] Preservar chat bilateral durante/depois da partida e chat focado da campeã ao finalizar.
-- [ ] Isolar mensagens por provider, canal e identidade; preservar retenção de 24 horas e limite global.
+- [x] Validar captura simulada, Twitch e YouTube em torneio individual e por equipes.
+- [x] Preservar atribuição manual, drag and drop e distribuição aleatória dos capturados.
+- [x] Criar consulta de chat por lado usando somente identidades externas persistidas daquele lado.
+- [x] Exibir duas colunas/abas com avatar, handle, provider, mensagens e estado da conexão.
+- [x] Permitir resposta somente por conexão compatível `connected` com `chat.write`.
+- [x] Informar participantes manuais sem chat e suportar equipes com Twitch e YouTube simultaneamente.
+- [x] Preservar chat bilateral durante/depois da partida e chat focado da campeã ao finalizar.
+- [x] Isolar mensagens por provider, canal e identidade; preservar retenção de 24 horas e limite global.
 
 ### 20.5 Testes, documentação e gate
 
-- [ ] Cobrir invariantes, combinações inválidas, empate, desistência, progressão e rollback em unitários.
-- [ ] Cobrir migrations, transações, concorrência, restart, auditoria e chats isolados em integração.
-- [ ] Cobrir layout 4/8/16/32, seleção, teclado, estados e chat bilateral em componentes.
-- [ ] Cobrir torneio individual/equipes completo, correção de resultado e restart em E2E.
-- [ ] Executar soak com 10.000 eventos, burst, duplicatas e reconexão sem usar o banco real.
-- [ ] Atualizar especificação, Scalar/OpenAPI, privacidade e guia de teste do simulador.
-- [ ] Executar format, lint, typecheck, todas as suítes, build e E2E aplicável.
-- [ ] Revisar diff/segurança, marcar somente tasks comprovadas, fazer commit e push.
+- [x] Cobrir invariantes, combinações inválidas, empate, desistência, progressão e rollback em unitários.
+- [x] Cobrir migrations, transações, concorrência, restart, auditoria e chats isolados em integração.
+- [x] Cobrir layout 4/8/16/32, seleção, teclado, estados e chat bilateral em componentes.
+- [x] Cobrir torneio individual/equipes completo, correção de resultado e restart em E2E.
+- [x] Executar soak com 10.000 eventos, burst, duplicatas e reconexão sem usar o banco real.
+- [x] Atualizar especificação, Scalar/OpenAPI, privacidade e guia de teste do simulador.
+- [x] Executar format, lint, typecheck, todas as suítes, build e E2E aplicável.
+- [x] Revisar diff/segurança, marcar somente tasks comprovadas, fazer commit e push.
+
+**Concluída em 2026-08-13.** A operação de Games passou a ter uma única partida atual,
+resultados bilaterais persistidos, empate sem avanço, correção auditada, bracket por rodadas e chat
+isolado por lado. O simulador determinístico de debug percorre o mesmo pipeline persistente dos
+providers reais e oferece cenários até 10.000 eventos. O gate completo `pnpm validate` passou com
+47 unitários do backend, 34 integrações, 10 testes de frontend, 19 testes desktop e 8 E2E.
 
 ## Batch 21 — LivePix
 

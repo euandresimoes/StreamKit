@@ -40,6 +40,7 @@ import { KickSupportService } from '../modules/integrations/kick/kick-support.se
 import { FocusedChatRepository } from '../modules/integrations/focused-chat.repository'
 import { FocusedChatService } from '../modules/integrations/focused-chat.service'
 import { ChatProviderRegistry } from '../modules/integrations/chat-provider.registry'
+import { ChatSimulationService } from '../modules/integrations/chat-simulation.service'
 import { IntegrationConnectionManager } from '../modules/integrations/integration-connection.manager'
 import { IntegrationEventBus } from '../modules/integrations/integration-event.bus'
 import { IntegrationRepository } from '../modules/integrations/integration.repository'
@@ -94,6 +95,7 @@ export class AppModule {
         FocusedChatRepository,
         FocusedChatService,
         ChatProviderRegistry,
+        ChatSimulationService,
         IntegrationConnectionManager,
         IntegrationEventBus,
         IntegrationRepository,
