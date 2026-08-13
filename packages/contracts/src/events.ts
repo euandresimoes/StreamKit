@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const StreamKitEventNameSchema = z.enum([
   'giveaway.changed',
+  'integration.changed',
   'settings.changed',
   'todo.changed',
   'tournament.changed',

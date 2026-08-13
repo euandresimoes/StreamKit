@@ -1,21 +1,20 @@
 import { useState } from "react";
-import {
-  KeyRound,
-  Zap,
-  ShieldCheck,
-  Palette,
-  MonitorCog,
-  Plug,
-  RefreshCw,
-  Check,
-  Download,
-} from "lucide-react";
+import type { IntegrationProvider } from "@streamkit/contracts";
+import { Check, Download, MonitorCog, Palette, Plug, RefreshCw, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useIntegrations } from "@/modules/integration/use-integrations";
 import { useSettings } from "@/modules/settings/use-settings";
 
 type Section = "appearance" | "system" | "integrations" | "updates";
@@ -23,7 +22,7 @@ type Section = "appearance" | "system" | "integrations" | "updates";
 const nav: { id: Section; label: string; icon: typeof Palette; hint: string }[] = [
   { id: "appearance", label: "Aparência", icon: Palette, hint: "Tema e densidade" },
   { id: "system", label: "Sistema", icon: MonitorCog, hint: "Janela e inicialização" },
-  { id: "integrations", label: "Integrações", icon: Plug, hint: "LivePix API" },
+  { id: "integrations", label: "Integrações", icon: Plug, hint: "Chats ao vivo" },
   { id: "updates", label: "Atualizações", icon: RefreshCw, hint: "v0.4.0" },
 ];
 
@@ -63,12 +62,14 @@ export function SettingsDialog({
   const [section, setSection] = useState<Section>("appearance");
   const [density, setDensity] = useState(true);
   const [hardware, setHardware] = useState(true);
-  const [key, setKey] = useState("");
-  const [auto, setAuto] = useState(false);
+  const [provider, setProvider] = useState<IntegrationProvider>("twitch");
+  const [channelId, setChannelId] = useState("");
+  const [channelName, setChannelName] = useState("");
   const [checking, setChecking] = useState(false);
   const [checked, setChecked] = useState(false);
   const [beta, setBeta] = useState(false);
   const persisted = useSettings(open);
+  const integrations = useIntegrations(open && section === "integrations");
   const theme = persisted.settings?.theme ?? "dark";
 
   return (
@@ -194,61 +195,93 @@ export function SettingsDialog({
               <div>
                 <h3 className="text-[15px] font-semibold">Integrações</h3>
                 <p className="text-[12px] text-muted-foreground">
-                  Conecte a LivePix para o modo automático de torneios e sorteios.
+                  Cadastre canais que poderão fornecer participantes para sorteios e torneios.
                 </p>
 
                 <div className="mt-4 rounded-2xl border border-border bg-surface-2/60 p-4">
-                  <div className="flex items-center gap-2">
-                    <KeyRound className="size-4 text-primary" />
-                    <h4 className="flex-1 text-[13px] font-semibold">LivePix API Key</h4>
-                    {persisted.credentialConfigured && (
-                      <span className="flex items-center gap-1 rounded-md bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success">
-                        <ShieldCheck className="size-3" /> Conectado
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-3 flex gap-2">
+                  <h4 className="text-[13px] font-semibold">Novo canal</h4>
+                  <div className="mt-3 grid grid-cols-[130px_1fr_1fr_auto] gap-2">
+                    <Select
+                      value={provider}
+                      onValueChange={(value) => setProvider(value as IntegrationProvider)}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="twitch">Twitch</SelectItem>
+                        <SelectItem value="youtube">YouTube</SelectItem>
+                        <SelectItem value="kick">Kick</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Input
-                      type="password"
-                      value={key}
-                      onChange={(e) => setKey(e.target.value)}
-                      placeholder="lp_live_••••••••••••"
-                      className="h-9 font-mono text-[12.5px]"
+                      value={channelName}
+                      onChange={(event) => setChannelName(event.target.value)}
+                      placeholder="Nome do canal"
+                      className="h-9 text-[12.5px]"
+                    />
+                    <Input
+                      value={channelId}
+                      onChange={(event) => setChannelId(event.target.value)}
+                      placeholder="ID do canal"
+                      className="h-9 text-[12.5px]"
                     />
                     <Button
-                      loading={persisted.busy}
+                      loading={integrations.busy}
+                      disabled={!channelId.trim() || !channelName.trim()}
                       onClick={() => {
-                        if (key.trim()) void persisted.saveCredential(key.trim());
+                        if (!channelId.trim() || !channelName.trim()) return;
+                        void integrations.save({
+                          capabilities: [],
+                          channelDisplayName: channelName.trim(),
+                          channelId: channelId.trim(),
+                          provider,
+                        });
+                        setChannelId("");
+                        setChannelName("");
                       }}
                     >
-                      Salvar
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={() => {
-                        setKey("");
-                        void persisted.removeCredential();
-                      }}
-                    >
-                      Limpar
+                      Adicionar
                     </Button>
                   </div>
                   <p className="mt-2 text-[11.5px] text-muted-foreground">
-                    A chave é armazenada localmente e nunca sai do seu computador.
+                    Tokens OAuth serão guardados no cofre do sistema quando o provider for
+                    conectado.
                   </p>
                 </div>
 
-                <Separator className="my-4" />
-
-                <div className="flex items-start gap-3">
-                  <Zap className="mt-0.5 size-4 text-warning" />
-                  <div className="flex-1">
-                    <p className="text-[13px] font-medium">Modo automático</p>
-                    <p className="text-[11.5px] text-muted-foreground">
-                      Adicionar doadores automaticamente em torneios e sorteios (em breve).
+                <div className="mt-4 space-y-2">
+                  {integrations.connections.map((connection) => (
+                    <div
+                      key={connection.id}
+                      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] font-medium">
+                          {connection.channelDisplayName}
+                        </p>
+                        <p className="text-[11px] capitalize text-muted-foreground">
+                          {connection.provider} · {connection.status}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Remover ${connection.channelDisplayName}`}
+                        onClick={() => void integrations.remove(connection.id)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  ))}
+                  {!integrations.connections.length && (
+                    <p className="py-6 text-center text-xs text-muted-foreground">
+                      Nenhum canal cadastrado.
                     </p>
-                  </div>
-                  <Switch checked={auto} onCheckedChange={setAuto} disabled />
+                  )}
+                  {integrations.error && (
+                    <p className="text-xs text-destructive">{integrations.error}</p>
+                  )}
                 </div>
               </div>
             )}

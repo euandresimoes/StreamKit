@@ -49,6 +49,50 @@ export const appSettings = sqliteTable('app_settings', {
   valueJson: text('value_json').notNull(),
 })
 
+export const integrationConnections = sqliteTable(
+  'integration_connections',
+  {
+    capabilitiesJson: text('capabilities_json').notNull(),
+    channelDisplayName: text('channel_display_name').notNull(),
+    channelId: text('channel_id').notNull(),
+    createdAt: text('created_at').notNull(),
+    id: text('id').primaryKey(),
+    lastErrorCode: text('last_error_code'),
+    nextRetryAt: text('next_retry_at'),
+    provider: text('provider').notNull(),
+    retryAttempt: integer('retry_attempt').notNull().default(0),
+    status: text('status').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [unique().on(table.provider, table.channelId)],
+)
+
+export const integrationOffsets = sqliteTable('integration_offsets', {
+  connectionId: text('connection_id')
+    .primaryKey()
+    .references(() => integrationConnections.id, { onDelete: 'cascade' }),
+  cursor: text('cursor').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+export const integrationEvents = sqliteTable(
+  'integration_events',
+  {
+    channelId: text('channel_id'),
+    eventType: text('event_type').notNull(),
+    externalEventId: text('external_event_id').notNull(),
+    id: text('id').primaryKey(),
+    occurredAt: text('occurred_at'),
+    payloadJson: text('payload_json').notNull(),
+    processedAt: text('processed_at'),
+    provider: text('provider').notNull(),
+    providerUserId: text('provider_user_id'),
+    receivedAt: text('received_at').notNull(),
+    status: text('status').notNull(),
+  },
+  (table) => [unique().on(table.provider, table.externalEventId)],
+)
+
 export const tournaments = sqliteTable('tournaments', {
   bracketSize: integer('bracket_size').notNull(),
   createdAt: text('created_at').notNull(),

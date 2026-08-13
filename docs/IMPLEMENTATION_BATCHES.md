@@ -324,16 +324,21 @@ validadas e publicadas, evitando misturar a migração de UI com integrações e
 - [x] **Decisão do usuário:** separar providers de chat de gateways/providers de pagamento.
 - [x] **Decisão do usuário:** incluir Twitch, YouTube e Kick; manter LivePix, Bots e canvas fora do escopo.
 - [x] Registrar a arquitetura orientada a capacidades no ADR 0014.
-- [ ] Criar contratos Zod de conexão, capacidade, identidade externa e evento normalizado.
-- [ ] Criar módulo `integrations` no backend sem dependência de Giveaway ou Games.
-- [ ] Persistir conexões sem segredos, offsets e eventos necessários com migrations versionadas.
-- [ ] Deduplicar eventos por `provider + externalEventId` e processá-los de forma idempotente.
-- [ ] Implementar event bus local com inscrição/desinscrição e isolamento de falhas entre consumidores.
-- [ ] Implementar estado `disconnected`, `connecting`, `connected`, `reconnecting`, `error` e `revoked`.
-- [ ] Implementar backoff com jitter, cancelamento e recuperação após reinício.
-- [ ] Garantir que payload bruto sensível, tokens e refresh tokens não sejam salvos no SQLite/logs.
-- [ ] Criar adapters simulados e testes de contrato, migrations, duplicatas e reconexão.
-- [ ] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+- [x] Criar contratos Zod de conexão, capacidade, identidade externa e evento normalizado.
+- [x] Criar módulo `integrations` no backend sem dependência de Giveaway ou Games.
+- [x] Persistir conexões sem segredos, offsets e eventos necessários com migrations versionadas.
+- [x] Deduplicar eventos por `provider + externalEventId` e processá-los de forma idempotente.
+- [x] Implementar event bus local com inscrição/desinscrição e isolamento de falhas entre consumidores.
+- [x] Implementar estado `disconnected`, `connecting`, `connected`, `reconnecting`, `error` e `revoked`.
+- [x] Implementar backoff com jitter, cancelamento e recuperação após reinício.
+- [x] Garantir que payload bruto sensível, tokens e refresh tokens não sejam salvos no SQLite/logs.
+- [x] Criar adapters simulados e testes de contrato, migrations, duplicatas e reconexão.
+- [x] Executar gate completo, marcar tasks comprovadas, fazer commit e push.
+
+**Evidência registrada em 2026-08-13:** migration v7, contratos compartilhados, repository,
+event bus, registry, lifecycle manager, adapter simulado e UI de conexões foram validados por 28
+testes unitários do backend, 25 testes de integração, 8 E2E do desktop, lint, typecheck e builds
+de todos os workspaces no comando `pnpm validate`.
 
 ## Batch 13 — Twitch Chat
 

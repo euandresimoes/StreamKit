@@ -130,4 +130,35 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
     version: 6,
     sql: `UPDATE tournament_teams SET color = '#3B82F6' WHERE color IS NULL;`,
   },
+  {
+    destructive: false,
+    name: 'chat_integration_core',
+    version: 7,
+    sql: `
+      CREATE TABLE integration_connections (
+        id TEXT PRIMARY KEY NOT NULL,
+        provider TEXT NOT NULL,
+        channel_id TEXT NOT NULL,
+        channel_display_name TEXT NOT NULL,
+        capabilities_json TEXT NOT NULL,
+        status TEXT NOT NULL,
+        retry_attempt INTEGER NOT NULL DEFAULT 0,
+        next_retry_at TEXT,
+        last_error_code TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(provider, channel_id)
+      );
+      CREATE TABLE integration_offsets (
+        connection_id TEXT PRIMARY KEY NOT NULL REFERENCES integration_connections(id) ON DELETE CASCADE,
+        cursor TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      ALTER TABLE integration_events ADD COLUMN channel_id TEXT;
+      ALTER TABLE integration_events ADD COLUMN provider_user_id TEXT;
+      ALTER TABLE integration_events ADD COLUMN occurred_at TEXT;
+      CREATE INDEX integration_events_identity_index
+        ON integration_events(provider, channel_id, provider_user_id, occurred_at);
+    `,
+  },
 ]

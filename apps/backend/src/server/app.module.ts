@@ -30,6 +30,12 @@ import {
 } from '../modules/settings/secure-credential.repository'
 import { SettingsRepository } from '../modules/settings/settings.repository'
 import { SettingsService } from '../modules/settings/settings.service'
+import { IntegrationController } from '../modules/integrations/integration.controller'
+import { ChatProviderRegistry } from '../modules/integrations/chat-provider.registry'
+import { IntegrationConnectionManager } from '../modules/integrations/integration-connection.manager'
+import { IntegrationEventBus } from '../modules/integrations/integration-event.bus'
+import { IntegrationRepository } from '../modules/integrations/integration.repository'
+import { IntegrationService } from '../modules/integrations/integration.service'
 
 @Module({})
 export class AppModule {
@@ -44,6 +50,7 @@ export class AppModule {
         DiagnosticsController,
         GiveawayController,
         HealthController,
+        IntegrationController,
         WorkspaceController,
         TournamentController,
         SettingsController,
@@ -58,6 +65,11 @@ export class AppModule {
         ManageTodoService,
         GiveawayRepository,
         GiveawayService,
+        ChatProviderRegistry,
+        IntegrationConnectionManager,
+        IntegrationEventBus,
+        IntegrationRepository,
+        IntegrationService,
         TournamentRepository,
         TournamentService,
         { provide: SECURE_CREDENTIAL_REPOSITORY, useValue: secureCredentials },
