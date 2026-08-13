@@ -55,7 +55,13 @@ export async function startLocalBackend(
 
   app.useGlobalFilters(new ApiExceptionFilter())
   app.useGlobalGuards(new LocalAuthGuard(options.authenticationToken))
-  if (options.allowedOrigins?.length) app.enableCors({ origin: [...options.allowedOrigins] })
+  if (options.allowedOrigins?.length) {
+    app.enableCors({
+      allowedHeaders: ['authorization', 'content-type'],
+      methods: ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
+      origin: [...options.allowedOrigins],
+    })
+  }
   const started = new WeakMap<object, number>()
   adapter.getInstance().addHook('onRequest', async (request) => {
     started.set(request, performance.now())

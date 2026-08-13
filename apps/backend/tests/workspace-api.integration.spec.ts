@@ -63,13 +63,15 @@ describe('workspace API vertical slice', () => {
     const allowed = await fetch(`${backend.baseUrl}/api/v1/todo/workspaces`, {
       headers: {
         'access-control-request-headers': 'authorization,content-type',
-        'access-control-request-method': 'POST',
+        'access-control-request-method': 'PATCH',
         origin: rendererOrigin,
       },
       method: 'OPTIONS',
     })
     expect(allowed.status).toBe(204)
     expect(allowed.headers.get('access-control-allow-origin')).toBe(rendererOrigin)
+    expect(allowed.headers.get('access-control-allow-methods')).toContain('PATCH')
+    expect(allowed.headers.get('access-control-allow-headers')).toContain('authorization')
 
     const rejected = await fetch(`${backend.baseUrl}/api/v1/todo/workspaces`, {
       headers: { 'access-control-request-method': 'POST', origin: 'https://attacker.example' },
