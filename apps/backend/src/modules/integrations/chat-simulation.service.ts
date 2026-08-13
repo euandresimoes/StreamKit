@@ -65,10 +65,10 @@ export class ChatSimulationService {
         occurredAt: new Date().toISOString(),
         provider: input.provider,
         roles: {
-          isBot: index % 97 === 0,
-          isBroadcaster: index === 0,
-          isMember: index % 3 === 0,
-          isModerator: index % 29 === 0,
+          isBot: false,
+          isBroadcaster: false,
+          isMember: true,
+          isModerator: false,
         },
         type: 'chat.message',
       })

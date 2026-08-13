@@ -58,10 +58,14 @@ export function GamesTab() {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [correctingMatchId, setCorrectingMatchId] = useState<string | null>(null);
   const detail = tournaments.detail;
+  const qualifiedParticipants =
+    detail?.participants.filter((participant) => participant.entryId) ?? [];
+  const overflowParticipants =
+    detail?.participants.filter((participant) => !participant.entryId) ?? [];
   const entrantCount = detail
     ? detail.tournament.mode === "team"
       ? detail.teams.length
-      : detail.participants.length
+      : qualifiedParticipants.length
     : 0;
   const slotsFilled = entrantCount === detail?.tournament.bracketSize;
   const canChangeStructure = detail ? !detail.matches.length : false;
@@ -352,10 +356,11 @@ export function GamesTab() {
                       detail.tournament.mode === "team" ? "Adicionar equipe…" : "Adicionar nome…"
                     }
                     disabled={tournaments.busy || detail.matches.length > 0}
-                    className="h-8 text-[13px]"
+                    className="h-8 min-w-0 flex-1 text-[13px]"
                   />
                   <Button
                     size="icon-sm"
+                    className="shrink-0"
                     disabled={tournaments.busy || detail.matches.length > 0 || !name.trim()}
                     onClick={() => {
                       if (name.trim()) {
@@ -549,7 +554,7 @@ export function GamesTab() {
                           </div>
                         );
                       })
-                    : detail.participants.map((participant) => (
+                    : qualifiedParticipants.map((participant) => (
                         <div
                           key={participant.id}
                           draggable={!tournaments.busy && !detail.matches.length}
@@ -560,17 +565,64 @@ export function GamesTab() {
                           <span className="flex size-6 items-center justify-center rounded-lg bg-surface-2 text-[10px] font-semibold">
                             {participant.displayName.slice(0, 2).toUpperCase()}
                           </span>
-                          <span className="truncate">{participant.displayName}</span>
+                          <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
                           {participant.source === "chat" && (
-                            <span className="ml-auto" title={participant.provider ?? undefined}>
+                            <span className="shrink-0" title={participant.provider ?? undefined}>
                               {participant.provider && (
                                 <BaseBrandIcon provider={participant.provider} className="size-3" />
                               )}
                             </span>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="shrink-0"
+                            disabled={tournaments.busy || detail.matches.length > 0}
+                            onClick={() => void tournaments.removeParticipant(participant.id)}
+                            aria-label={`Excluir ${participant.displayName}`}
+                          >
+                            <Trash2 />
+                          </Button>
                         </div>
                       ))}
                 </div>
+                {detail.tournament.mode === "individual" && overflowParticipants.length > 0 && (
+                  <section className="mt-3 rounded-2xl border border-dashed border-border-strong bg-background/30 p-2">
+                    <div className="mb-2 flex items-center justify-between px-1">
+                      <p className="text-[11px] font-semibold">Fora do chaveamento</p>
+                      <span className="text-[10px] text-muted-foreground">
+                        {overflowParticipants.length}
+                      </span>
+                    </div>
+                    <div className="max-h-40 space-y-1 overflow-y-auto">
+                      {overflowParticipants.map((participant) => (
+                        <div
+                          key={participant.id}
+                          className="flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 text-xs"
+                        >
+                          <User className="size-3.5 shrink-0 text-muted-foreground" />
+                          <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
+                          {participant.provider && (
+                            <BaseBrandIcon
+                              provider={participant.provider}
+                              className="size-3 shrink-0"
+                            />
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="shrink-0"
+                            disabled={tournaments.busy || detail.matches.length > 0}
+                            onClick={() => void tournaments.removeParticipant(participant.id)}
+                            aria-label={`Excluir ${participant.displayName}`}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </>
             )}
             {!teamsExpanded && (

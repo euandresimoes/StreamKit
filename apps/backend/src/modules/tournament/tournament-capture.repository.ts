@@ -58,19 +58,6 @@ export class TournamentCaptureRepository {
           .run()
         return false
       }
-      const [{ count = 0 } = {}] = this.database.orm
-        .select({ count: sql<number>`count(*)` })
-        .from(tournamentParticipants)
-        .where(eq(tournamentParticipants.tournamentId, rule.tournamentId))
-        .all()
-      const capacity =
-        tournament.mode === 'team'
-          ? tournament.bracketSize * (tournament.teamCapacity ?? 1)
-          : tournament.bracketSize
-      if (count >= capacity) {
-        this.incrementRejected(rule.id, now)
-        return false
-      }
       const participantId = randomUUID()
       this.database.orm
         .insert(tournamentParticipants)
@@ -87,14 +74,20 @@ export class TournamentCaptureRepository {
           tournamentId: rule.tournamentId,
         })
         .run()
-      if (tournament.mode === 'individual')
+      const entryCount =
+        this.database.orm
+          .select({ count: sql<number>`count(*)` })
+          .from(tournamentEntries)
+          .where(eq(tournamentEntries.tournamentId, rule.tournamentId))
+          .get()?.count ?? 0
+      if (tournament.mode === 'individual' && entryCount < tournament.bracketSize)
         this.database.orm
           .insert(tournamentEntries)
           .values({
             createdAt: now,
             id: randomUUID(),
             participantId,
-            seed: count + 1,
+            seed: entryCount + 1,
             teamId: null,
             tournamentId: rule.tournamentId,
           })
