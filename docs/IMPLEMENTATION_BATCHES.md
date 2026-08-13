@@ -297,7 +297,9 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Testar update disponível, versão pulada, erro de update e continuidade do app.
 - [x] Testar migration/backup/restauração usando banco versionado anterior; repetir entre pacotes publicados na Batch 14.
 - [x] Executar os dez fluxos de sucesso do MVP em Windows e registrar evidências.
-- [x] Mover teste guiado com streamer real para a Batch 14, antes da validação final, por ainda não haver participante externo.
+- [ ] Executar teste guiado dos fluxos manuais com o proprietário/streamer e registrar os achados antes de corrigir.
+- [ ] Revisar e melhorar a UI do frontend a partir dos achados do teste manual.
+- [ ] Repetir os fluxos afetados no instalador após os ajustes de UI.
 - [x] Executar gate completo, smoke test do instalador e auditoria do artefato.
 - [x] Marcar as tasks concluídas, fazer commit e push.
 - [x] Não criar/publicar release sem autorização explícita, confirmação remota e pipeline verde.
@@ -307,12 +309,17 @@ gerado e passou por instalação silenciosa, abertura com `AppData` isolado e de
 Metadados do updater, blockmap e SHA-256 também foram validados. Por decisão registrada no
 ADR 0012, as releases Windows iniciais não serão assinadas e devem avisar sobre SmartScreen
 e editor desconhecido. A matriz de evidências está em `docs/BATCH_11_VALIDATION.md`. Como não
-existe pacote público anterior, o teste entre instaladores e o teste guiado com streamer externo
-foram movidos para a Batch 14. Nenhuma tag ou release foi criada sem autorização.
+existe pacote público anterior, o teste entre instaladores permanece na Batch 14. Por decisão do
+ADR 0013, a batch foi reaberta para teste manual do proprietário e refinamento da interface antes
+de qualquer integração. Nenhuma tag ou release foi criada sem autorização.
 
 ## Batch 12 — LivePix
 
 **Referências:** seções 6.10–6.11, 7.2, 7.7, 8.1 (LivePix), 11.4 (`integration_events`), 17.2, 21 e 22 (Fase 5).
+
+**Adiada por decisão do usuário em 2026-08-12:** não implementar até os fluxos manuais e a UI
+da Batch 11 serem testados, refinados e aprovados. A leitura inicial da documentação oficial não
+constitui início de implementação.
 
 - [ ] **Decisão do usuário:** validar documentação oficial, acesso, contrato/API/webhook e limites do provedor.
 - [ ] **Decisão do usuário:** definir campo do nome, nome vazio/repetido, estorno, lotação, retenção e rotação de credenciais.

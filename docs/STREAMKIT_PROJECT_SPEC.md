@@ -91,6 +91,10 @@ Permitir que um streamer organize sua rotina e execute interações com a comuni
 
 Essa separação é essencial: o domínio manual será construído primeiro e as integrações serão tratadas como novas fontes de entrada, não como parte obrigatória da lógica central.
 
+Conforme o ADR 0013, a integração LivePix permanece adiada até o proprietário testar, refinar e
+aprovar os fluxos manuais e a interface do MVP. Preparações técnicas existentes não caracterizam
+uma integração funcional nem autorizam automações externas.
+
 ### 2.3 Critério de sucesso do MVP
 
 O MVP será considerado bem-sucedido quando um streamer conseguir:

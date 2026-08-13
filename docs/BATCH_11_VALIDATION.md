@@ -40,5 +40,6 @@ uma versão anterior real.
 
 ## Validação humana
 
-O teste guiado com streamer externo foi movido para a Batch 14, antes da validação final. Ele não
-é alegado como executado nesta batch. Achados deverão virar tasks antes de correções.
+A validação automatizada não substitui a aprovação de uso. A Batch 11 foi reaberta para o
+proprietário testar os fluxos manuais, registrar problemas e preferências de UI e validar novamente
+o instalador após os ajustes. Um teste adicional com streamer externo continua previsto na Batch 14.
