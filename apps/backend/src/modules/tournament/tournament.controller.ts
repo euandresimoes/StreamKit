@@ -183,6 +183,15 @@ export class TournamentController {
       ReorderTournamentParticipantRequestSchema.parse(body).seed,
     )
   }
+  @Post(':id/participants/:participantId/queue') public queueParticipant(
+    @Param('id') id: unknown,
+    @Param('participantId') participantId: unknown,
+  ) {
+    return this.service.queueParticipant(
+      EntityIdSchema.parse(id),
+      EntityIdSchema.parse(participantId),
+    )
+  }
   @Post(':id/shuffle') public shuffle(@Param('id') id: unknown) {
     return this.service.shuffle(EntityIdSchema.parse(id))
   }

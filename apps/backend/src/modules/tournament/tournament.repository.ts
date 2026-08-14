@@ -204,12 +204,12 @@ export class TournamentRepository {
               tournamentId: tournamentParticipants.tournamentId,
             })
             .from(tournamentParticipants)
-            .innerJoin(
+            .leftJoin(
               tournamentEntries,
               eq(tournamentEntries.participantId, tournamentParticipants.id),
             )
             .where(eq(tournamentParticipants.tournamentId, id))
-            .orderBy(asc(tournamentEntries.seed))
+            .orderBy(asc(tournamentEntries.seed), asc(tournamentParticipants.createdAt))
         : (
             await this.database.orm
               .select()
@@ -797,6 +797,35 @@ export class TournamentRepository {
     this.database.transaction(() => {
       this.applySeeds(reordered)
       this.audit(id, 'seeding.reordered', { participantId, seed })
+    })
+    return this.detail(id)
+  }
+  public async queueParticipant(id: string, participantId: string) {
+    const tournament = await this.mutableDraft(id)
+    if (!tournament || tournament.mode !== 'individual') return null
+    const [participant] = await this.database.orm
+      .select()
+      .from(tournamentParticipants)
+      .where(
+        and(
+          eq(tournamentParticipants.id, participantId),
+          eq(tournamentParticipants.tournamentId, id),
+        ),
+      )
+    if (!participant) return 'missing' as const
+    const removed = await this.database.orm
+      .delete(tournamentEntries)
+      .where(
+        and(
+          eq(tournamentEntries.tournamentId, id),
+          eq(tournamentEntries.participantId, participantId),
+        ),
+      )
+      .returning()
+    if (!removed.length) return this.detail(id)
+    this.database.transaction(() => {
+      this.reseed(id)
+      this.audit(id, 'participant.queued', { participantId })
     })
     return this.detail(id)
   }

@@ -586,14 +586,30 @@ export function GamesTab() {
                         </div>
                       ))}
                 </div>
-                {detail.tournament.mode === "individual" && overflowParticipants.length > 0 && (
-                  <section className="mt-3 rounded-2xl border border-dashed border-border-strong bg-background/30 p-2">
+                {detail.tournament.mode === "individual" && !detail.matches.length && (
+                  <section
+                    className={cn(
+                      "mt-3 rounded-2xl border border-dashed bg-background/30 p-2 transition-colors",
+                      draggedParticipantId ? "border-primary bg-primary/5" : "border-border-strong",
+                    )}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => {
+                      if (draggedParticipantId)
+                        void tournaments.queueParticipant(draggedParticipantId);
+                      setDraggedParticipantId(null);
+                    }}
+                  >
                     <div className="mb-2 flex items-center justify-between px-1">
                       <p className="text-[11px] font-semibold">Fora do chaveamento</p>
                       <span className="text-[10px] text-muted-foreground">
                         {overflowParticipants.length}
                       </span>
                     </div>
+                    {!overflowParticipants.length && (
+                      <p className="rounded-xl border border-dashed border-border px-2 py-3 text-center text-[10px] text-muted-foreground">
+                        Arraste uma pessoa do chaveamento para cá
+                      </p>
+                    )}
                     <div className="max-h-40 space-y-1 overflow-y-auto">
                       {overflowParticipants.map((participant) => (
                         <div
@@ -709,6 +725,7 @@ export function GamesTab() {
                       void tournaments.reorderParticipant(draggedParticipantId, seed);
                     setDraggedParticipantId(null);
                   }}
+                  onDragStart={setDraggedParticipantId}
                 />
               )}
               {Array.from(new Set(detail.matches.map((match) => match.roundNumber))).map(
@@ -987,10 +1004,12 @@ function PreviewBracket({
   bracketSize,
   participants,
   onDrop,
+  onDragStart,
 }: {
   bracketSize: number;
   participants: Array<{ id: string; displayName: string; seed: number | null }>;
   onDrop(seed: number): void;
+  onDragStart(participantId: string | null): void;
 }) {
   const bySeed = new Map(participants.map((participant) => [participant.seed, participant]));
   const rounds = Math.log2(bracketSize);
@@ -1011,6 +1030,9 @@ function PreviewBracket({
               return (
                 <div
                   key={seed}
+                  draggable={Boolean(participant)}
+                  onDragStart={() => participant && onDragStart(participant.id)}
+                  onDragEnd={() => onDragStart(null)}
                   onDragOver={(event) => event.preventDefault()}
                   onDrop={() => onDrop(seed)}
                   className={cn(

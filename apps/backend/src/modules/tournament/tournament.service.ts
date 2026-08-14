@@ -111,6 +111,9 @@ export class TournamentService {
   public reorder(id: string, participantId: string, seed: number) {
     return this.resolve(this.repository.reorder(id, participantId, seed), participantId)
   }
+  public queueParticipant(id: string, participantId: string) {
+    return this.resolve(this.repository.queueParticipant(id, participantId), participantId)
+  }
   public shuffle(id: string) {
     return this.resolve(this.repository.shuffle(id))
   }

@@ -94,6 +94,10 @@ export const tournamentApi = {
       method: "POST",
       body: { seed },
     }),
+  queueParticipant: (id: string, participantId: string) =>
+    apiClient.request(`/api/v1/tournaments/${id}/participants/${participantId}/queue`, {
+      method: "POST",
+    }),
   shuffle: (id: string) =>
     apiClient.request(`/api/v1/tournaments/${id}/shuffle`, { method: "POST" }),
   generate: (id: string) =>
