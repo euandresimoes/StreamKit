@@ -2,8 +2,10 @@ import { useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
+  CircleCheck,
   GripVertical,
   MessageCircle,
+  Play,
   Minus,
   Plus,
   Settings2,
@@ -11,6 +13,7 @@ import {
   Trash2,
   Trophy,
   User,
+  UserX,
   Users,
 } from "lucide-react";
 
@@ -20,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
 import { BaseColorPicker } from "@/components/base/BaseColorPicker";
 import { BaseBrandIcon } from "@/components/base/BaseBrandIcon";
+import { BaseModal } from "@/components/base/BaseModal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -56,6 +60,7 @@ export function GamesTab() {
   const [participantsExpanded, setParticipantsExpanded] = useState(true);
   const [teamsExpanded, setTeamsExpanded] = useState(true);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [operatingMatchId, setOperatingMatchId] = useState<string | null>(null);
   const [correctingMatchId, setCorrectingMatchId] = useState<string | null>(null);
   const detail = tournaments.detail;
   const qualifiedParticipants =
@@ -75,13 +80,19 @@ export function GamesTab() {
     ) ?? null;
   const bracketEntries = detail
     ? detail.tournament.mode === "team"
-      ? detail.teams.map((team) => ({ id: team.entryId, name: team.name, color: team.color }))
+      ? detail.teams.map((team) => ({
+          avatarUrl: null,
+          id: team.entryId,
+          name: team.name,
+          color: team.color,
+        }))
       : detail.participants
           .filter((participant) => participant.entryId)
           .map((participant) => ({
             id: participant.entryId!,
             name: participant.displayName,
             color: null,
+            avatarUrl: participant.avatarUrl,
           }))
     : [];
 
@@ -525,6 +536,24 @@ export function GamesTab() {
                                     {member ? (
                                       <>
                                         <GripVertical className="size-3 cursor-grab text-muted-foreground" />
+                                        {detail.participants.find(
+                                          (participant) => participant.id === member.participantId,
+                                        )?.avatarUrl ? (
+                                          <img
+                                            src={
+                                              detail.participants.find(
+                                                (participant) =>
+                                                  participant.id === member.participantId,
+                                              )!.avatarUrl!
+                                            }
+                                            alt=""
+                                            className="size-5 shrink-0 rounded-full object-cover"
+                                          />
+                                        ) : (
+                                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-card">
+                                            <User className="size-3" />
+                                          </span>
+                                        )}
                                         <span
                                           draggable
                                           onDragStart={() => setDraggedMemberId(member.id)}
@@ -562,10 +591,22 @@ export function GamesTab() {
                           onDragEnd={() => setDraggedParticipantId(null)}
                           className="raise flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[13px]"
                         >
-                          <span className="flex size-6 items-center justify-center rounded-lg bg-surface-2 text-[10px] font-semibold">
-                            {participant.displayName.slice(0, 2).toUpperCase()}
-                          </span>
+                          {participant.avatarUrl ? (
+                            <img
+                              src={participant.avatarUrl}
+                              alt=""
+                              className="size-6 shrink-0 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-[10px] font-semibold">
+                              {participant.displayName.slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
                           <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
+                          <CircleCheck
+                            className="size-3.5 shrink-0 text-emerald-500"
+                            aria-label="No chaveamento"
+                          />
                           {participant.source === "chat" && (
                             <span className="shrink-0" title={participant.provider ?? undefined}>
                               {participant.provider && (
@@ -589,8 +630,8 @@ export function GamesTab() {
                 {detail.tournament.mode === "individual" && !detail.matches.length && (
                   <section
                     className={cn(
-                      "mt-3 rounded-2xl border border-dashed bg-background/30 p-2 transition-colors",
-                      draggedParticipantId ? "border-primary bg-primary/5" : "border-border-strong",
+                      "mt-3 max-h-36 overflow-hidden rounded-xl border border-red-500/20 bg-red-500/[0.06] p-2 transition-colors",
+                      draggedParticipantId && "border-red-400/50 bg-red-500/10",
                     )}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={() => {
@@ -606,7 +647,7 @@ export function GamesTab() {
                       </span>
                     </div>
                     {!overflowParticipants.length && (
-                      <p className="rounded-xl border border-dashed border-border px-2 py-3 text-center text-[10px] text-muted-foreground">
+                      <p className="px-2 py-2 text-center text-[10px] text-red-300/60">
                         Arraste uma pessoa do chaveamento para cá
                       </p>
                     )}
@@ -616,8 +657,10 @@ export function GamesTab() {
                           key={participant.id}
                           className="flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 text-xs"
                         >
-                          <User className="size-3.5 shrink-0 text-muted-foreground" />
-                          <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
+                          <UserX className="size-3.5 shrink-0 text-red-400/70" />
+                          <span className="min-w-0 flex-1 truncate text-muted-foreground line-through decoration-red-400/60">
+                            {participant.displayName}
+                          </span>
                           {participant.provider && (
                             <BaseBrandIcon
                               provider={participant.provider}
@@ -748,16 +791,68 @@ export function GamesTab() {
                             detail.tournament.currentMatchId === match.id &&
                             match.status === "in_progress";
                           return (
-                            <button
-                              type="button"
+                            <div
+                              role="button"
+                              tabIndex={0}
                               key={match.id}
                               onClick={() => setSelectedMatchId(match.id)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ")
+                                  setSelectedMatchId(match.id);
+                              }}
                               className={cn(
-                                "rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-accent/40",
+                                "relative rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-accent/40",
                                 active ? "border-primary ring-2 ring-primary/25" : "border-border",
                                 selectedMatch?.id === match.id && !active && "border-border-strong",
                               )}
                             >
+                              {selectedMatch?.id === match.id && (
+                                <div className="absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
+                                  {match.status === "ready" &&
+                                    detail.tournament.status === "in_progress" && (
+                                      <Button
+                                        size="sm"
+                                        className="h-7"
+                                        disabled={
+                                          tournaments.busy ||
+                                          detail.matches.some(
+                                            (item) => item.status === "in_progress",
+                                          )
+                                        }
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          void tournaments.startMatch(match.id);
+                                        }}
+                                      >
+                                        <Play className="size-3" /> Começar
+                                      </Button>
+                                    )}
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      setOperatingMatchId(match.id);
+                                    }}
+                                  >
+                                    Abrir partida
+                                  </Button>
+                                  {match.status === "finished" && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setCorrectingMatchId(match.id);
+                                      }}
+                                    >
+                                      Corrigir
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
                               <p className="px-2 pb-1 text-[10px] text-muted-foreground">
                                 Partida {match.matchNumber}
                               </p>
@@ -771,12 +866,22 @@ export function GamesTab() {
                                       index === 0 && "border-b border-border",
                                     )}
                                   >
-                                    {entry?.color && (
+                                    {entry?.avatarUrl && detail.tournament.mode === "individual" ? (
+                                      <img
+                                        src={entry.avatarUrl}
+                                        alt=""
+                                        className="size-5 shrink-0 rounded-full object-cover"
+                                      />
+                                    ) : entry?.color ? (
                                       <span
                                         className="size-2.5 rounded-full"
                                         style={{ backgroundColor: entry.color }}
                                       />
-                                    )}
+                                    ) : detail.tournament.mode === "individual" && entry ? (
+                                      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-surface-2">
+                                        <User className="size-3" />
+                                      </span>
+                                    ) : null}
                                     <span
                                       className={cn(
                                         "min-w-0 flex-1 truncate",
@@ -800,7 +905,7 @@ export function GamesTab() {
                                   </div>
                                 );
                               })}
-                            </button>
+                            </div>
                           );
                         })}
                     </div>
@@ -809,7 +914,14 @@ export function GamesTab() {
               )}
             </div>
             {selectedMatch && (
-              <div className="mt-5 rounded-2xl border border-border-strong bg-card p-4">
+              <BaseModal
+                open={operatingMatchId === selectedMatch.id}
+                onOpenChange={(open) => {
+                  if (!open) setOperatingMatchId(null);
+                }}
+                title={`Partida ${selectedMatch.matchNumber}`}
+                description={`Rodada ${selectedMatch.roundNumber}`}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-[13px] font-semibold">Partida {selectedMatch.matchNumber}</p>
@@ -884,12 +996,12 @@ export function GamesTab() {
                               onClick={() =>
                                 void tournaments.completeMatch(
                                   selectedMatch.id,
-                                  side === "left" ? "won" : "forfeit",
-                                  side === "right" ? "won" : "forfeit",
+                                  side === "left" ? "forfeit" : "won",
+                                  side === "right" ? "forfeit" : "won",
                                 )
                               }
                             >
-                              Adversário desistiu
+                              Desistiu
                             </Button>
                           </div>
                         </div>
@@ -915,7 +1027,7 @@ export function GamesTab() {
                     matchId={selectedMatch.id}
                   />
                 )}
-              </div>
+              </BaseModal>
             )}
           </div>
         </div>

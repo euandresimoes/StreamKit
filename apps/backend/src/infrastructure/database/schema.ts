@@ -106,6 +106,7 @@ export const tournaments = sqliteTable('tournaments', {
   updatedAt: text('updated_at').notNull(),
 })
 export const tournamentParticipants = sqliteTable('tournament_participants', {
+  avatarUrl: text('avatar_url'),
   channelId: text('channel_id'),
   createdAt: text('created_at').notNull(),
   displayName: text('display_name').notNull(),

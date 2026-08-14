@@ -278,4 +278,10 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
       ALTER TABLE tournament_matches ADD COLUMN finished_at TEXT;
     `,
   },
+  {
+    destructive: false,
+    name: 'tournament_participant_avatars',
+    version: 13,
+    sql: `ALTER TABLE tournament_participants ADD COLUMN avatar_url TEXT;`,
+  },
 ]
