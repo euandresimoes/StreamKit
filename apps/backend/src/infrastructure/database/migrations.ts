@@ -284,4 +284,62 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
     version: 13,
     sql: `ALTER TABLE tournament_participants ADD COLUMN avatar_url TEXT;`,
   },
+  {
+    destructive: false,
+    name: 'todo_richer_cards_columns_and_templates',
+    version: 14,
+    sql: `
+      ALTER TABLE todo_columns ADD COLUMN icon TEXT;
+      ALTER TABLE todo_columns ADD COLUMN wip_limit INTEGER;
+      ALTER TABLE todo_columns ADD COLUMN is_collapsed INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE todo_columns ADD COLUMN is_pinned INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE todo_cards ADD COLUMN priority TEXT NOT NULL DEFAULT 'normal';
+      ALTER TABLE todo_cards ADD COLUMN accent_color TEXT;
+      ALTER TABLE todo_cards ADD COLUMN labels_json TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE todo_cards ADD COLUMN checklist_json TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE todo_cards ADD COLUMN is_pinned INTEGER NOT NULL DEFAULT 0;
+      CREATE TABLE todo_templates (
+        id TEXT PRIMARY KEY NOT NULL,
+        workspace_id TEXT NOT NULL REFERENCES todo_workspaces(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        description TEXT,
+        structure_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX todo_templates_workspace_index ON todo_templates(workspace_id, updated_at);
+    `,
+  },
+  {
+    destructive: false,
+    name: 'todo_workspace_pins_colors_and_global_templates',
+    version: 15,
+    sql: `
+      ALTER TABLE todo_workspaces ADD COLUMN accent_color TEXT;
+      ALTER TABLE todo_workspaces ADD COLUMN is_pinned INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE todo_templates ADD COLUMN global_scope INTEGER NOT NULL DEFAULT 1;
+    `,
+  },
+  {
+    destructive: false,
+    name: 'todo_templates_global_scope',
+    version: 16,
+    sql: `
+      ALTER TABLE todo_templates RENAME TO todo_templates_legacy;
+      CREATE TABLE todo_templates (
+        id TEXT PRIMARY KEY NOT NULL,
+        workspace_id TEXT REFERENCES todo_workspaces(id) ON DELETE SET NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        structure_json TEXT NOT NULL,
+        global_scope INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      INSERT INTO todo_templates (id, workspace_id, name, description, structure_json, global_scope, created_at, updated_at)
+        SELECT id, workspace_id, name, description, structure_json, global_scope, created_at, updated_at FROM todo_templates_legacy;
+      DROP TABLE todo_templates_legacy;
+      CREATE INDEX todo_templates_workspace_index ON todo_templates(workspace_id, updated_at);
+    `,
+  },
 ]

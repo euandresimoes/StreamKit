@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import {
+  type CreateTodoTemplateRequest,
   type DeleteColumnRequest,
   type MoveCardRequest,
   type TodoBoard,
@@ -8,6 +9,8 @@ import {
   TodoCardSchema,
   type TodoColumn,
   TodoColumnSchema,
+  type TodoTemplate,
+  TodoTemplateSchema,
   type UpdateCardRequest,
   type UpdateColumnRequest,
   type UpdateWorkspaceRequest,
@@ -20,6 +23,7 @@ import {
   appSettings,
   todoCards,
   todoColumns,
+  todoTemplates,
   todoWorkspaces,
 } from '../../../infrastructure/database/schema'
 import type { SqliteDatabase } from '../../../infrastructure/database/sqlite-database'
@@ -53,6 +57,8 @@ export class SqliteWorkspaceRepository extends WorkspaceRepository {
         row.position,
         row.createdAt,
         row.updatedAt,
+        row.accentColor,
+        row.isPinned,
       )
     })
   }
@@ -108,7 +114,15 @@ export class SqliteWorkspaceRepository extends WorkspaceRepository {
               )})`,
             )
             .orderBy(asc(todoCards.position))
-    return TodoBoardSchema.parse({ workspace, columns, cards })
+    return TodoBoardSchema.parse({
+      workspace,
+      columns,
+      cards: cards.map((card) => ({
+        ...card,
+        labels: JSON.parse(card.labelsJson ?? '[]'),
+        checklist: JSON.parse(card.checklistJson ?? '[]'),
+      })),
+    })
   }
 
   public async update(id: string, input: UpdateWorkspaceRequest): Promise<WorkspaceEntity | null> {
@@ -126,6 +140,8 @@ export class SqliteWorkspaceRepository extends WorkspaceRepository {
           board.workspace.position,
           board.workspace.createdAt,
           board.workspace.updatedAt,
+          board.workspace.accentColor,
+          board.workspace.isPinned,
         )
       : null
   }
@@ -159,6 +175,10 @@ export class SqliteWorkspaceRepository extends WorkspaceRepository {
       position: (highest?.value ?? -1) + 1,
       updatedAt: now,
       workspaceId,
+      icon: null,
+      isCollapsed: false,
+      isPinned: false,
+      wipLimit: null,
     }
     await this.database.orm.insert(todoColumns).values(row)
     return TodoColumnSchema.parse(row)
@@ -270,25 +290,42 @@ export class SqliteWorkspaceRepository extends WorkspaceRepository {
       .where(eq(todoCards.columnId, columnId))
     const now = new Date().toISOString()
     const row = {
+      accentColor: null,
       columnId,
       createdAt: now,
       description,
       id: crypto.randomUUID(),
       notes,
+      priority: 'normal' as const,
+      isPinned: false,
+      labelsJson: '[]',
+      checklistJson: '[]',
       position: (highest?.value ?? -1) + 1,
       title,
       updatedAt: now,
     }
     await this.database.orm.insert(todoCards).values(row)
-    return TodoCardSchema.parse(row)
+    return TodoCardSchema.parse({ ...row, labels: [], checklist: [] })
   }
   public async updateCard(id: string, input: UpdateCardRequest): Promise<TodoCard | null> {
+    const { labels, checklist, ...scalarInput } = input
     await this.database.orm
       .update(todoCards)
-      .set({ ...input, updatedAt: new Date().toISOString() })
+      .set({
+        ...scalarInput,
+        ...(labels === undefined ? {} : { labelsJson: JSON.stringify(labels) }),
+        ...(checklist === undefined ? {} : { checklistJson: JSON.stringify(checklist) }),
+        updatedAt: new Date().toISOString(),
+      })
       .where(eq(todoCards.id, id))
     const [row] = await this.database.orm.select().from(todoCards).where(eq(todoCards.id, id))
-    return row ? TodoCardSchema.parse(row) : null
+    return row
+      ? TodoCardSchema.parse({
+          ...row,
+          labels: JSON.parse(row.labelsJson ?? '[]'),
+          checklist: JSON.parse(row.checklistJson ?? '[]'),
+        })
+      : null
   }
   public async deleteCard(id: string): Promise<boolean> {
     const [card] = await this.database.orm.select().from(todoCards).where(eq(todoCards.id, id))
@@ -351,8 +388,125 @@ export class SqliteWorkspaceRepository extends WorkspaceRepository {
       )
       const updatedAt = new Date().toISOString()
       this.database.orm.update(todoCards).set({ updatedAt }).where(eq(todoCards.id, id)).run()
-      return TodoCardSchema.parse({ ...card, columnId: input.columnId, position, updatedAt })
+      return TodoCardSchema.parse({
+        ...card,
+        columnId: input.columnId,
+        position,
+        updatedAt,
+        labels: JSON.parse(card.labelsJson ?? '[]'),
+        checklist: JSON.parse(card.checklistJson ?? '[]'),
+      })
     })
+  }
+  public async createTemplate(
+    workspaceId: string,
+    input: CreateTodoTemplateRequest,
+  ): Promise<TodoTemplate | null> {
+    const board = await this.findBoard(workspaceId)
+    if (!board) return null
+    const now = new Date().toISOString()
+    const row = {
+      id: crypto.randomUUID(),
+      workspaceId,
+      name: input.name,
+      description: input.description ?? null,
+      structureJson: JSON.stringify({
+        columns: board.columns.map((column) => ({
+          name: column.name,
+          color: column.color,
+          icon: column.icon,
+          wipLimit: column.wipLimit,
+          cards: board.cards
+            .filter((card) => card.columnId === column.id)
+            .map((card) => ({
+              title: card.title,
+              description: card.description,
+              notes: card.notes,
+              priority: card.priority,
+              accentColor: card.accentColor,
+              labels: card.labels,
+              checklist: card.checklist,
+            })),
+        })),
+      }),
+      createdAt: now,
+      updatedAt: now,
+    }
+    await this.database.orm.insert(todoTemplates).values(row)
+    return TodoTemplateSchema.parse({ ...row, structure: JSON.parse(row.structureJson) })
+  }
+  public async listTemplates(workspaceId: string): Promise<TodoTemplate[]> {
+    void workspaceId
+    const rows = await this.database.orm
+      .select()
+      .from(todoTemplates)
+      .orderBy(asc(todoTemplates.updatedAt))
+    return rows.map((row) =>
+      TodoTemplateSchema.parse({ ...row, structure: JSON.parse(row.structureJson) }),
+    )
+  }
+  public async applyTemplate(workspaceId: string, templateId: string): Promise<TodoBoard | null> {
+    const [template] = await this.database.orm
+      .select()
+      .from(todoTemplates)
+      .where(eq(todoTemplates.id, templateId))
+    if (!template) return null
+    const structure = JSON.parse(template.structureJson) as {
+      columns: Array<{
+        name: string
+        color?: string | null
+        icon?: string | null
+        wipLimit?: number | null
+        cards: Array<Record<string, unknown>>
+      }>
+    }
+    this.database.transaction(() => {
+      this.database.orm.delete(todoColumns).where(eq(todoColumns.workspaceId, workspaceId)).run()
+      structure.columns.forEach((column, columnIndex) => {
+        const columnId = crypto.randomUUID()
+        const now = new Date().toISOString()
+        this.database.orm
+          .insert(todoColumns)
+          .values({
+            id: columnId,
+            workspaceId,
+            name: column.name,
+            color: column.color ?? null,
+            icon: column.icon ?? null,
+            wipLimit: column.wipLimit ?? null,
+            position: columnIndex,
+            isCollapsed: false,
+            isPinned: false,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .run()
+        column.cards.forEach((card, cardIndex) =>
+          this.database.orm
+            .insert(todoCards)
+            .values({
+              id: crypto.randomUUID(),
+              columnId,
+              title: String(card.title),
+              description: (card.description as string | null) ?? null,
+              notes: (card.notes as string | null) ?? null,
+              priority: (card.priority as string) ?? 'normal',
+              accentColor: (card.accentColor as string | null) ?? null,
+              labelsJson: JSON.stringify(card.labels ?? []),
+              checklistJson: JSON.stringify(card.checklist ?? []),
+              isPinned: false,
+              position: cardIndex,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .run(),
+        )
+      })
+    })
+    return this.findBoard(workspaceId)
+  }
+  public async deleteTemplate(id: string): Promise<boolean> {
+    return this.database.orm.delete(todoTemplates).where(eq(todoTemplates.id, id)).run().changes > 0
   }
   private normalizeCards(columnId: string): void {
     this.database.orm

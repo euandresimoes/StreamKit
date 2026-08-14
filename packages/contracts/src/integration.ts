@@ -1,7 +1,13 @@
 import { z } from 'zod'
 
 export const IntegrationProviderSchema = z.enum(['kick', 'twitch', 'youtube'])
-export const IntegrationCapabilitySchema = z.enum(['chat.read', 'chat.write', 'user.identity'])
+export const IntegrationCapabilitySchema = z.enum([
+  'chat.read',
+  'chat.write',
+  'live.metadata.write',
+  'live.read',
+  'user.identity',
+])
 export const IntegrationConnectionStatusSchema = z.enum([
   'connected',
   'connecting',

@@ -229,6 +229,14 @@ Workspace: Filmes
 - excluir card;
 - registrar datas de criação e atualização.
 
+#### Evolução operacional (Batch 24)
+
+- colunas podem ter ícone, cor, limite WIP, estado recolhido e pin persistente;
+- cards suportam prioridade, cor de destaque, etiquetas, checklist e pin;
+- templates são salvos por workspace e podem recriar sua estrutura localmente;
+- detalhes de card usam modal base compartilhado e as etiquetas/prioridades usam primitives visuais reutilizáveis;
+- esta evolução não adiciona chat ou colaboração em tempo real.
+
 ### 5.4 Regras de negócio
 
 - Um workspace precisa ter um nome não vazio.
@@ -239,6 +247,7 @@ Workspace: Filmes
 - Mover um card deve ser uma única operação transacional.
 - Excluir um workspace remove suas colunas e cards em cascata após confirmação.
 - Excluir uma coluna com cards exige uma decisão explícita do usuário.
+- Aplicar um template substitui a estrutura atual do workspace e exige ação explícita do usuário.
 
 ### 5.5 Fora do MVP inicial
 
@@ -1289,6 +1298,7 @@ Entradas de usuário exibidas na roleta, times e cards devem ser tratadas como t
 - resultado independente do frame rate;
 - uso de transformações adequadas para GPU;
 - quantidade visual de itens limitada ou virtualizada;
+- na operaÃ§Ã£o de live, giveaway e torneio, manter no mÃ¡ximo 50 participantes/mensagens montados por janela; o conjunto completo permanece no backend para sorteio, auditoria e persistÃªncia;
 - reprodução determinística do destino final;
 - opção de reduzir movimento;
 - sons desacoplados da lógica de seleção.

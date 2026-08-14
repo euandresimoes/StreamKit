@@ -45,7 +45,13 @@ const TwitchUsersSchema = z.object({
 
 @Injectable()
 export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBootstrap {
-  public readonly capabilities = ['chat.read', 'chat.write', 'user.identity'] as const
+  public readonly capabilities = [
+    'chat.read',
+    'chat.write',
+    'live.metadata.write',
+    'live.read',
+    'user.identity',
+  ] as const
   public readonly provider = 'twitch' as const
   private readonly avatars = new Map<string, Promise<string | null>>()
 

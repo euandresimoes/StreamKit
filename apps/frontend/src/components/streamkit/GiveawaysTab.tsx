@@ -26,6 +26,7 @@ import { GiveawayStage } from "./GiveawayStage";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { FocusedChatPanel } from "./FocusedChatPanel";
 import { ParticipantCaptureDialog } from "./ParticipantCaptureDialog";
+import { MAX_VISIBLE_PARTICIPANTS } from "@/modules/performance/bounded-render-window";
 
 export function GiveawaysTab() {
   const giveaways = useGiveaways(false);
@@ -102,6 +103,7 @@ export function GiveawaysTab() {
         .toLocaleLowerCase("pt-BR")
         .includes(participantQuery.trim().toLocaleLowerCase("pt-BR")),
     ) ?? [];
+  const visibleParticipants = filteredParticipants.slice(0, MAX_VISIBLE_PARTICIPANTS);
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-auto px-2 pb-2">
@@ -204,7 +206,7 @@ export function GiveawaysTab() {
                 />
               </div>
               <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto pr-1">
-                {filteredParticipants.map((participant) => (
+                {visibleParticipants.map((participant) => (
                   <div
                     key={participant.id}
                     className="flex items-center rounded-xl border border-border bg-card py-1.5 pl-3 pr-1.5 text-[13px]"
@@ -230,6 +232,12 @@ export function GiveawaysTab() {
                 {!filteredParticipants.length && (
                   <p className="px-2 py-5 text-center text-xs text-muted-foreground">
                     {participantQuery ? "Nenhum participante encontrado." : "Nenhum participante."}
+                  </p>
+                )}
+                {filteredParticipants.length > MAX_VISIBLE_PARTICIPANTS && (
+                  <p className="px-2 pt-2 text-center text-[10px] text-muted-foreground">
+                    Exibindo {MAX_VISIBLE_PARTICIPANTS} de {filteredParticipants.length}. Refine a
+                    busca para ver outros participantes.
                   </p>
                 )}
               </div>

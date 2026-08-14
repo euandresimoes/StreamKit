@@ -1,9 +1,11 @@
 import { integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core'
 
 export const todoWorkspaces = sqliteTable('todo_workspaces', {
+  accentColor: text('accent_color'),
   createdAt: text('created_at').notNull(),
   description: text('description'),
   id: text('id').primaryKey(),
+  isPinned: integer('is_pinned', { mode: 'boolean' }).notNull().default(false),
   icon: text('icon').notNull().default('📋'),
   name: text('name').notNull(),
   position: integer('position').notNull(),
@@ -16,9 +18,13 @@ export const todoColumns = sqliteTable(
     color: text('color'),
     createdAt: text('created_at').notNull(),
     id: text('id').primaryKey(),
+    icon: text('icon'),
+    isCollapsed: integer('is_collapsed', { mode: 'boolean' }).notNull().default(false),
+    isPinned: integer('is_pinned', { mode: 'boolean' }).notNull().default(false),
     name: text('name').notNull(),
     position: integer('position').notNull(),
     updatedAt: text('updated_at').notNull(),
+    wipLimit: integer('wip_limit'),
     workspaceId: text('workspace_id')
       .notNull()
       .references(() => todoWorkspaces.id, { onDelete: 'cascade' }),
@@ -29,19 +35,35 @@ export const todoColumns = sqliteTable(
 export const todoCards = sqliteTable(
   'todo_cards',
   {
+    accentColor: text('accent_color'),
     columnId: text('column_id')
       .notNull()
       .references(() => todoColumns.id, { onDelete: 'cascade' }),
     createdAt: text('created_at').notNull(),
     description: text('description'),
     id: text('id').primaryKey(),
+    isPinned: integer('is_pinned', { mode: 'boolean' }).notNull().default(false),
+    labelsJson: text('labels_json').notNull().default('[]'),
+    checklistJson: text('checklist_json').notNull().default('[]'),
     notes: text('notes'),
+    priority: text('priority').notNull().default('normal'),
     position: integer('position').notNull(),
     title: text('title').notNull(),
     updatedAt: text('updated_at').notNull(),
   },
   (table) => [unique().on(table.columnId, table.position)],
 )
+
+export const todoTemplates = sqliteTable('todo_templates', {
+  createdAt: text('created_at').notNull(),
+  description: text('description'),
+  id: text('id').primaryKey(),
+  globalScope: integer('global_scope', { mode: 'boolean' }).notNull().default(true),
+  name: text('name').notNull(),
+  structureJson: text('structure_json').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  workspaceId: text('workspace_id').references(() => todoWorkspaces.id, { onDelete: 'set null' }),
+})
 
 export const appSettings = sqliteTable('app_settings', {
   key: text('key').primaryKey(),

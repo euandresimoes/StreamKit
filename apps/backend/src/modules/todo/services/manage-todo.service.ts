@@ -2,11 +2,13 @@ import { Inject, Injectable } from '@nestjs/common'
 import type {
   CreateCardRequest,
   CreateColumnRequest,
+  CreateTodoTemplateRequest,
   DeleteColumnRequest,
   MoveCardRequest,
   TodoBoard,
   TodoCard,
   TodoColumn,
+  TodoTemplate,
   UpdateCardRequest,
   UpdateColumnRequest,
   UpdateWorkspaceRequest,
@@ -92,5 +94,24 @@ export class ManageTodoService {
       .then((value) =>
         this.required(value, 'TODO_CARD_NOT_FOUND', 'Card or target column not found'),
       )
+  }
+  public createTemplate(id: string, input: CreateTodoTemplateRequest): Promise<TodoTemplate> {
+    return this.repository
+      .createTemplate(id, input)
+      .then((value) => this.required(value, 'TODO_WORKSPACE_NOT_FOUND', 'Workspace not found'))
+  }
+  public listTemplates(id: string): Promise<TodoTemplate[]> {
+    return this.repository.listTemplates(id)
+  }
+  public applyTemplate(id: string, templateId: string): Promise<TodoBoard> {
+    return this.repository
+      .applyTemplate(id, templateId)
+      .then((value) =>
+        this.required(value, 'TODO_WORKSPACE_NOT_FOUND', 'Workspace or template not found'),
+      )
+  }
+  public async deleteTemplate(id: string): Promise<void> {
+    if (!(await this.repository.deleteTemplate(id)))
+      throw new ApiApplicationError('TODO_TEMPLATE_NOT_FOUND', 'Template not found', 404)
   }
 }

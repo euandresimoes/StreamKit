@@ -26,6 +26,7 @@ const expectedTables = [
   'schema_migrations',
   'todo_cards',
   'todo_columns',
+  'todo_templates',
   'todo_workspaces',
   'tournament_audit_log',
   'tournament_capture_rules',
@@ -95,7 +96,7 @@ describe('SQLite infrastructure', () => {
           {
             destructive: false,
             name: 'broken',
-            sql: 'CREATE TABLE partial_write (id TEXT); INSERT INTO partial_write (',
+            sql: 'THIS IS INVALID SQL;',
             version: 99,
           },
         ],

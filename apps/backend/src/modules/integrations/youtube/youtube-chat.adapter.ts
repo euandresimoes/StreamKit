@@ -31,7 +31,13 @@ import { YouTubeAuthService } from './youtube-auth.service'
 export class YouTubeChatAdapter
   implements ChatProviderAdapter, OnApplicationBootstrap, OnModuleDestroy
 {
-  public readonly capabilities = ['chat.read', 'chat.write', 'user.identity'] as const
+  public readonly capabilities = [
+    'chat.read',
+    'chat.write',
+    'live.metadata.write',
+    'live.read',
+    'user.identity',
+  ] as const
   public readonly provider = 'youtube' as const
   private unregister: (() => void) | null = null
   private readonly avatars = new Map<string, Promise<string | null>>()

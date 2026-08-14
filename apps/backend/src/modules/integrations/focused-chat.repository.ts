@@ -4,6 +4,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import {
   type ChatMessageReceived,
   FocusedChatThreadSchema,
+  type IntegrationConnectionStatus,
   type IntegrationProvider,
 } from '@streamkit/contracts'
 import { and, desc, eq, isNotNull, lt, or, sql } from 'drizzle-orm'
@@ -14,6 +15,8 @@ import type { SqliteDatabase } from '../../infrastructure/database/sqlite-databa
 
 export const CHAT_BUFFER_MAX_MESSAGES = 10_000
 export const CHAT_BUFFER_RETENTION_MS = 24 * 60 * 60 * 1_000
+const CHAT_PRUNE_INTERVAL_MS = 5_000
+const CHAT_PRUNE_EVERY_MESSAGES = 250
 const FOCUSED_THREAD_MAX_MESSAGES = 200
 
 export type FocusedChatKey = {
@@ -25,6 +28,8 @@ export type FocusedChatKey = {
 
 @Injectable()
 export class FocusedChatRepository {
+  private lastPrunedAt = 0
+  private writesSincePrune = 0
   public constructor(@Inject(SQLITE_DATABASE) private readonly database: SqliteDatabase) {}
 
   public async append(event: ChatMessageReceived): Promise<void> {
@@ -62,7 +67,15 @@ export class FocusedChatRepository {
         receivedAt: now,
       })
       .onConflictDoNothing()
-    await this.prune(new Date(now))
+    this.writesSincePrune += 1
+    if (
+      this.writesSincePrune >= CHAT_PRUNE_EVERY_MESSAGES ||
+      Date.now() - this.lastPrunedAt >= CHAT_PRUNE_INTERVAL_MS
+    ) {
+      await this.prune(new Date(now))
+      this.writesSincePrune = 0
+      this.lastPrunedAt = Date.now()
+    }
   }
 
   public async prune(now = new Date()): Promise<void> {
@@ -183,5 +196,58 @@ export class FocusedChatRepository {
 
   public async count(): Promise<number> {
     return this.database.orm.$count(chatMessageBuffer)
+  }
+
+  public async forChannel(connection: {
+    id: string
+    provider: IntegrationProvider
+    channelId: string
+    channelDisplayName: string
+    capabilities: unknown[]
+    createdAt: string
+    lastErrorCode: string | null
+    nextRetryAt: string | null
+    retryAttempt: number
+    status: IntegrationConnectionStatus
+    updatedAt: string
+  }) {
+    const rows = await this.database.orm
+      .select()
+      .from(chatMessageBuffer)
+      .where(
+        and(
+          eq(chatMessageBuffer.provider, connection.provider),
+          eq(chatMessageBuffer.channelId, connection.channelId),
+        ),
+      )
+      .orderBy(desc(chatMessageBuffer.occurredAt))
+      .limit(200)
+    const identities = new Map<string, (typeof rows)[number]>()
+    for (const row of rows) identities.set(row.providerUserId, row)
+    return FocusedChatThreadSchema.parse({
+      connections: [connection],
+      identities: [...identities.values()].map((row) => ({
+        avatarUrl: row.avatarUrl,
+        channelId: row.channelId,
+        displayName: row.displayName,
+        handle: row.handle,
+        provider: row.provider,
+        providerUserId: row.providerUserId,
+      })),
+      messages: rows.reverse().map((row) => ({
+        avatarUrl: row.avatarUrl,
+        badges: JSON.parse(row.badgesJson) as string[],
+        channelId: row.channelId,
+        connectionId: connection.id,
+        displayName: row.displayName,
+        handle: row.handle,
+        id: row.id,
+        message: row.message,
+        occurredAt: row.occurredAt,
+        provider: row.provider,
+        providerUserId: row.providerUserId,
+      })),
+      subject: connection.channelDisplayName,
+    })
   }
 }

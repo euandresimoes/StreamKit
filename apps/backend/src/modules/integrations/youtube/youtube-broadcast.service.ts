@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common'
+import { z } from 'zod'
 import {
   type SelectYouTubeBroadcastRequestSchema,
   YouTubeLiveBroadcastSchema,
 } from '@streamkit/contracts'
-import type { z } from 'zod'
 
 import { ApiApplicationError } from '../../../application/api-error'
 import { IntegrationRepository } from '../integration.repository'
@@ -51,11 +51,43 @@ export class YouTubeBroadcastService {
 
   public select(input: z.infer<typeof SelectYouTubeBroadcastRequestSchema>) {
     return this.integrations.saveConnection({
-      capabilities: ['chat.read', 'chat.write', 'user.identity'],
+      capabilities: [
+        'chat.read',
+        'chat.write',
+        'live.metadata.write',
+        'live.read',
+        'user.identity',
+      ],
       channelDisplayName: input.title,
       channelId: input.liveChatId,
       provider: 'youtube',
     })
+  }
+
+  public async updateTitle(videoId: string, title: string): Promise<void> {
+    const token = await this.auth.getAccessToken()
+    const readUrl = new URL('https://www.googleapis.com/youtube/v3/videos')
+    readUrl.search = new URLSearchParams({ id: videoId, part: 'snippet' }).toString()
+    const readResponse = await fetch(readUrl, {
+      headers: { authorization: `Bearer ${token.accessToken}` },
+    })
+    if (!readResponse.ok) throw await this.apiError(readResponse)
+    const payload = z
+      .object({ items: z.array(z.object({ snippet: z.record(z.string(), z.unknown()) })) })
+      .parse(await readResponse.json())
+    const snippet = payload.items[0]?.snippet
+    if (!snippet)
+      throw new ApiApplicationError(
+        'INTEGRATION_PROVIDER_ERROR',
+        'YouTube video metadata is unavailable',
+        503,
+      )
+    const response = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet', {
+      body: JSON.stringify({ id: videoId, snippet: { ...snippet, title } }),
+      headers: { authorization: `Bearer ${token.accessToken}`, 'content-type': 'application/json' },
+      method: 'PUT',
+    })
+    if (!response.ok) throw await this.apiError(response)
   }
 
   private async apiError(response: Response): Promise<ApiApplicationError> {

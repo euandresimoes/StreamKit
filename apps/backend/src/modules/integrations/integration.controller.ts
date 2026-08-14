@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Put } from '@nestjs/common'
 import {
+  LiveMetadataUpdateSchema,
   SaveIntegrationConnectionRequestSchema,
   SendChatMessageRequestSchema,
   StartChatSimulationRequestSchema,
@@ -11,6 +12,7 @@ import { IntegrationConnectionManager } from './integration-connection.manager'
 import { FocusedChatService } from './focused-chat.service'
 import { ChatSimulationService } from './chat-simulation.service'
 import { ApiApplicationError } from '../../application/api-error'
+import { LiveControlService } from './live-control.service'
 
 @Controller('api/v1/integrations')
 export class IntegrationController {
@@ -19,7 +21,23 @@ export class IntegrationController {
     @Inject(IntegrationConnectionManager) private readonly manager: IntegrationConnectionManager,
     @Inject(FocusedChatService) private readonly focusedChat: FocusedChatService,
     @Inject(ChatSimulationService) private readonly simulation: ChatSimulationService,
+    @Inject(LiveControlService) private readonly liveControl: LiveControlService,
   ) {}
+
+  @Get('live-control') public liveControlList() {
+    return this.liveControl.list()
+  }
+
+  @Get('live-control/:id/chat') public liveControlChat(@Param('id') id: string) {
+    return this.liveControl.channelChat(id)
+  }
+
+  @Put('live-control/:id/metadata') public updateLiveMetadata(
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.liveControl.updateMetadata(id, LiveMetadataUpdateSchema.parse(body))
+  }
 
   @Get('debug/simulation') public simulationStatus() {
     this.requireDebug()

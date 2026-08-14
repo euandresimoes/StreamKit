@@ -1,6 +1,7 @@
 import type { Giveaway, GiveawayParticipant } from "@streamkit/contracts";
 import { CircleUserRound, Gift } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { selectBoundedItems } from "@/modules/performance/bounded-render-window";
 
 const WHEEL_COLORS = [
   "#3369E8",
@@ -31,23 +32,27 @@ export function GiveawayStage({
   phase,
   targetWinner,
 }: GiveawayStageProps) {
+  const visibleParticipants = selectBoundedItems(
+    participants,
+    (targetWinner && participants.find((item) => item.displayName === targetWinner)?.id) ?? null,
+  );
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={onDraw}
       aria-label={phase === "drawing" ? "Sorteio em andamento" : "Iniciar sorteio"}
-      className="relative flex h-full min-h-[430px] w-full items-center justify-center overflow-hidden rounded-3xl bg-black/20 outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait"
+      className="relative flex h-full min-h-[430px] w-full items-center justify-center overflow-hidden rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait"
     >
       {mode === "wheel" ? (
         <WheelStage
-          participants={participants}
+          participants={visibleParticipants}
           spinning={phase === "drawing"}
           winner={targetWinner}
         />
       ) : (
         <CaseStage
-          participants={participants}
+          participants={visibleParticipants}
           rolling={phase === "drawing"}
           winner={targetWinner}
         />
@@ -199,8 +204,7 @@ function WheelStage({
           stroke="var(--border-strong)"
           strokeWidth="5"
         />
-        <circle cx="120" cy="120" r="10" fill="#ffffff" />
-        <circle cx="120" cy="120" r="4" fill="#d8dbe2" />
+        <circle cx="120" cy="120" r="5" fill="#ffffff" />
       </svg>
     </div>
   );
@@ -238,7 +242,7 @@ function CaseStage({
   const [offset, setOffset] = useState(0);
   const previousRolling = useRef(false);
   const participantKey = participants.map((participant) => participant.id).join(":");
-  const items = participants.length ? Array.from({ length: 15 }, () => participants).flat() : [];
+  const items = participants;
   const itemStep = 156;
 
   const centeredOffset = (index: number) =>
@@ -246,7 +250,7 @@ function CaseStage({
 
   useLayoutEffect(() => {
     if (!participants.length || !viewportRef.current) return;
-    const initialIndex = participants.length * 12;
+    const initialIndex = 0;
     setOffset(centeredOffset(initialIndex));
   }, [participantKey]);
 
@@ -258,16 +262,14 @@ function CaseStage({
 
     if (!rolling) {
       if (previousRolling.current && winnerIndex >= 0) {
-        setOffset(centeredOffset(participants.length * 12 + winnerIndex));
+        setOffset(centeredOffset(winnerIndex));
       }
       previousRolling.current = false;
       return;
     }
     if (previousRolling.current || winnerIndex < 0) return;
 
-    const random = crypto.getRandomValues(new Uint32Array(1));
-    const targetCopy = 2 + ((random[0] ?? 0) % 3);
-    const targetIndex = participants.length * targetCopy + winnerIndex;
+    const targetIndex = winnerIndex >= 0 ? winnerIndex : 0;
     setOffset(centeredOffset(targetIndex));
     previousRolling.current = true;
   }, [participantKey, rolling, winner]);

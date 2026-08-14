@@ -13,7 +13,11 @@ describe('TODO entities', () => {
         new TodoColumnEntity({
           ...base,
           color: null,
+          icon: null,
+          isCollapsed: false,
+          isPinned: false,
           name: ' ',
+          wipLimit: null,
           workspaceId: 'c8ee1c4b-4b1f-4a9a-959d-ce1b942943da',
         }),
     ).toThrow()
@@ -24,8 +28,13 @@ describe('TODO entities', () => {
         new TodoCardEntity({
           ...base,
           columnId: 'c8ee1c4b-4b1f-4a9a-959d-ce1b942943da',
+          accentColor: null,
+          checklist: [],
           description: null,
+          isPinned: false,
+          labels: [],
           notes: null,
+          priority: 'normal',
           position: -1,
           title: '',
         }),

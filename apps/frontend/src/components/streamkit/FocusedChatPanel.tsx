@@ -7,6 +7,7 @@ import { BaseBrandIcon } from "@/components/base/BaseBrandIcon";
 import { Input } from "@/components/ui/input";
 import { copyText } from "@/infrastructure/clipboard";
 import { integrationApi } from "@/modules/integration/integration-api";
+import { MAX_VISIBLE_CHAT_MESSAGES } from "@/modules/performance/bounded-render-window";
 
 export function FocusedChatPanel({
   target,
@@ -26,6 +27,8 @@ export function FocusedChatPanel({
   useEffect(() => {
     setOpen(true);
     let active = true;
+    let timer: number | undefined;
+    let delay = 1_500;
     const load = async () => {
       try {
         const value = await integrationApi.focusedChat(target, targetId);
@@ -33,18 +36,27 @@ export function FocusedChatPanel({
           setThread(value);
           setError(null);
           setLoading(false);
+          delay = 1_500;
         }
       } catch (cause) {
+        delay = Math.min(delay * 2, 15_000);
         if (active)
           setError(cause instanceof Error ? cause.message : "Não foi possível carregar o chat.");
         if (active) setLoading(false);
       }
     };
     void load();
-    const timer = setInterval(() => void load(), 1_500);
+    const schedule = () => {
+      if (active)
+        timer = window.setTimeout(async () => {
+          await load();
+          schedule();
+        }, delay);
+    };
+    schedule();
     return () => {
       active = false;
-      clearInterval(timer);
+      if (timer) window.clearTimeout(timer);
     };
   }, [target, targetId]);
 
@@ -57,6 +69,7 @@ export function FocusedChatPanel({
     [thread],
   );
   const identities = thread?.identities ?? [];
+  const visibleMessages = thread?.messages.slice(-MAX_VISIBLE_CHAT_MESSAGES) ?? [];
   const identity = identities[0] ?? null;
   const isGroup = identities.length > 1;
 
@@ -168,7 +181,7 @@ export function FocusedChatPanel({
         {loading && (
           <p className="py-8 text-center text-xs text-muted-foreground">Carregando mensagens…</p>
         )}
-        {thread?.messages.map((item) => (
+        {visibleMessages.map((item) => (
           <div key={item.id} className="rounded-xl border border-border bg-card p-2.5">
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <span className="font-medium text-foreground">{item.displayName}</span>
@@ -178,6 +191,11 @@ export function FocusedChatPanel({
             <p className="mt-1 whitespace-pre-wrap break-words text-xs">{item.message}</p>
           </div>
         ))}
+        {thread && thread.messages.length > MAX_VISIBLE_CHAT_MESSAGES && (
+          <p className="text-center text-[10px] text-muted-foreground">
+            Exibindo as {MAX_VISIBLE_CHAT_MESSAGES} mensagens mais recentes.
+          </p>
+        )}
         {!loading && thread && !thread.messages.length && (
           <p className="py-8 text-center text-xs text-muted-foreground">
             Nenhuma mensagem recente deste participante.

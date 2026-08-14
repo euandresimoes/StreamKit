@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ListTodo, Swords, Gift, Settings } from "lucide-react";
+import { ListTodo, Swords, Gift, Settings, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TodoTab } from "./TodoTab";
@@ -7,13 +7,15 @@ import { GamesTab } from "./GamesTab";
 import { GiveawaysTab } from "./GiveawaysTab";
 import { SettingsDialog } from "./SettingsDialog";
 import { useSettings } from "@/modules/settings/use-settings";
+import { LiveControlTab } from "./LiveControlTab";
 
-type Tab = "todo" | "games" | "giveaways";
+type Tab = "todo" | "games" | "giveaways" | "live";
 
 const tabs: { id: Tab; label: string; icon: typeof ListTodo }[] = [
   { id: "todo", label: "TODO", icon: ListTodo },
   { id: "games", label: "GAMES", icon: Swords },
   { id: "giveaways", label: "GIVEAWAYS", icon: Gift },
+  { id: "live", label: "LIVE", icon: Radio },
 ];
 
 export function AppShell() {
@@ -76,6 +78,7 @@ export function AppShell() {
                 {tabItem.id === "todo" && <TodoTab />}
                 {tabItem.id === "games" && <GamesTab />}
                 {tabItem.id === "giveaways" && <GiveawaysTab />}
+                {tabItem.id === "live" && <LiveControlTab />}
               </div>
             );
           })}

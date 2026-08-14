@@ -664,6 +664,95 @@ constitui início de implementação.
 - [ ] Marcar as tasks concluídas, fazer commit e push da documentação final.
 - [ ] Publicar release final somente com autorização explícita e confirmação de todos os gates.
 
+## Batch 24 — TODO operacional: colunas inteligentes, cards, pins e templates
+
+**Escopo aprovado:** evoluir o TODO sem transformá-lo em chat. O board permanece local-first e todas as operações passam pelo backend e por migrações versionadas.
+
+- [x] Persistir ícone, limite WIP, colapso e pin das colunas.
+- [x] Persistir prioridade, cor, etiquetas, checklist e pin dos cards.
+- [x] Criar tabela `todo_templates` e endpoints para salvar, listar, aplicar e excluir templates.
+- [x] Expor contratos Zod para os novos campos e manter entidades/repositórios tipados.
+- [x] Criar primitives base de prioridade e etiquetas para reutilização visual.
+- [x] Atualizar TODO para o layout de hub/grid usado por Games e Giveaways.
+- [ ] Adicionar testes de migração, contrato, repositório e E2E das operações de template.
+- [ ] Executar gate completo e validar upgrade em banco existente antes de marcar a batch como concluída.
+
+## Batch 25 — Live Control: preview oficial, chat e metadados
+
+**Escopo aprovado:** criar uma área de controle da transmissão que complemente OBS/Streamlabs. O StreamKit não fará captura, composição ou encoding da live nesta batch; essas responsabilidades continuam no OBS/Streamlabs. O preview deve utilizar exclusivamente os players oficiais de Twitch, YouTube e Kick, sem capturar a janela do OBS e sem implementar OBS WebSocket nesta batch.
+
+**Referências:** seções 2.2, 4, 9.2, 9.5, 12, 13, 17, 19, 20, 21 e 28 da especificação.
+
+### 25.1 Shell da tela e seleção de plataforma
+
+- [x] Criar `LiveControlTab` como tela independente e acessível no frontend.
+- [x] Criar `LivePlatformSelector` reutilizando o mapa de brand icons existente para Twitch, YouTube e Kick.
+- [x] Permitir selecionar somente conexões autorizadas e em estado `connected`.
+- [x] Mostrar estado vazio quando nenhuma plataforma estiver conectada ou quando não houver transmissão ativa.
+- [x] Mostrar no header plataforma, status da conexão, espectadores e duração da live.
+- [x] Atualizar espectadores, duração e status sem bloquear a interface e com tratamento de erro recuperável.
+- [x] Isolar a seleção de plataforma da lógica de domínio por meio de `useLiveControl` e casos de uso específicos.
+
+### 25.2 Preview oficial da transmissão
+
+- [ ] Criar `LivePreview` com adaptadores por plataforma e contrato compartilhado de embed.
+- [x] Renderizar o player oficial da Twitch com os parâmetros de domínio/`parent` exigidos pela plataforma.
+- [x] Renderizar o player oficial do YouTube usando o identificador da transmissão ativa e as regras de embed oficiais.
+- [ ] Renderizar o player oficial do Kick conforme o identificador/canal retornado pelo provider.
+- [x] Não expor tokens, client secrets ou credenciais no renderer, URL do embed, logs ou banco local.
+- [x] Exibir fallback explícito para transmissão offline, embed bloqueado, canal indisponível ou provider sem suporte a preview.
+- [x] Respeitar CSP, navegação restrita, permissões de iframe e `prefers-reduced-motion`.
+- [ ] Testar redimensionamento, viewport estreito, zoom, tema claro/escuro e recuperação após reconexão.
+
+### 25.3 Chat real da plataforma
+
+- [ ] Reutilizar o componente base de chat existente dentro de `LiveChatPanel`.
+- [x] Exibir mensagens em tempo real somente da plataforma selecionada, mantendo isolamento por canal e provider.
+- [ ] Mostrar avatar, handle, badges, timestamp, estado de conexão e mensagens de erro sem vazar credenciais.
+- [x] Permitir resposta apenas quando o provider estiver conectado e possuir a capacidade `chat.write`.
+- [ ] Pausar/reconectar o stream de mensagens com backoff, fila limitada e feedback visível.
+- [x] Manter retenção e limites já definidos para chat, sem transformar a tela em um histórico ilimitado.
+- [x] Cobrir estados vazio, carregando, offline e erro recuperável; rate limit/reconexão de UI permanecem pendentes.
+
+### 25.4 Editor de metadados da live
+
+- [ ] Criar `LiveMetadataEditor` em uma seção abaixo do preview/chat, organizada em layout responsivo.
+- [ ] Criar campos tipados para título, descrição, categoria/jogo, idioma e tags.
+- [ ] Criar toggles/switches somente para capacidades declaradas pelo provider, como modo lento, seguidores/subscribers only, emotes e visibilidade.
+- [ ] Exibir valores atuais retornados pelo provider e indicar campos alterados localmente.
+- [ ] Implementar salvar, descartar e estado de sincronização por provider.
+- [ ] Impedir perda silenciosa: erro de atualização deve preservar rascunho, mostrar código estável/request ID e permitir tentar novamente.
+- [x] Validar tamanho, formato e permissões no contrato Zod compartilhado antes de chamar o backend.
+- [ ] Garantir que provider sem suporte a um campo mostre estado disabled/read-only com explicação acessível.
+
+### 25.5 Arquitetura, contratos e segurança
+
+- [x] Definir contratos Zod compartilhados para status, preview, chat, capacidades e metadados da transmissão.
+- [x] Criar adapters por provider sem regra de UI ou de Games/Giveaway dentro dos adapters.
+- [ ] Criar casos de uso separados para consultar transmissão, atualizar metadados e assinar chat.
+- [ ] Persistir apenas preferências locais não sensíveis, como plataforma selecionada e layout; nunca persistir tokens no frontend/SQLite.
+- [ ] Reutilizar o cofre seguro e as conexões existentes dos providers.
+- [ ] Adicionar request/correlation ID aos erros de fronteira e redigir payloads sensíveis nos logs.
+- [x] Registrar ADR especificando o uso dos players oficiais e a exclusão de captura do OBS/OBS WebSocket nesta batch.
+
+### 25.6 Testes e critérios de aceitação
+
+- [ ] Cobrir adapters e contratos com Twitch, YouTube, Kick, provider offline e provider sem capacidade de edição.
+- [ ] Cobrir componentes de header, selector, preview, chat e editor em estados claro/escuro, erro, loading, vazio e disabled.
+- [ ] Cobrir salvar/descartar, rollback de falha e concorrência de atualização de metadados.
+- [ ] Cobrir CSP/iframe, viewport estreito, acessibilidade por teclado e redução de movimento.
+- [ ] Cobrir E2E com transmissão simulada, troca de plataforma, chat isolado e persistência da preferência após reinício.
+- [ ] Executar gate completo de format, lint, typecheck, testes frontend/backend/integration, build e E2E aplicável.
+- [ ] Revisar diff, segurança, privacidade e documentação antes de marcar qualquer task como concluída.
+
+### 25.7 Proteção de carga visual e operacional
+
+- [x] Limitar a janela visual do Giveaway a 50 participantes e preservar o vencedor selecionado na animação.
+- [x] Limitar listas operacionais de Games e mensagens de chat a 50 itens renderizados por janela.
+- [x] Amortizar o pruning do buffer de chat sem reduzir retenção ou auditoria persistida.
+- [x] Adicionar teste de regressão com 1.000 participantes e ADR de janelas limitadas.
+- [ ] Executar profiling controlado com 1.000 e 10.000 eventos/participantes no Windows e registrar os resultados.
+
 ## Matriz de cobertura da especificação
 
 | Seção | Assunto                      | Batches principais                    |
@@ -671,16 +760,16 @@ constitui início de implementação.
 | 1     | Visão do produto             | 0, 14                                 |
 | 2     | Escopo do MVP                | 0, 11, 13, 14                         |
 | 3     | Personas e cenários          | 0, 3                                  |
-| 4     | Navegação e experiência      | 2, 3, 10                              |
-| 5     | TODO                         | 5                                     |
+| 4     | Navegação e experiência      | 2, 3, 10, 25                          |
+| 5     | TODO                         | 5, 24                                 |
 | 6     | Games/Tournament             | 8, 9, 12                              |
 | 7     | Giveaway                     | 6, 7, 12                              |
 | 8     | Configurações globais        | 3, 4, 10, 12                          |
 | 9     | Arquitetura de alto nível    | 1, 2, 13                              |
 | 10    | Estrutura do repositório     | 1, 4                                  |
 | 11    | SQLite                       | 4, 5, 6, 8, 9, 12, 14–16, 20          |
-| 12    | API e Scalar                 | 2, 4, 5, 6, 8, 9, 10                  |
-| 13    | Estado do frontend           | 3, 5, 7, 8                            |
+| 12    | API e Scalar                 | 2, 4, 5, 6, 8, 9, 10, 25              |
+| 13    | Estado do frontend           | 3, 5, 7, 8, 25                        |
 | 14    | Auto update e releases       | 11                                    |
 | 15    | Debug e observabilidade      | 10                                    |
 | 16    | Scripts raiz                 | 1, 11                                 |
@@ -688,12 +777,12 @@ constitui início de implementação.
 | 18    | CI/CD                        | 1, 11, 22                             |
 | 19    | Segurança do Electron        | 2, 10, 12–19, 22                      |
 | 20    | Performance e confiabilidade | 3, 4, 7, 11, 12–19, 21, 22            |
-| 21    | Integrações externas         | 12–20                                 |
-| 22    | Roadmap                      | 0–21                                  |
+| 21    | Integrações externas         | 12–20, 25                             |
+| 22    | Roadmap                      | 0–25                                  |
 | 23    | Primeiro vertical slice      | 2                                     |
 | 24    | Definition of Done           | todas as batches                      |
 | 25    | Decisões pendentes           | 0, 12, 13, 17, 18, 20, 21             |
 | 26    | Riscos e mitigação           | 0, 19, 22                             |
 | 27    | Princípios de implementação  | 0, 1 e todas as implementações        |
-| 28    | Visão futura                 | 0, 21                                 |
-| 29    | Resumo executivo             | 0, 22                                 |
+| 28    | Visão futura                 | 0, 21, 25                             |
+| 29    | Resumo executivo             | 0, 22, 25                             |

@@ -1,9 +1,11 @@
 import type {
+  CreateTodoTemplateRequest,
   DeleteColumnRequest,
   MoveCardRequest,
   TodoBoard,
   TodoCard,
   TodoColumn,
+  TodoTemplate,
   UpdateCardRequest,
   UpdateColumnRequest,
   UpdateWorkspaceRequest,
@@ -37,4 +39,11 @@ export abstract class WorkspaceRepository {
   public abstract updateCard(id: string, input: UpdateCardRequest): Promise<TodoCard | null>
   public abstract deleteCard(id: string): Promise<boolean>
   public abstract moveCard(id: string, input: MoveCardRequest): Promise<TodoCard | null>
+  public abstract createTemplate(
+    workspaceId: string,
+    input: CreateTodoTemplateRequest,
+  ): Promise<TodoTemplate | null>
+  public abstract listTemplates(workspaceId: string): Promise<TodoTemplate[]>
+  public abstract applyTemplate(workspaceId: string, templateId: string): Promise<TodoBoard | null>
+  public abstract deleteTemplate(id: string): Promise<boolean>
 }

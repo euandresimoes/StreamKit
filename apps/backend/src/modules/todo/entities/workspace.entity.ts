@@ -9,6 +9,8 @@ export class WorkspaceEntity implements WorkspaceContract {
     public readonly position: number,
     public readonly createdAt: string,
     public readonly updatedAt: string,
+    public readonly accentColor: string | null = null,
+    public readonly isPinned = false,
   ) {
     if (name.length === 0) {
       throw new Error('Workspace name cannot be empty')

@@ -302,7 +302,13 @@ describe('YouTube integration', () => {
     ])
     await service.select(broadcasts[0]!)
     expect(integrations.saveConnection).toHaveBeenCalledWith({
-      capabilities: ['chat.read', 'chat.write', 'user.identity'],
+      capabilities: [
+        'chat.read',
+        'chat.write',
+        'live.metadata.write',
+        'live.read',
+        'user.identity',
+      ],
       channelDisplayName: 'Live agora',
       channelId: 'live-chat-id',
       provider: 'youtube',

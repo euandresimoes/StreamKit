@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Post } f
 import {
   CreateCardRequestSchema,
   CreateColumnRequestSchema,
+  CreateTodoTemplateRequestSchema,
   CreateWorkspaceRequestSchema,
   DeleteColumnRequestSchema,
   EntityIdSchema,
@@ -91,5 +92,30 @@ export class WorkspaceController {
     @Body() body: unknown,
   ): Promise<TodoCard> {
     return this.manage.moveCard(EntityIdSchema.parse(id), MoveCardRequestSchema.parse(body))
+  }
+  @Get('workspaces/:id/templates') public listTemplates(
+    @Param('id') id: unknown,
+  ): Promise<unknown> {
+    return this.manage.listTemplates(EntityIdSchema.parse(id))
+  }
+  @Post('workspaces/:id/templates') @HttpCode(201) public createTemplate(
+    @Param('id') id: unknown,
+    @Body() body: unknown,
+  ): Promise<unknown> {
+    return this.manage.createTemplate(
+      EntityIdSchema.parse(id),
+      CreateTodoTemplateRequestSchema.parse(body),
+    )
+  }
+  @Post('workspaces/:id/templates/:templateId/apply') public applyTemplate(
+    @Param('id') id: unknown,
+    @Param('templateId') templateId: unknown,
+  ): Promise<TodoBoard> {
+    return this.manage.applyTemplate(EntityIdSchema.parse(id), EntityIdSchema.parse(templateId))
+  }
+  @Delete('templates/:id') @HttpCode(204) public deleteTemplate(
+    @Param('id') id: unknown,
+  ): Promise<void> {
+    return this.manage.deleteTemplate(EntityIdSchema.parse(id))
   }
 }

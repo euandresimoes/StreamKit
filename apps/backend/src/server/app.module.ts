@@ -45,6 +45,7 @@ import { IntegrationConnectionManager } from '../modules/integrations/integratio
 import { IntegrationEventBus } from '../modules/integrations/integration-event.bus'
 import { IntegrationRepository } from '../modules/integrations/integration.repository'
 import { IntegrationService } from '../modules/integrations/integration.service'
+import { LiveControlService } from '../modules/integrations/live-control.service'
 import {
   DEFAULT_INTEGRATION_RUNTIME_CONFIG,
   INTEGRATION_RUNTIME_CONFIG,
@@ -53,6 +54,7 @@ import {
 import { TwitchAuthController } from '../modules/integrations/twitch/twitch-auth.controller'
 import { TwitchAuthService } from '../modules/integrations/twitch/twitch-auth.service'
 import { TwitchChatAdapter } from '../modules/integrations/twitch/twitch-chat.adapter'
+import { TwitchLiveControlAdapter } from '../modules/integrations/twitch/twitch-live-control.adapter'
 import { YouTubeAuthService } from '../modules/integrations/youtube/youtube-auth.service'
 import { YouTubeBroadcastService } from '../modules/integrations/youtube/youtube-broadcast.service'
 import { YouTubeChatAdapter } from '../modules/integrations/youtube/youtube-chat.adapter'
@@ -100,10 +102,12 @@ export class AppModule {
         IntegrationEventBus,
         IntegrationRepository,
         IntegrationService,
+        LiveControlService,
         KickSupportService,
         { provide: INTEGRATION_RUNTIME_CONFIG, useValue: integrationConfig },
         TwitchAuthService,
         TwitchChatAdapter,
+        TwitchLiveControlAdapter,
         YouTubeAuthService,
         YouTubeBroadcastService,
         YouTubeChatAdapter,

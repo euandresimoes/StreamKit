@@ -41,6 +41,7 @@ import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { FocusedChatPanel } from "./FocusedChatPanel";
 import { TournamentMatchChat } from "./TournamentMatchChat";
 import { ParticipantCaptureDialog } from "./ParticipantCaptureDialog";
+import { MAX_VISIBLE_PARTICIPANTS } from "@/modules/performance/bounded-render-window";
 
 function getParticipantInitials(displayName: string) {
   return Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
@@ -77,6 +78,9 @@ export function GamesTab() {
     detail?.participants.filter((participant) => participant.entryId) ?? [];
   const overflowParticipants =
     detail?.participants.filter((participant) => !participant.entryId) ?? [];
+  const visibleQualifiedParticipants = qualifiedParticipants.slice(0, MAX_VISIBLE_PARTICIPANTS);
+  const visibleOverflowParticipants = overflowParticipants.slice(0, MAX_VISIBLE_PARTICIPANTS);
+  const visibleParticipants = (detail?.participants ?? []).slice(0, MAX_VISIBLE_PARTICIPANTS);
   const entrantCount = detail
     ? detail.tournament.mode === "team"
       ? detail.teams.length
@@ -731,7 +735,7 @@ export function GamesTab() {
                           </div>
                         );
                       })
-                    : qualifiedParticipants.map((participant) => (
+                    : visibleQualifiedParticipants.map((participant) => (
                         <div
                           key={participant.id}
                           draggable={!tournaments.busy && !detail.matches.length}
@@ -805,7 +809,7 @@ export function GamesTab() {
                       </p>
                     )}
                     <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
-                      {overflowParticipants.map((participant) => (
+                      {visibleOverflowParticipants.map((participant) => (
                         <div
                           key={participant.id}
                           draggable={!tournaments.busy && !detail.matches.length}
@@ -885,7 +889,7 @@ export function GamesTab() {
                           </Tooltip>
                         );
                       })
-                    : detail.participants.map((participant) => (
+                    : visibleParticipants.map((participant) => (
                         <Tooltip key={participant.id}>
                           <TooltipTrigger asChild>
                             <button

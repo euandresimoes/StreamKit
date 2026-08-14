@@ -25,7 +25,7 @@ import {
 import { IntegrationRepository } from '../integration.repository'
 
 const CREDENTIAL_NAME = 'twitch.oauth'
-const TWITCH_SCOPES = ['user:read:chat', 'user:write:chat'] as const
+const TWITCH_SCOPES = ['channel:manage:broadcast', 'user:read:chat', 'user:write:chat'] as const
 const DeviceResponseSchema = z.object({
   device_code: z.string().min(1),
   expires_in: z.number().int().positive(),
@@ -180,7 +180,13 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
     })
     await this.credentials.save(CREDENTIAL_NAME, JSON.stringify(stored))
     await this.integrations.saveConnection({
-      capabilities: ['chat.read', 'chat.write', 'user.identity'],
+      capabilities: [
+        'chat.read',
+        'chat.write',
+        'live.metadata.write',
+        'live.read',
+        'user.identity',
+      ],
       channelDisplayName: validation.login,
       channelId: validation.user_id,
       provider: 'twitch',
