@@ -11,12 +11,14 @@ export function LiveMetadataEditor({
   canEdit,
   controls = [],
   onSave,
+  showHeader = true,
 }: {
   metadata: LiveMetadata;
   busy: boolean;
   canEdit: boolean;
   controls?: { editable: boolean; id: string; label: string }[];
   onSave: (input: LiveMetadataUpdate) => Promise<void>;
+  showHeader?: boolean;
 }) {
   const [title, setTitle] = useState(metadata.title ?? "");
   const [draft, setDraft] = useState(false);
@@ -26,17 +28,19 @@ export function LiveMetadataEditor({
   }, [metadata.title]);
   return (
     <section className="flex h-full w-full min-h-0 flex-col overflow-y-auto bg-card p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold">Metadados da live</h3>
-          <p className="text-xs text-muted-foreground">
-            {canEdit
-              ? "Valores atuais do provider; alterações ficam marcadas como rascunho."
-              : "Conecte uma plataforma para habilitar a edição dos metadados."}
-          </p>
+      {showHeader && (
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">Metadados da live</h3>
+            <p className="text-xs text-muted-foreground">
+              {canEdit
+                ? "Valores atuais do provider; alterações ficam marcadas como rascunho."
+                : "Conecte uma plataforma para habilitar a edição dos metadados."}
+            </p>
+          </div>
+          {draft && <span className="text-xs text-warning">Alterado localmente</span>}
         </div>
-        {draft && <span className="text-xs text-warning">Alterado localmente</span>}
-      </div>
+      )}
       <label className="grid gap-1 text-xs font-medium">
         Título
         <Input

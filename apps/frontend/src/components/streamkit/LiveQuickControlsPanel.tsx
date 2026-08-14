@@ -1,13 +1,16 @@
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BaseDockPanel } from "@/components/base/BaseDockPanel";
 
 export function LiveQuickControlsPanel({ connected }: { connected: boolean }) {
   return (
-    <section className="flex h-full min-w-[220px] flex-1 flex-col border-l border-border bg-card">
-      <header className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3 text-xs font-semibold">
-        <SlidersHorizontal className="size-3.5 text-muted-foreground" />
-        Controles rápidos
-      </header>
+    <BaseDockPanel
+      panelId="live-quick-controls"
+      title="Controles rápidos"
+      icon={SlidersHorizontal}
+      defaultSize={300}
+      resize="left"
+    >
       <div className="grid content-start gap-2 p-3">
         <Button size="sm" variant="outline" disabled={!connected}>
           Iniciar transmissão
@@ -21,6 +24,6 @@ export function LiveQuickControlsPanel({ connected }: { connected: boolean }) {
             : "Conecte uma plataforma para habilitar ações."}
         </p>
       </div>
-    </section>
+    </BaseDockPanel>
   );
 }

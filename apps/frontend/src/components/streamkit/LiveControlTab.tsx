@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { BaseDockPanel } from "@/components/base/BaseDockPanel";
 import { BaseResizablePanel } from "@/components/base/BaseResizablePanel";
 import { useLiveControl } from "@/modules/live-control/use-live-control";
 import { LivePlatformSelector } from "./LivePlatformSelector";
@@ -91,15 +92,23 @@ export function LiveControlTab() {
               className="w-full shrink-0 border-t border-border"
             >
               <div className="flex h-full w-full min-w-0 overflow-x-auto">
-                <div className="min-w-[360px] flex-[1.7]">
+                <BaseDockPanel
+                  panelId="live-metadata-dock"
+                  title="Metadados da live"
+                  defaultSize={600}
+                  minSize={420}
+                  maxSize={1000}
+                  className="border-l-0"
+                >
                   <LiveMetadataEditor
                     metadata={selected?.metadata ?? EMPTY_METADATA}
                     controls={selected?.metadataControls ?? []}
                     busy={live.busy}
                     canEdit={Boolean(selected?.capabilities.includes("live.metadata.write"))}
                     onSave={live.updateMetadata}
+                    showHeader={false}
                   />
-                </div>
+                </BaseDockPanel>
                 <LiveActivityPanel connected={Boolean(selected)} />
                 <LiveQuickControlsPanel connected={Boolean(selected)} />
               </div>
