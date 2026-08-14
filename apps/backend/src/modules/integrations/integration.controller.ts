@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Put } from '@nestjs/common'
 import {
+  ChatModerationRequestSchema,
   LiveMetadataUpdateSchema,
   SaveIntegrationConnectionRequestSchema,
   SendChatMessageRequestSchema,
@@ -30,6 +31,13 @@ export class IntegrationController {
 
   @Get('live-control/:id/chat') public liveControlChat(@Param('id') id: string) {
     return this.liveControl.channelChat(id)
+  }
+
+  @Post('live-control/:id/chat/actions') public moderateLiveChat(
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.liveControl.moderateChat(id, ChatModerationRequestSchema.parse(body))
   }
 
   @Put('live-control/:id/metadata') public updateLiveMetadata(

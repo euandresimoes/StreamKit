@@ -48,6 +48,9 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
   public readonly capabilities = [
     'chat.read',
     'chat.write',
+    'chat.message.delete',
+    'chat.message.pin',
+    'chat.user.ban',
     'live.metadata.write',
     'live.read',
     'user.identity',
@@ -83,6 +86,56 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
       method: 'POST',
     })
     if (!response.ok) throw new Error(`TWITCH_CHAT_SEND_${response.status}`)
+  }
+
+  public async deleteMessage(channelId: string, messageId: string): Promise<void> {
+    await this.moderationRequest(
+      'https://api.twitch.tv/helix/moderation/chat',
+      'DELETE',
+      channelId,
+      {
+        message_id: messageId,
+      },
+    )
+  }
+
+  public async pinMessage(channelId: string, messageId: string): Promise<void> {
+    await this.moderationRequest('https://api.twitch.tv/helix/chat/pins', 'PUT', channelId, {
+      message_id: messageId,
+    })
+  }
+
+  public async banUser(channelId: string, userId: string): Promise<void> {
+    await this.moderationRequest('https://api.twitch.tv/helix/moderation/bans', 'POST', channelId, {
+      data: { user_id: userId },
+    })
+  }
+
+  private async moderationRequest(
+    endpoint: string,
+    method: 'DELETE' | 'POST' | 'PUT',
+    channelId: string,
+    body: unknown,
+  ): Promise<void> {
+    const clientId = this.config.twitchClientId
+    if (!clientId) throw new Error('INTEGRATION_CLIENT_NOT_CONFIGURED')
+    const token = await this.auth.getAccessToken()
+    const url = new URL(endpoint)
+    url.searchParams.set('broadcaster_id', channelId)
+    url.searchParams.set('moderator_id', token.userId)
+    if (endpoint.endsWith('/pins') || method === 'DELETE')
+      url.searchParams.set('message_id', String((body as { message_id: string }).message_id))
+    const requestBody = endpoint.endsWith('/bans') ? body : undefined
+    const response = await fetch(url, {
+      ...(requestBody ? { body: JSON.stringify(requestBody) } : {}),
+      headers: {
+        authorization: `Bearer ${token.accessToken}`,
+        'client-id': clientId,
+        'content-type': 'application/json',
+      },
+      method,
+    })
+    if (!response.ok) throw new Error(`TWITCH_CHAT_MODERATION_${response.status}`)
   }
 
   public async connect(context: ChatProviderConnectionContext): Promise<ChatProviderSession> {

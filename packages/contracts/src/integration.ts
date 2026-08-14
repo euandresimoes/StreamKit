@@ -4,6 +4,9 @@ export const IntegrationProviderSchema = z.enum(['kick', 'twitch', 'youtube'])
 export const IntegrationCapabilitySchema = z.enum([
   'chat.read',
   'chat.write',
+  'chat.message.delete',
+  'chat.message.pin',
+  'chat.user.ban',
   'live.metadata.write',
   'live.read',
   'user.identity',
@@ -67,6 +70,12 @@ export const SaveIntegrationConnectionRequestSchema = z.object({
 export const SendChatMessageRequestSchema = z.object({
   message: z.string().trim().min(1).max(500),
 })
+export const ChatModerationActionSchema = z.enum(['delete_message', 'pin_message', 'ban_user'])
+export const ChatModerationRequestSchema = z.object({
+  action: ChatModerationActionSchema,
+  externalMessageId: z.string().trim().min(1).max(300),
+  providerUserId: z.string().trim().min(1).max(200),
+})
 export const StartChatSimulationRequestSchema = z.object({
   channelId: z.string().trim().min(1).max(200),
   count: z.union([z.literal(8), z.literal(16), z.literal(32), z.literal(1000), z.literal(10000)]),
@@ -91,6 +100,7 @@ export const FocusedChatMessageSchema = z.object({
   channelId: z.string().min(1),
   connectionId: z.uuid().nullable(),
   displayName: z.string().min(1),
+  externalEventId: z.string().min(1),
   handle: z.string().min(1),
   id: z.uuid(),
   message: z.string().max(5_000),
@@ -178,6 +188,8 @@ export type IntegrationConnectionStatus = z.infer<typeof IntegrationConnectionSt
 export type IntegrationProvider = z.infer<typeof IntegrationProviderSchema>
 export type StartChatSimulationRequest = z.infer<typeof StartChatSimulationRequestSchema>
 export type ChatSimulationStatus = z.infer<typeof ChatSimulationStatusSchema>
+export type ChatModerationAction = z.infer<typeof ChatModerationActionSchema>
+export type ChatModerationRequest = z.infer<typeof ChatModerationRequestSchema>
 export type KickIntegrationSupport = z.infer<typeof KickIntegrationSupportSchema>
 export type FocusedChatMessage = z.infer<typeof FocusedChatMessageSchema>
 export type FocusedChatThread = z.infer<typeof FocusedChatThreadSchema>

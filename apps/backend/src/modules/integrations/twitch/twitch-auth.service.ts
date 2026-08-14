@@ -25,7 +25,13 @@ import {
 import { IntegrationRepository } from '../integration.repository'
 
 const CREDENTIAL_NAME = 'twitch.oauth'
-const TWITCH_SCOPES = ['channel:manage:broadcast', 'user:read:chat', 'user:write:chat'] as const
+const TWITCH_SCOPES = [
+  'channel:manage:broadcast',
+  'moderator:manage:banned_users',
+  'moderator:manage:chat_messages',
+  'user:read:chat',
+  'user:write:chat',
+] as const
 const DeviceResponseSchema = z.object({
   device_code: z.string().min(1),
   expires_in: z.number().int().positive(),
@@ -183,6 +189,9 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
       capabilities: [
         'chat.read',
         'chat.write',
+        'chat.message.delete',
+        'chat.message.pin',
+        'chat.user.ban',
         'live.metadata.write',
         'live.read',
         'user.identity',

@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import {
+  type ChatModerationRequest,
+  ChatModerationRequestSchema,
   LiveMetadataSchema,
   type LiveMetadataUpdate,
   LiveMetadataUpdateSchema,
@@ -10,6 +12,7 @@ import { ApiApplicationError } from '../../application/api-error'
 import { FocusedChatRepository } from './focused-chat.repository'
 import { IntegrationRepository } from './integration.repository'
 import { TwitchLiveControlAdapter } from './twitch/twitch-live-control.adapter'
+import { TwitchChatAdapter } from './twitch/twitch-chat.adapter'
 import { YouTubeBroadcastService } from './youtube/youtube-broadcast.service'
 
 type ProviderLive = {
@@ -30,6 +33,7 @@ export class LiveControlService {
     @Inject(IntegrationRepository) private readonly integrations: IntegrationRepository,
     @Inject(FocusedChatRepository) private readonly chat: FocusedChatRepository,
     @Inject(TwitchLiveControlAdapter) private readonly twitch: TwitchLiveControlAdapter,
+    @Inject(TwitchChatAdapter) private readonly twitchChat: TwitchChatAdapter,
     @Inject(YouTubeBroadcastService) private readonly youtube: YouTubeBroadcastService,
   ) {}
 
@@ -81,6 +85,51 @@ export class LiveControlService {
     if (!connection)
       throw new ApiApplicationError('INTEGRATION_CONNECTION_NOT_FOUND', 'Connection not found', 404)
     return this.chat.forChannel(connection)
+  }
+
+  public async moderateChat(id: string, input: ChatModerationRequest) {
+    const connection = await this.integrations.getConnection(id)
+    if (!connection)
+      throw new ApiApplicationError('INTEGRATION_CONNECTION_NOT_FOUND', 'Connection not found', 404)
+    if (connection.status !== 'connected')
+      throw new ApiApplicationError(
+        'INTEGRATION_CONNECTION_UNAVAILABLE',
+        'Chat connection is not active',
+        409,
+      )
+    const request = ChatModerationRequestSchema.parse(input)
+    const capability =
+      request.action === 'delete_message'
+        ? 'chat.message.delete'
+        : request.action === 'pin_message'
+          ? 'chat.message.pin'
+          : 'chat.user.ban'
+    if (!connection.capabilities.includes(capability))
+      throw new ApiApplicationError(
+        'INTEGRATION_CAPABILITY_UNAVAILABLE',
+        'This action is not available for the connected platform',
+        409,
+      )
+    if (connection.provider === 'twitch') {
+      if (request.action === 'delete_message')
+        await this.twitchChat.deleteMessage(connection.channelId, request.externalMessageId)
+      if (request.action === 'pin_message')
+        await this.twitchChat.pinMessage(connection.channelId, request.externalMessageId)
+      if (request.action === 'ban_user')
+        await this.twitchChat.banUser(connection.channelId, request.providerUserId)
+    } else if (connection.provider === 'youtube') {
+      if (request.action === 'delete_message')
+        await this.youtube.deleteMessage(request.externalMessageId)
+      if (request.action === 'ban_user')
+        await this.youtube.banUser(connection.channelId, request.providerUserId)
+    } else {
+      throw new ApiApplicationError(
+        'INTEGRATION_CAPABILITY_UNAVAILABLE',
+        'Kick moderation actions are not available in the current integration',
+        409,
+      )
+    }
+    return { action: request.action, externalMessageId: request.externalMessageId }
   }
 
   private async snapshot(

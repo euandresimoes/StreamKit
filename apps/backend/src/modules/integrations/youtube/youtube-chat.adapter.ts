@@ -34,6 +34,8 @@ export class YouTubeChatAdapter
   public readonly capabilities = [
     'chat.read',
     'chat.write',
+    'chat.message.delete',
+    'chat.user.ban',
     'live.metadata.write',
     'live.read',
     'user.identity',

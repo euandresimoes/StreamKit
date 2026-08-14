@@ -55,6 +55,8 @@ export class YouTubeBroadcastService {
       capabilities: [
         'chat.read',
         'chat.write',
+        'chat.message.delete',
+        'chat.user.ban',
         'live.metadata.write',
         'live.read',
         'user.identity',
@@ -87,6 +89,31 @@ export class YouTubeBroadcastService {
       body: JSON.stringify({ id: videoId, snippet: { ...snippet, title } }),
       headers: { authorization: `Bearer ${token.accessToken}`, 'content-type': 'application/json' },
       method: 'PUT',
+    })
+    if (!response.ok) throw await this.apiError(response)
+  }
+
+  public async deleteMessage(messageId: string): Promise<void> {
+    const token = await this.auth.getAccessToken()
+    const url = new URL('https://www.googleapis.com/youtube/v3/liveChat/messages')
+    url.searchParams.set('id', messageId)
+    const response = await fetch(url, {
+      headers: { authorization: `Bearer ${token.accessToken}` },
+      method: 'DELETE',
+    })
+    if (!response.ok) throw await this.apiError(response)
+  }
+
+  public async banUser(liveChatId: string, userId: string): Promise<void> {
+    const token = await this.auth.getAccessToken()
+    const url = new URL('https://www.googleapis.com/youtube/v3/liveChat/bans')
+    url.searchParams.set('part', 'snippet')
+    const response = await fetch(url, {
+      body: JSON.stringify({
+        snippet: { bannedUserDetails: { channelId: userId }, liveChatId, type: 'permanent' },
+      }),
+      headers: { authorization: `Bearer ${token.accessToken}`, 'content-type': 'application/json' },
+      method: 'POST',
     })
     if (!response.ok) throw await this.apiError(response)
   }

@@ -1,4 +1,9 @@
-import type { FocusedChatMessage, FocusedChatThread, LiveStream } from "@streamkit/contracts";
+import type {
+  ChatModerationAction,
+  FocusedChatMessage,
+  FocusedChatThread,
+  LiveStream,
+} from "@streamkit/contracts";
 import { ArrowLeft, MoreHorizontal, Send, Shield, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +56,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [moderating, setModerating] = useState<string | null>(null);
   const displayedIds = useRef(new Set<string>());
   const queuedIds = useRef(new Set<string>());
   const queue = useRef<FocusedChatMessage[]>([]);
@@ -132,6 +138,36 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
       setError("Não foi possível enviar a mensagem.");
     } finally {
       setSending(false);
+    }
+  };
+
+  const canModerate = (action: ChatModerationAction) => {
+    if (!writer) return false;
+    const capability =
+      action === "delete_message"
+        ? "chat.message.delete"
+        : action === "pin_message"
+          ? "chat.message.pin"
+          : "chat.user.ban";
+    return writer.capabilities.includes(capability);
+  };
+
+  const moderate = async (item: FocusedChatMessage, action: ChatModerationAction) => {
+    if (!stream || !canModerate(action)) return;
+    setModerating(`${item.id}:${action}`);
+    try {
+      await liveControlApi.moderateChat(stream.connectionId, {
+        action,
+        externalMessageId: item.externalEventId,
+        providerUserId: item.providerUserId,
+      });
+      if (action === "delete_message")
+        setDisplayedMessages((items) => items.filter((messageItem) => messageItem.id !== item.id));
+      setError(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível executar a ação.");
+    } finally {
+      setModerating(null);
     }
   };
 
@@ -219,11 +255,24 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
                       <UserRound /> Abrir chat privado
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem disabled={!writer}>
+                    <DropdownMenuItem
+                      disabled={!canModerate("delete_message") || moderating !== null}
+                      onSelect={() => void moderate(item, "delete_message")}
+                    >
                       <Shield /> Excluir mensagem
                     </DropdownMenuItem>
-                    <DropdownMenuItem disabled={!writer}>Fixar mensagem</DropdownMenuItem>
-                    <DropdownMenuItem disabled={!writer}>Banir usuário</DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={!canModerate("pin_message") || moderating !== null}
+                      onSelect={() => void moderate(item, "pin_message")}
+                    >
+                      Fixar mensagem
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={!canModerate("ban_user") || moderating !== null}
+                      onSelect={() => void moderate(item, "ban_user")}
+                    >
+                      Banir usuário
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
