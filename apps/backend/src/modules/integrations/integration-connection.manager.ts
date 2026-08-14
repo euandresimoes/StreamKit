@@ -104,6 +104,13 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
     }
   }
 
+  public async ensureStarted(id: string): Promise<void> {
+    const connection = await this.repository.getConnection(id)
+    if (!connection || ['connected', 'connecting', 'reconnecting'].includes(connection.status))
+      return
+    await this.start(id)
+  }
+
   public async sendMessage(id: string, message: string): Promise<void> {
     const connection = await this.repository.getConnection(id)
     if (!connection)

@@ -38,10 +38,35 @@ export class LiveControlService {
   ) {}
 
   public async list() {
-    const connections = (await this.integrations.listConnections()).filter(
-      (connection) => connection.status === 'connected',
-    )
+    await this.syncYouTubeBroadcasts()
+    const connections = await this.integrations.listConnections()
     return Promise.all(connections.map((connection) => this.snapshot(connection)))
+  }
+
+  private async syncYouTubeBroadcasts(): Promise<void> {
+    try {
+      const broadcasts = await this.youtube.list()
+      await Promise.all(
+        broadcasts.map((broadcast) =>
+          this.integrations.saveConnection({
+            capabilities: [
+              'chat.read',
+              'chat.write',
+              'chat.message.delete',
+              'chat.user.ban',
+              'live.metadata.write',
+              'live.read',
+              'user.identity',
+            ],
+            channelDisplayName: broadcast.title,
+            channelId: broadcast.liveChatId,
+            provider: 'youtube',
+          }),
+        ),
+      )
+    } catch {
+      // YouTube may be disconnected or have no active broadcast.
+    }
   }
 
   public async updateMetadata(id: string, input: LiveMetadataUpdate) {

@@ -269,13 +269,9 @@ export function SettingsDialog({
                             <p className="truncate text-xs font-medium">{broadcast.title}</p>
                             <p className="text-[10px] text-muted-foreground">Transmissão ativa</p>
                           </div>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => void integrations.selectYouTubeBroadcast(broadcast)}
-                          >
-                            Usar chat
-                          </Button>
+                          <span className="text-[10px] text-muted-foreground">
+                            Disponível na aba Live
+                          </span>
                         </div>
                       ))}
                     </div>

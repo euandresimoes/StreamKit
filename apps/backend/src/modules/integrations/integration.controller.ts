@@ -25,7 +25,13 @@ export class IntegrationController {
     @Inject(LiveControlService) private readonly liveControl: LiveControlService,
   ) {}
 
-  @Get('live-control') public liveControlList() {
+  @Get('live-control') public async liveControlList() {
+    const initial = await this.liveControl.list()
+    await Promise.all(
+      initial
+        .filter((stream) => stream.state === 'online')
+        .map((stream) => this.manager.ensureStarted(stream.connectionId)),
+    )
     return this.liveControl.list()
   }
 
