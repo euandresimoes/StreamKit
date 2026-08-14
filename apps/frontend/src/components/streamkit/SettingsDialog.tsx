@@ -239,14 +239,6 @@ export function SettingsDialog({
                     {integrations.youtubeAuth?.configured ? (
                       <>
                         <Button
-                          variant="secondary"
-                          size="sm"
-                          loading={integrations.busy}
-                          onClick={() => void integrations.discoverYouTubeBroadcasts()}
-                        >
-                          Buscar lives
-                        </Button>
-                        <Button
                           variant="danger"
                           size="sm"
                           loading={integrations.busy}
@@ -335,29 +327,6 @@ export function SettingsDialog({
                           </p>
                         )}
                       </div>
-                      {connection.status === "connected" ? (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => void integrations.stop(connection.id)}
-                        >
-                          Parar
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          disabled={
-                            (connection.provider === "twitch" &&
-                              !integrations.twitchAuth?.configured) ||
-                            (connection.provider === "youtube" &&
-                              !integrations.youtubeAuth?.configured)
-                          }
-                          onClick={() => void integrations.start(connection.id)}
-                        >
-                          Iniciar
-                        </Button>
-                      )}
                       <Button
                         variant="ghost"
                         size="icon-sm"

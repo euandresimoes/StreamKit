@@ -35,6 +35,9 @@ export function useIntegrations(active: boolean) {
       setConnections(nextConnections);
       setTwitchAuth(nextTwitchAuth);
       setYouTubeAuth(nextYouTubeAuth);
+      setYouTubeBroadcasts(
+        nextYouTubeAuth.configured ? await integrationApi.listYouTubeBroadcasts() : [],
+      );
       setKickSupport(nextKickSupport);
     } catch (cause) {
       setError(

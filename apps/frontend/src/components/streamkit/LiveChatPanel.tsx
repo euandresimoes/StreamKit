@@ -119,6 +119,9 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
   const writer = thread?.connections.find(
     (item) => item.status === "connected" && item.capabilities.includes("chat.write"),
   );
+  const privateMessages = privateUser
+    ? displayedMessages.filter((item) => item.providerUserId === privateUser.providerUserId)
+    : [];
   const send = async () => {
     if (!writer || !message.trim()) return;
     setSending(true);
@@ -150,12 +153,22 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
             <p className="text-[10px] font-normal text-muted-foreground">Chat privado</p>
           </div>
         </header>
-        <div className="flex flex-1 items-center justify-center p-5 text-center text-xs text-muted-foreground">
-          O provider selecionado ainda não disponibiliza mensagens privadas nesta conexão.
+        <div role="log" aria-live="polite" className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
+          {privateMessages.map((item) => (
+            <article key={item.id} className="flex gap-2 rounded-lg bg-surface-2 px-2 py-2 text-xs">
+              <Avatar message={item} />
+              <div className="min-w-0">
+                <p className="font-semibold">{item.displayName}</p>
+                <p className="break-words text-muted-foreground">{item.message}</p>
+              </div>
+            </article>
+          ))}
+          {!privateMessages.length && (
+            <p className="py-8 text-center text-xs text-muted-foreground">
+              Nenhuma mensagem desse usuário ainda.
+            </p>
+          )}
         </div>
-        <footer className="border-t border-border p-3">
-          <Input disabled placeholder="Chat privado não disponível" aria-label="Chat privado" />
-        </footer>
       </section>
     );
 
