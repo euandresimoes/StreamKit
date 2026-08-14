@@ -30,6 +30,19 @@ export const YouTubeBroadcastListResponseSchema = z.object({
   ),
 })
 
+export const YouTubeVideoLiveDetailsResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      liveStreamingDetails: z
+        .object({
+          actualStartTime: z.iso.datetime().optional(),
+          concurrentViewers: z.string().optional(),
+        })
+        .optional(),
+    }),
+  ),
+})
+
 export const YouTubeLiveChatItemSchema = z.object({
   authorDetails: z
     .object({

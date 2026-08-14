@@ -32,10 +32,10 @@ function readSize(panelId: string, fallback: number, minSize: number, maxSize: n
 
 function edgeClassFor(edge: ResizeEdge) {
   return {
-    top: "top-0 left-0 right-0 h-2 cursor-ns-resize",
-    left: "left-0 top-0 bottom-0 w-2 cursor-ew-resize",
-    bottom: "bottom-0 left-0 right-0 h-2 cursor-ns-resize",
-    right: "right-0 top-0 bottom-0 w-2 cursor-ew-resize",
+    top: "-top-1 left-0 right-0 h-3 cursor-ns-resize",
+    left: "-left-1 top-0 bottom-0 w-3 cursor-ew-resize",
+    bottom: "-bottom-1 left-0 right-0 h-3 cursor-ns-resize",
+    right: "-right-1 top-0 bottom-0 w-3 cursor-ew-resize",
   }[edge];
 }
 
@@ -125,7 +125,7 @@ export function BaseResizablePanel({
         <div
           key={edge}
           aria-label={`Redimensionar painel ${panelId} pela borda ${edge}`}
-          className={`absolute z-20 touch-none rounded-sm bg-transparent transition-colors hover:bg-primary/60 ${edgeClassFor(edge)}`}
+          className={`absolute z-50 touch-none select-none rounded-sm bg-transparent transition-colors hover:bg-primary/60 ${edgeClassFor(edge)}`}
           onPointerDown={startResize(edge)}
           role="separator"
           aria-orientation={edge === "left" || edge === "right" ? "vertical" : "horizontal"}

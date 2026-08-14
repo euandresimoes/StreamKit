@@ -9,7 +9,6 @@ import { LivePreview } from "./LivePreview";
 import { LiveChatPanel } from "./LiveChatPanel";
 import { LiveMetadataEditor } from "./LiveMetadataEditor";
 import { LiveActivityPanel } from "./LiveActivityPanel";
-import { LiveQuickControlsPanel } from "./LiveQuickControlsPanel";
 
 const EMPTY_METADATA = {
   category: null,
@@ -40,7 +39,6 @@ export function LiveControlTab() {
       "Duração",
       selected?.durationSeconds ? `${Math.floor(selected.durationSeconds / 60)} min` : "—",
     ],
-    ["Canal", selected?.channelDisplayName ?? "Nenhum canal"],
   ];
 
   return (
@@ -109,7 +107,6 @@ export function LiveControlTab() {
                   />
                 </BaseDockPanel>
                 <LiveActivityPanel connected={Boolean(selected)} />
-                <LiveQuickControlsPanel connected={Boolean(selected)} />
               </div>
             </BaseResizablePanel>
           </div>

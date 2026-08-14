@@ -10,6 +10,7 @@ import { IntegrationRepository } from '../integration.repository'
 import {
   YouTubeApiErrorResponseSchema,
   YouTubeBroadcastListResponseSchema,
+  YouTubeVideoLiveDetailsResponseSchema,
 } from './youtube-api.schemas'
 import { YouTubeAuthService } from './youtube-auth.service'
 
@@ -88,6 +89,22 @@ export class YouTubeBroadcastService {
       method: 'PUT',
     })
     if (!response.ok) throw await this.apiError(response)
+  }
+
+  public async liveDetails(videoId: string) {
+    const token = await this.auth.getAccessToken()
+    const url = new URL('https://www.googleapis.com/youtube/v3/videos')
+    url.search = new URLSearchParams({ id: videoId, part: 'liveStreamingDetails' }).toString()
+    const response = await fetch(url, {
+      headers: { authorization: `Bearer ${token.accessToken}` },
+    })
+    if (!response.ok) throw await this.apiError(response)
+    const payload = YouTubeVideoLiveDetailsResponseSchema.parse(await response.json())
+    const details = payload.items[0]?.liveStreamingDetails
+    return {
+      startedAt: details?.actualStartTime ?? null,
+      viewerCount: details?.concurrentViewers ? Number(details.concurrentViewers) : null,
+    }
   }
 
   private async apiError(response: Response): Promise<ApiApplicationError> {

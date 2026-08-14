@@ -160,16 +160,21 @@ export class LiveControlService {
         const broadcast = (await this.youtube.list()).find(
           (item) => item.liveChatId === connection.channelId,
         )
-        return broadcast
-          ? {
-              channel: broadcast.title,
-              startedAt: broadcast.scheduledStartAt,
-              state: 'online',
-              title: broadcast.title,
-              videoId: broadcast.videoId,
-              viewerCount: null,
-            }
-          : { state: 'offline' }
+        if (!broadcast) return { state: 'offline' }
+        let details = { startedAt: null as string | null, viewerCount: null as number | null }
+        try {
+          details = await this.youtube.liveDetails(broadcast.videoId)
+        } catch {
+          // Live status remains useful when the optional analytics fields are unavailable.
+        }
+        return {
+          channel: broadcast.title,
+          startedAt: details.startedAt ?? broadcast.scheduledStartAt,
+          state: 'online',
+          title: broadcast.title,
+          videoId: broadcast.videoId,
+          viewerCount: details.viewerCount,
+        }
       }
     } catch {
       return { state: 'error' }

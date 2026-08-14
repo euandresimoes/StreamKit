@@ -16,7 +16,14 @@ const ExternalUrlSchema = z.url().refine((value) => {
   const url = new URL(value)
   return (
     url.protocol === 'https:' &&
-    ['accounts.google.com', 'id.kick.com', 'www.twitch.tv'].includes(url.hostname)
+    [
+      'accounts.google.com',
+      'id.kick.com',
+      'player.twitch.tv',
+      'www.twitch.tv',
+      'www.youtube.com',
+      'www.youtube-nocookie.com',
+    ].includes(url.hostname)
   )
 }, 'External authentication URL is not allowed')
 
