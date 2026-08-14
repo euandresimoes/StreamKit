@@ -89,9 +89,9 @@ export function LiveControlTab() {
               defaultSize={260}
               minSize={180}
               maxSize={520}
-              className="w-full shrink-0 border-t border-border"
+              className="w-full shrink-0 border-t border-border bg-card"
             >
-              <div className="flex h-full w-full min-w-0 overflow-x-auto">
+              <div className="flex h-full w-full min-w-0 overflow-x-auto bg-card">
                 <BaseDockPanel
                   panelId="live-metadata-dock"
                   title="Metadados da live"
@@ -111,6 +111,7 @@ export function LiveControlTab() {
                 </BaseDockPanel>
                 <LiveActivityPanel connected={Boolean(selected)} />
                 <LiveQuickControlsPanel connected={Boolean(selected)} />
+                <div className="min-w-0 flex-1 bg-card" aria-hidden="true" />
               </div>
             </BaseResizablePanel>
           </div>
