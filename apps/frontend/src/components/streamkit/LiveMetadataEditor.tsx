@@ -25,7 +25,7 @@ export function LiveMetadataEditor({
     setDraft(false);
   }, [metadata.title]);
   return (
-    <section className="rounded-2xl border border-border bg-card p-4">
+    <section className="flex h-full min-h-0 flex-col overflow-y-auto bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold">Metadados da live</h3>

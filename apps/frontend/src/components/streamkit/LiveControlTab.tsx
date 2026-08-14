@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { BaseResizablePanel } from "@/components/base/BaseResizablePanel";
 import { useLiveControl } from "@/modules/live-control/use-live-control";
 import { LivePlatformSelector } from "./LivePlatformSelector";
 import { LivePreview } from "./LivePreview";
@@ -64,7 +65,7 @@ export function LiveControlTab() {
           </Button>
         </div>
       </header>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 p-5">
+      <div className="flex min-h-0 flex-1 flex-col">
         {live.error && (
           <div
             role="alert"
@@ -73,19 +74,39 @@ export function LiveControlTab() {
             {live.error}
           </div>
         )}
-        <div className="grid min-h-0 gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,.75fr)]">
-          <div className="space-y-4">
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <div className="min-h-0 min-w-0 flex-1">
             <LivePreview stream={selected} />
-            <LiveMetadataEditor
-              metadata={selected?.metadata ?? EMPTY_METADATA}
-              controls={selected?.metadataControls ?? []}
-              busy={live.busy}
-              canEdit={Boolean(selected?.capabilities.includes("live.metadata.write"))}
-              onSave={live.updateMetadata}
-            />
           </div>
-          <LiveChatPanel stream={selected} />
+          <BaseResizablePanel
+            panelId="live-chat"
+            mode="vertical"
+            resize="left"
+            defaultSize={360}
+            minSize={280}
+            maxSize={620}
+            className="shrink-0 border-l border-border"
+          >
+            <LiveChatPanel stream={selected} />
+          </BaseResizablePanel>
         </div>
+        <BaseResizablePanel
+          panelId="live-metadata"
+          mode="horizontal"
+          resize="top"
+          defaultSize={260}
+          minSize={180}
+          maxSize={520}
+          className="w-full shrink-0 border-t border-border"
+        >
+          <LiveMetadataEditor
+            metadata={selected?.metadata ?? EMPTY_METADATA}
+            controls={selected?.metadataControls ?? []}
+            busy={live.busy}
+            canEdit={Boolean(selected?.capabilities.includes("live.metadata.write"))}
+            onSave={live.updateMetadata}
+          />
+        </BaseResizablePanel>
       </div>
     </div>
   );

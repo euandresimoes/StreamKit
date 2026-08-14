@@ -39,7 +39,7 @@ export function LivePreview({ stream }: { stream: LiveStream | null }) {
       </div>
     );
   return (
-    <div className="relative h-[min(70vh,760px)] min-h-[420px] overflow-hidden rounded-2xl border border-border bg-black">
+    <div className="relative h-full min-h-[420px] overflow-hidden border border-border bg-black">
       <iframe
         title={`Preview oficial de ${stream.channelDisplayName}`}
         src={url}

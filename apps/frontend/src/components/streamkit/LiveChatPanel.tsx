@@ -67,7 +67,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
     }
   };
   return (
-    <section className="flex min-h-64 flex-col rounded-2xl border border-border bg-card">
+    <section className="flex h-full min-h-64 flex-col bg-card">
       <header className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-semibold">
         {stream && <BaseBrandIcon provider={stream.provider} />}
         Chat da live
