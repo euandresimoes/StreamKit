@@ -3,23 +3,26 @@ import { useCallback, useEffect, useState } from "react";
 
 import { tournamentApi } from "./tournament-api";
 
-export function useTournaments() {
+export function useTournaments(autoSelect = true) {
   const [items, setItems] = useState<Tournament[]>([]);
   const [detail, setDetail] = useState<TournamentDetail | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (preferredId?: string) => {
-    setError(null);
-    try {
-      const list = await tournamentApi.list();
-      setItems(list.items);
-      const id = preferredId ?? list.items[0]?.id;
-      setDetail(id ? await tournamentApi.detail(id) : null);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível carregar os torneios.");
-    }
-  }, []);
+  const load = useCallback(
+    async (preferredId?: string) => {
+      setError(null);
+      try {
+        const list = await tournamentApi.list();
+        setItems(list.items);
+        const id = preferredId ?? (autoSelect ? list.items[0]?.id : undefined);
+        setDetail(id ? await tournamentApi.detail(id) : null);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Não foi possível carregar os torneios.");
+      }
+    },
+    [autoSelect],
+  );
   useEffect(() => void load(), [load]);
 
   const mutate = async (operation: () => Promise<unknown>) => {
@@ -44,8 +47,8 @@ export function useTournaments() {
     create: async (input: CreateTournamentRequest) => {
       setBusy(true);
       try {
-        await tournamentApi.create(input);
-        await load();
+        const created = await tournamentApi.create(input);
+        await load(created.id);
       } finally {
         setBusy(false);
       }

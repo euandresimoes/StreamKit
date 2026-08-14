@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleCheck,
+  DoorOpen,
   GripVertical,
   MessageCircle,
   Play,
@@ -19,7 +20,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
 import { BaseColorPicker } from "@/components/base/BaseColorPicker";
 import { BaseBrandIcon } from "@/components/base/BaseBrandIcon";
@@ -36,18 +36,18 @@ import {
 import { useTournaments } from "@/modules/tournament/use-tournaments";
 import { cn } from "@/lib/utils";
 import { CreateItemDialog } from "./CreateItemDialog";
-import { EntitySelect } from "./EntitySelect";
+import { EntityHub } from "./EntityHub";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
-import { ParticipantChatCapturePanel } from "./GiveawayChatCapturePanel";
 import { FocusedChatPanel } from "./FocusedChatPanel";
 import { TournamentMatchChat } from "./TournamentMatchChat";
+import { ParticipantCaptureDialog } from "./ParticipantCaptureDialog";
 
 function getParticipantInitials(displayName: string) {
   return Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
 }
 
 export function GamesTab() {
-  const tournaments = useTournaments();
+  const tournaments = useTournaments(false);
   const [name, setName] = useState("");
   const [participantName, setParticipantName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -153,175 +153,174 @@ export function GamesTab() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex flex-wrap items-center gap-3 px-6 py-5">
-        <div>
-          <h2 className="text-lg font-semibold">{detail?.tournament.name ?? "Torneios"}</h2>
-        </div>
-        <div className="ml-auto">
-          <EntitySelect
-            items={tournaments.items}
-            label="Selecionar torneio"
-            value={detail?.tournament.id}
-            onChange={(id) => void tournaments.select(id)}
-          />
-        </div>
-        <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>
-          <Plus /> Novo torneio
-        </Button>
-        {detail && ["draft", "ready"].includes(detail.tournament.status) && (
-          <Button variant="secondary" size="sm" onClick={() => setCapturing(true)}>
-            <MessageCircle /> Capturar do chat
-          </Button>
-        )}
-        {detail && (
+      {detail && (
+        <header className="flex flex-wrap items-center gap-2 px-4 py-3">
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Configurar torneio"
-            onClick={() => setConfiguring(true)}
+            aria-label="Sair do torneio"
+            onClick={() => void tournaments.select("")}
           >
-            <Settings2 />
+            <DoorOpen />
           </Button>
-        )}
-        {detail && (
-          <>
-            {["draft", "ready"].includes(detail.tournament.status) &&
-              detail.tournament.mode === "individual" && (
-                <Select
-                  value={String(detail.tournament.bracketSize)}
-                  disabled={tournaments.busy || !canChangeStructure}
-                  onValueChange={(value) =>
-                    void tournaments.updateStructure(
-                      detail.tournament.mode,
-                      Number(value) as 4 | 8 | 16 | 32,
-                    )
-                  }
-                >
-                  <SelectTrigger className="h-8 w-36" aria-label="Quantidade de participantes">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[4, 8, 16, 32].map((size) => (
-                      <SelectItem key={size} value={String(size)}>
-                        {size} participantes
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            {["draft", "ready"].includes(detail.tournament.status) &&
-              detail.tournament.mode === "team" && (
-                <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">{detail.tournament.name}</h2>
+          <div className="ml-auto">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Configurar torneio"
+              onClick={() => setConfiguring(true)}
+            >
+              <Settings2 />
+            </Button>
+          </div>
+          {detail && ["draft", "ready"].includes(detail.tournament.status) && (
+            <Button variant="secondary" size="sm" onClick={() => setCapturing(true)}>
+              <MessageCircle /> Capturar do chat
+            </Button>
+          )}
+
+          {detail && (
+            <>
+              {["draft", "ready"].includes(detail.tournament.status) &&
+                detail.tournament.mode === "individual" && (
                   <Select
-                    value={String(totalTeamParticipants)}
+                    value={String(detail.tournament.bracketSize)}
                     disabled={tournaments.busy || !canChangeStructure}
-                    onValueChange={(value) => {
-                      const total = Number(value);
-                      const nextTeams = ([teamCount, 4, 8, 16, 32] as const).find(
-                        (count) => total % count === 0 && total / count <= 16,
-                      );
-                      if (nextTeams)
-                        void tournaments.updateStructure("team", nextTeams, total / nextTeams);
-                    }}
-                  >
-                    <SelectTrigger className="h-8 w-40" aria-label="Total de participantes">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {totalParticipantOptions.map((total) => (
-                        <SelectItem key={total} value={String(total)}>
-                          {total} participantes
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={String(teamCount)}
-                    disabled={tournaments.busy || !canChangeStructure}
-                    onValueChange={(value) => {
-                      const count = Number(value) as 4 | 8 | 16 | 32;
+                    onValueChange={(value) =>
                       void tournaments.updateStructure(
-                        "team",
-                        count,
-                        totalTeamParticipants / count,
-                      );
-                    }}
+                        detail.tournament.mode,
+                        Number(value) as 4 | 8 | 16 | 32,
+                      )
+                    }
                   >
-                    <SelectTrigger className="h-8 w-28" aria-label="Quantidade de equipes">
+                    <SelectTrigger className="h-8 w-36" aria-label="Quantidade de participantes">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableTeamCounts.map((count) => (
-                        <SelectItem key={count} value={String(count)}>
-                          {count} equipes
+                      {[4, 8, 16, 32].map((size) => (
+                        <SelectItem key={size} value={String(size)}>
+                          {size} participantes
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select
-                    value={String(membersPerTeam)}
-                    disabled={tournaments.busy || !canChangeStructure}
-                    onValueChange={(value) => {
-                      const capacity = Number(value);
-                      const count = totalTeamParticipants / capacity;
-                      if ([4, 8, 16, 32].includes(count))
+                )}
+              {["draft", "ready"].includes(detail.tournament.status) &&
+                detail.tournament.mode === "team" && (
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={String(totalTeamParticipants)}
+                      disabled={tournaments.busy || !canChangeStructure}
+                      onValueChange={(value) => {
+                        const total = Number(value);
+                        const nextTeams = ([teamCount, 4, 8, 16, 32] as const).find(
+                          (count) => total % count === 0 && total / count <= 16,
+                        );
+                        if (nextTeams)
+                          void tournaments.updateStructure("team", nextTeams, total / nextTeams);
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-40" aria-label="Total de participantes">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {totalParticipantOptions.map((total) => (
+                          <SelectItem key={total} value={String(total)}>
+                            {total} participantes
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={String(teamCount)}
+                      disabled={tournaments.busy || !canChangeStructure}
+                      onValueChange={(value) => {
+                        const count = Number(value) as 4 | 8 | 16 | 32;
                         void tournaments.updateStructure(
                           "team",
-                          count as 4 | 8 | 16 | 32,
-                          capacity,
+                          count,
+                          totalTeamParticipants / count,
                         );
-                    }}
-                  >
-                    <SelectTrigger className="h-8 w-32" aria-label="Participantes por equipe">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableTeamCounts.map((count) => {
-                        const capacity = totalTeamParticipants / count;
-                        return (
-                          <SelectItem key={capacity} value={String(capacity)}>
-                            {capacity} por equipe
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-28" aria-label="Quantidade de equipes">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTeamCounts.map((count) => (
+                          <SelectItem key={count} value={String(count)}>
+                            {count} equipes
                           </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={String(membersPerTeam)}
+                      disabled={tournaments.busy || !canChangeStructure}
+                      onValueChange={(value) => {
+                        const capacity = Number(value);
+                        const count = totalTeamParticipants / capacity;
+                        if ([4, 8, 16, 32].includes(count))
+                          void tournaments.updateStructure(
+                            "team",
+                            count as 4 | 8 | 16 | 32,
+                            capacity,
+                          );
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-32" aria-label="Participantes por equipe">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTeamCounts.map((count) => {
+                          const capacity = totalTeamParticipants / count;
+                          return (
+                            <SelectItem key={capacity} value={String(capacity)}>
+                              {capacity} por equipe
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              {["draft", "ready"].includes(detail.tournament.status) && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={tournaments.busy}
+                  disabled={tournaments.busy || !slotsFilled || detail.matches.length > 0}
+                  onClick={() => void tournaments.shuffle()}
+                >
+                  <Sparkles /> Sortear chaves
+                </Button>
               )}
-            {["draft", "ready"].includes(detail.tournament.status) && (
-              <Button
-                variant="secondary"
-                size="sm"
-                loading={tournaments.busy}
-                disabled={tournaments.busy || !slotsFilled || detail.matches.length > 0}
-                onClick={() => void tournaments.shuffle()}
-              >
-                <Sparkles /> Sortear chaves
-              </Button>
-            )}
-            {detail.tournament.status === "finished" || detail.tournament.status === "archived" ? (
-              <Button size="sm" onClick={() => setShowingSummary(true)}>
-                <Trophy /> Ver resultado
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                disabled={
-                  tournaments.busy ||
-                  detail.tournament.status === "in_progress" ||
-                  (!detail.matches.length && !slotsFilled)
-                }
-                onClick={() => void tournaments.start()}
-              >
-                <Trophy />{" "}
-                {detail.tournament.status === "in_progress"
-                  ? "Torneio em andamento"
-                  : "Iniciar torneio"}
-              </Button>
-            )}
-          </>
-        )}
-      </header>
+              {detail.tournament.status === "finished" ||
+              detail.tournament.status === "archived" ? (
+                <Button size="sm" onClick={() => setShowingSummary(true)}>
+                  <Trophy /> Ver resultado
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  disabled={
+                    tournaments.busy ||
+                    detail.tournament.status === "in_progress" ||
+                    (!detail.matches.length && !slotsFilled)
+                  }
+                  onClick={() => void tournaments.start()}
+                >
+                  <Trophy />{" "}
+                  {detail.tournament.status === "in_progress"
+                    ? "Torneio em andamento"
+                    : "Iniciar torneio"}
+                </Button>
+              )}
+            </>
+          )}
+        </header>
+      )}
 
       {tournaments.error && (
         <p className="mx-6 mb-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
@@ -330,12 +329,15 @@ export function GamesTab() {
       )}
 
       {!detail ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-          <Trophy className="size-9" />
-          <p className="text-sm">Nenhum torneio cadastrado.</p>
-        </div>
+        <EntityHub
+          items={tournaments.items}
+          icon={Trophy}
+          label="Torneio"
+          onCreate={() => setCreating(true)}
+          onSelect={(id) => void tournaments.select(id)}
+        />
       ) : (
-        <div className="flex min-h-0 flex-1 gap-4 px-6 pb-6">
+        <div className="flex min-h-0 flex-1 gap-2 px-2 pb-2">
           {detail.tournament.mode === "team" &&
             (() => {
               const assignedIds = new Set(detail.teamMembers.map((member) => member.participantId));
@@ -1384,25 +1386,18 @@ export function GamesTab() {
           setDeletingTeam(null);
         }}
       />
-      <Dialog open={capturing} onOpenChange={setCapturing}>
-        <DialogContent className="glass-panel max-h-[85vh] max-w-lg border-border-strong bg-popover/95">
-          <DialogHeader>
-            <DialogTitle>Capturar participantes do chat</DialogTitle>
-          </DialogHeader>
-          {detail && (
-            <div className="min-h-0 overflow-y-auto py-2">
-              <ParticipantChatCapturePanel
-                target="tournament"
-                targetId={detail.tournament.id}
-                participantCount={detail.participants.length}
-                onRefresh={async () => {
-                  await tournaments.reload(detail.tournament.id);
-                }}
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {detail && (
+        <ParticipantCaptureDialog
+          open={capturing}
+          onOpenChange={setCapturing}
+          target="tournament"
+          targetId={detail.tournament.id}
+          participantCount={detail.participants.length}
+          onRefresh={async () => {
+            await tournaments.reload(detail.tournament.id);
+          }}
+        />
+      )}
       {detail?.tournament.status === "finished" && detail.championEntryId && (
         <FocusedChatPanel target="tournaments" targetId={detail.tournament.id} />
       )}

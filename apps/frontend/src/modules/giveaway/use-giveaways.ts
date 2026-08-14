@@ -8,34 +8,37 @@ import { useCallback, useEffect, useState } from "react";
 
 import { giveawayApi } from "./giveaway-api";
 
-export function useGiveaways() {
+export function useGiveaways(autoSelect = true) {
   const [items, setItems] = useState<Giveaway[]>([]);
   const [detail, setDetail] = useState<GiveawayDetail | null>(null);
   const [history, setHistory] = useState<GiveawayRound[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (preferredId?: string) => {
-    setError(null);
-    try {
-      const list = await giveawayApi.list();
-      setItems(list.items);
-      const id = preferredId ?? list.items[0]?.id;
-      if (!id) {
-        setDetail(null);
-        setHistory([]);
-        return;
+  const load = useCallback(
+    async (preferredId?: string) => {
+      setError(null);
+      try {
+        const list = await giveawayApi.list();
+        setItems(list.items);
+        const id = preferredId ?? (autoSelect ? list.items[0]?.id : undefined);
+        if (!id) {
+          setDetail(null);
+          setHistory([]);
+          return;
+        }
+        const [nextDetail, nextHistory] = await Promise.all([
+          giveawayApi.detail(id),
+          giveawayApi.history(id),
+        ]);
+        setDetail(nextDetail);
+        setHistory(nextHistory.items);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Não foi possível carregar os sorteios.");
       }
-      const [nextDetail, nextHistory] = await Promise.all([
-        giveawayApi.detail(id),
-        giveawayApi.history(id),
-      ]);
-      setDetail(nextDetail);
-      setHistory(nextHistory.items);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível carregar os sorteios.");
-    }
-  }, []);
+    },
+    [autoSelect],
+  );
   useEffect(() => void load(), [load]);
 
   const mutate = async <T>(operation: () => Promise<T>): Promise<T | undefined> => {

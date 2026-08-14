@@ -56,7 +56,9 @@ export function FocusedChatPanel({
       ) ?? null,
     [thread],
   );
-  const identity = thread?.identities[0] ?? null;
+  const identities = thread?.identities ?? [];
+  const identity = identities[0] ?? null;
+  const isGroup = identities.length > 1;
 
   const copyHandle = async (handle: string) => {
     setError(null);
@@ -116,9 +118,11 @@ export function FocusedChatPanel({
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-1">
             <p className="truncate text-sm font-semibold">
-              {identity?.displayName ?? thread?.subject ?? "Chat do vencedor"}
+              {isGroup
+                ? (thread?.subject ?? "Chat da equipe")
+                : (identity?.displayName ?? thread?.subject ?? "Chat do vencedor")}
             </p>
-            {identity && (
+            {identity && !isGroup && (
               <Button
                 variant="ghost"
                 size="icon-sm"
@@ -131,8 +135,23 @@ export function FocusedChatPanel({
               </Button>
             )}
           </div>
-          {identity && (
+          {identity && !isGroup && (
             <p className="truncate text-[10px] text-muted-foreground">{identity.handle}</p>
+          )}
+          {isGroup && (
+            <div className="mt-1 flex max-w-[220px] flex-wrap gap-1">
+              {identities.map((member) => (
+                <button
+                  key={`${member.provider}:${member.providerUserId}`}
+                  type="button"
+                  className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[9px] text-muted-foreground hover:text-foreground"
+                  title={`Copiar ${member.handle}`}
+                  onClick={() => void copyHandle(member.handle)}
+                >
+                  {copied === member.handle ? "Copiado" : member.handle}
+                </button>
+              ))}
+            </div>
           )}
         </div>
         <Button

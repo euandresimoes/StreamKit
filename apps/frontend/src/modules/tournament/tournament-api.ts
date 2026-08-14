@@ -36,7 +36,11 @@ export const tournamentApi = {
       method: "DELETE",
     }),
   create: (input: CreateTournamentRequest) =>
-    apiClient.request("/api/v1/tournaments", { method: "POST", body: input }),
+    apiClient.request("/api/v1/tournaments", {
+      method: "POST",
+      body: input,
+      schema: TournamentSchema,
+    }),
   update: (id: string, input: UpdateTournamentRequest) =>
     apiClient.request(`/api/v1/tournaments/${id}`, {
       method: "PATCH",
