@@ -61,6 +61,7 @@ export function GamesTab() {
   const [teamsExpanded, setTeamsExpanded] = useState(true);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [operatingMatchId, setOperatingMatchId] = useState<string | null>(null);
+  const [showingSummary, setShowingSummary] = useState(false);
   const [correctingMatchId, setCorrectingMatchId] = useState<string | null>(null);
   const detail = tournaments.detail;
   const qualifiedParticipants =
@@ -95,6 +96,12 @@ export function GamesTab() {
             avatarUrl: participant.avatarUrl,
           }))
     : [];
+  const maxRound =
+    detail?.matches.reduce((maximum, match) => Math.max(maximum, match.roundNumber), 0) ??
+    Math.log2(detail?.tournament.bracketSize ?? 4);
+  const champion = detail?.championEntryId
+    ? (bracketEntries.find((entry) => entry.id === detail.championEntryId) ?? null)
+    : null;
 
   const createTournament = async (tournamentName: string, option?: string) => {
     const mode = option === "team" ? "team" : "individual";
@@ -124,7 +131,7 @@ export function GamesTab() {
         <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>
           <Plus /> Novo torneio
         </Button>
-        {detail && (
+        {detail && ["draft", "ready"].includes(detail.tournament.status) && (
           <Button variant="secondary" size="sm" onClick={() => setCapturing(true)}>
             <MessageCircle /> Capturar do chat
           </Button>
@@ -141,43 +148,60 @@ export function GamesTab() {
         )}
         {detail && (
           <>
-            <Select
-              value={String(detail.tournament.bracketSize)}
-              disabled={tournaments.busy || !canChangeStructure}
-              onValueChange={(value) =>
-                void tournaments.updateStructure(
-                  detail.tournament.mode,
-                  Number(value) as 4 | 8 | 16 | 32,
-                )
-              }
-            >
-              <SelectTrigger className="h-8 w-36" aria-label="Quantidade de participantes">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[4, 8, 16, 32].map((size) => (
-                  <SelectItem key={size} value={String(size)}>
-                    {size} participantes
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={tournaments.busy}
-              disabled={tournaments.busy || !slotsFilled || detail.matches.length > 0}
-              onClick={() => void tournaments.shuffle()}
-            >
-              <Sparkles /> Sortear chaves
-            </Button>
-            <Button
-              size="sm"
-              disabled={tournaments.busy || (!detail.matches.length && !slotsFilled)}
-              onClick={() => void tournaments.start()}
-            >
-              <Trophy /> Iniciar torneio
-            </Button>
+            {["draft", "ready"].includes(detail.tournament.status) && (
+              <Select
+                value={String(detail.tournament.bracketSize)}
+                disabled={tournaments.busy || !canChangeStructure}
+                onValueChange={(value) =>
+                  void tournaments.updateStructure(
+                    detail.tournament.mode,
+                    Number(value) as 4 | 8 | 16 | 32,
+                  )
+                }
+              >
+                <SelectTrigger className="h-8 w-36" aria-label="Quantidade de participantes">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[4, 8, 16, 32].map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size} participantes
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {["draft", "ready"].includes(detail.tournament.status) && (
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={tournaments.busy}
+                disabled={tournaments.busy || !slotsFilled || detail.matches.length > 0}
+                onClick={() => void tournaments.shuffle()}
+              >
+                <Sparkles /> Sortear chaves
+              </Button>
+            )}
+            {detail.tournament.status === "finished" || detail.tournament.status === "archived" ? (
+              <Button size="sm" onClick={() => setShowingSummary(true)}>
+                <Trophy /> Ver resultado
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                disabled={
+                  tournaments.busy ||
+                  detail.tournament.status === "in_progress" ||
+                  (!detail.matches.length && !slotsFilled)
+                }
+                onClick={() => void tournaments.start()}
+              >
+                <Trophy />{" "}
+                {detail.tournament.status === "in_progress"
+                  ? "Torneio em andamento"
+                  : "Iniciar torneio"}
+              </Button>
+            )}
           </>
         )}
       </header>
@@ -775,7 +799,7 @@ export function GamesTab() {
                 (round) => (
                   <div key={round} className="flex min-w-52 flex-1 flex-col">
                     <p className="mb-3 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                      Rodada {round}
+                      {round === maxRound ? "Final" : `Rodada ${round}`}
                     </p>
                     <div className="flex flex-1 flex-col justify-around gap-4">
                       {detail.matches
@@ -922,13 +946,20 @@ export function GamesTab() {
                   if (!open) setOperatingMatchId(null);
                 }}
                 title={`Partida ${selectedMatch.matchNumber}`}
-                description={`Rodada ${selectedMatch.roundNumber}`}
+                description={
+                  selectedMatch.roundNumber === maxRound
+                    ? "Final"
+                    : `Rodada ${selectedMatch.roundNumber}`
+                }
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-[13px] font-semibold">Partida {selectedMatch.matchNumber}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      Rodada {selectedMatch.roundNumber} ·{" "}
+                      {selectedMatch.roundNumber === maxRound
+                        ? "Final"
+                        : `Rodada ${selectedMatch.roundNumber}`}{" "}
+                      ·{" "}
                       {selectedMatch.status === "in_progress"
                         ? "Em andamento"
                         : selectedMatch.status === "finished"
@@ -1033,6 +1064,74 @@ export function GamesTab() {
             )}
           </div>
         </div>
+      )}
+      {detail && (
+        <BaseModal
+          open={showingSummary}
+          onOpenChange={setShowingSummary}
+          title="Resultado do torneio"
+          description={detail.tournament.name}
+        >
+          <div className="flex flex-col gap-5">
+            <section className="flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/[0.06] p-4">
+              {champion?.avatarUrl ? (
+                <img
+                  src={champion.avatarUrl}
+                  alt=""
+                  className="size-14 rounded-full object-cover"
+                />
+              ) : champion?.color ? (
+                <span
+                  className="size-14 rounded-full border-2 border-border-strong"
+                  style={{ backgroundColor: champion.color }}
+                />
+              ) : (
+                <span className="flex size-14 items-center justify-center rounded-full bg-surface-2">
+                  <User className="size-7" />
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  Campeão
+                </p>
+                <p className="truncate text-lg font-semibold">
+                  {champion?.name ?? "Resultado indisponível"}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {detail.matches.length} partidas · {detail.tournament.bracketSize} vagas
+                </p>
+              </div>
+            </section>
+            <section>
+              <h3 className="mb-2 text-[12px] font-semibold">Resumo das partidas</h3>
+              <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+                {detail.matches.map((match) => {
+                  const left = bracketEntries.find((entry) => entry.id === match.leftEntryId);
+                  const right = bracketEntries.find((entry) => entry.id === match.rightEntryId);
+                  const winner = bracketEntries.find((entry) => entry.id === match.winnerEntryId);
+                  return (
+                    <div
+                      key={match.id}
+                      className="grid grid-cols-[90px_1fr_auto] items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-[11px]"
+                    >
+                      <span className="text-muted-foreground">
+                        {match.roundNumber === maxRound ? "Final" : `Rodada ${match.roundNumber}`} ·
+                        #{match.matchNumber}
+                      </span>
+                      <span className="min-w-0 truncate">
+                        {left?.name ?? "A definir"} <span className="text-muted-foreground">×</span>{" "}
+                        {right?.name ?? "A definir"}
+                      </span>
+                      <span className="max-w-32 truncate font-medium text-primary">
+                        {winner?.name ?? (match.leftResult === "draw" ? "Empate" : "Sem resultado")}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+        </BaseModal>
       )}
       <CreateItemDialog
         open={creating}
