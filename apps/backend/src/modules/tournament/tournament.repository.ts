@@ -128,7 +128,12 @@ export class TournamentRepository {
         this.adaptTournamentMode(id, current.mode, input.mode, teamCapacity ?? 3)
       if (mode === 'individual' && input.bracketSize !== undefined)
         this.reconcileIndividualEntries(id, input.bracketSize)
-      if (mode === 'team' && (input.bracketSize !== undefined || current.mode !== mode))
+      if (
+        mode === 'team' &&
+        (input.bracketSize !== undefined ||
+          input.teamCapacity !== undefined ||
+          current.mode !== mode)
+      )
         this.reconcileTeams(id, input.bracketSize ?? current.bracketSize, teamCapacity ?? 3)
       this.database.orm.update(tournaments).set(next).where(eq(tournaments.id, id)).run()
       this.audit(id, 'tournament.structure.updated', {
@@ -823,6 +828,22 @@ export class TournamentRepository {
         .run()
       this.database.orm.delete(tournamentEntries).where(eq(tournamentEntries.teamId, team.id)).run()
       this.database.orm.delete(tournamentTeams).where(eq(tournamentTeams.id, team.id)).run()
+    }
+    for (const team of teams.slice(0, bracketSize)) {
+      this.database.orm
+        .delete(tournamentTeamMembers)
+        .where(
+          and(
+            eq(tournamentTeamMembers.teamId, team.id),
+            sql`${tournamentTeamMembers.slotPosition} > ${capacity}`,
+          ),
+        )
+        .run()
+      this.database.orm
+        .update(tournamentTeams)
+        .set({ capacity, updatedAt: new Date().toISOString() })
+        .where(eq(tournamentTeams.id, team.id))
+        .run()
     }
     const now = new Date().toISOString()
     for (let index = teams.length; index < bracketSize; index += 1) {

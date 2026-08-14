@@ -64,6 +64,15 @@ export function GamesTab() {
   const [showingSummary, setShowingSummary] = useState(false);
   const [correctingMatchId, setCorrectingMatchId] = useState<string | null>(null);
   const detail = tournaments.detail;
+  const teamCount = detail?.tournament.mode === "team" ? detail.tournament.bracketSize : 0;
+  const membersPerTeam = detail?.tournament.teamCapacity ?? 1;
+  const totalTeamParticipants = teamCount * membersPerTeam;
+  const totalParticipantOptions = Array.from(
+    new Set([8, 16, 24, 32, 64, totalTeamParticipants].filter(Boolean)),
+  ).sort((left, right) => left - right);
+  const availableTeamCounts = ([4, 8, 16, 32] as const).filter(
+    (count) => totalTeamParticipants % count === 0 && totalTeamParticipants / count <= 16,
+  );
   const qualifiedParticipants =
     detail?.participants.filter((participant) => participant.entryId) ?? [];
   const overflowParticipants =
@@ -86,6 +95,8 @@ export function GamesTab() {
           id: team.entryId,
           name: team.name,
           color: team.color,
+          seed: team.seed,
+          sourceId: team.id,
         }))
       : detail.participants
           .filter((participant) => participant.entryId)
@@ -94,8 +105,34 @@ export function GamesTab() {
             name: participant.displayName,
             color: null,
             avatarUrl: participant.avatarUrl,
+            seed: participant.seed,
+            sourceId: participant.id,
           }))
     : [];
+  const orderedBracketEntries = [...bracketEntries].sort(
+    (left, right) =>
+      (left.seed ?? Number.MAX_SAFE_INTEGER) - (right.seed ?? Number.MAX_SAFE_INTEGER),
+  );
+  const previewMatches =
+    detail && !detail.matches.length
+      ? Array.from({ length: Math.log2(detail.tournament.bracketSize) }, (_, roundIndex) => {
+          const roundNumber = roundIndex + 1;
+          const count = detail.tournament.bracketSize / 2 ** roundNumber;
+          return Array.from({ length: count }, (_, matchIndex) => ({
+            id: `preview-${roundNumber}-${matchIndex + 1}`,
+            leftEntryId:
+              roundNumber === 1 ? (orderedBracketEntries[matchIndex * 2]?.id ?? null) : null,
+            leftResult: "pending" as const,
+            matchNumber: matchIndex + 1,
+            rightEntryId:
+              roundNumber === 1 ? (orderedBracketEntries[matchIndex * 2 + 1]?.id ?? null) : null,
+            rightResult: "pending" as const,
+            roundNumber,
+            status: "waiting" as const,
+          }));
+        }).flat()
+      : [];
+  const bracketMatches = detail?.matches.length ? detail.matches : previewMatches;
   const maxRound =
     detail?.matches.reduce((maximum, match) => Math.max(maximum, match.roundNumber), 0) ??
     Math.log2(detail?.tournament.bracketSize ?? 4);
@@ -109,8 +146,8 @@ export function GamesTab() {
       name: tournamentName,
       description: null,
       mode,
-      bracketSize: 8,
-      teamCapacity: mode === "team" ? 3 : null,
+      bracketSize: mode === "team" ? 4 : 8,
+      teamCapacity: mode === "team" ? 2 : null,
     });
   };
 
@@ -148,29 +185,109 @@ export function GamesTab() {
         )}
         {detail && (
           <>
-            {["draft", "ready"].includes(detail.tournament.status) && (
-              <Select
-                value={String(detail.tournament.bracketSize)}
-                disabled={tournaments.busy || !canChangeStructure}
-                onValueChange={(value) =>
-                  void tournaments.updateStructure(
-                    detail.tournament.mode,
-                    Number(value) as 4 | 8 | 16 | 32,
-                  )
-                }
-              >
-                <SelectTrigger className="h-8 w-36" aria-label="Quantidade de participantes">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[4, 8, 16, 32].map((size) => (
-                    <SelectItem key={size} value={String(size)}>
-                      {size} participantes
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            {["draft", "ready"].includes(detail.tournament.status) &&
+              detail.tournament.mode === "individual" && (
+                <Select
+                  value={String(detail.tournament.bracketSize)}
+                  disabled={tournaments.busy || !canChangeStructure}
+                  onValueChange={(value) =>
+                    void tournaments.updateStructure(
+                      detail.tournament.mode,
+                      Number(value) as 4 | 8 | 16 | 32,
+                    )
+                  }
+                >
+                  <SelectTrigger className="h-8 w-36" aria-label="Quantidade de participantes">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[4, 8, 16, 32].map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size} participantes
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            {["draft", "ready"].includes(detail.tournament.status) &&
+              detail.tournament.mode === "team" && (
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={String(totalTeamParticipants)}
+                    disabled={tournaments.busy || !canChangeStructure}
+                    onValueChange={(value) => {
+                      const total = Number(value);
+                      const nextTeams = ([teamCount, 4, 8, 16, 32] as const).find(
+                        (count) => total % count === 0 && total / count <= 16,
+                      );
+                      if (nextTeams)
+                        void tournaments.updateStructure("team", nextTeams, total / nextTeams);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-40" aria-label="Total de participantes">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {totalParticipantOptions.map((total) => (
+                        <SelectItem key={total} value={String(total)}>
+                          {total} participantes
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={String(teamCount)}
+                    disabled={tournaments.busy || !canChangeStructure}
+                    onValueChange={(value) => {
+                      const count = Number(value) as 4 | 8 | 16 | 32;
+                      void tournaments.updateStructure(
+                        "team",
+                        count,
+                        totalTeamParticipants / count,
+                      );
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-28" aria-label="Quantidade de equipes">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTeamCounts.map((count) => (
+                        <SelectItem key={count} value={String(count)}>
+                          {count} equipes
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={String(membersPerTeam)}
+                    disabled={tournaments.busy || !canChangeStructure}
+                    onValueChange={(value) => {
+                      const capacity = Number(value);
+                      const count = totalTeamParticipants / capacity;
+                      if ([4, 8, 16, 32].includes(count))
+                        void tournaments.updateStructure(
+                          "team",
+                          count as 4 | 8 | 16 | 32,
+                          capacity,
+                        );
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-32" aria-label="Participantes por equipe">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTeamCounts.map((count) => {
+                        const capacity = totalTeamParticipants / count;
+                        return (
+                          <SelectItem key={capacity} value={String(capacity)}>
+                            {capacity} por equipe
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             {["draft", "ready"].includes(detail.tournament.status) && (
               <Button
                 variant="secondary"
@@ -787,14 +904,14 @@ export function GamesTab() {
           </aside>
 
           <div className="glass-panel min-w-0 flex-1 overflow-auto rounded-3xl p-5">
-            {!!detail.matches.length && (
+            {!!bracketMatches.length && (
               <div
-                className="sticky top-0 z-20 mb-3 grid min-w-[720px] gap-8 border-b border-border bg-background/90 pb-3 backdrop-blur-xl"
+                className="sticky top-0 z-20 mb-3 grid min-w-[720px] gap-8 border-b border-border pb-3"
                 style={{
-                  gridTemplateColumns: `repeat(${new Set(detail.matches.map((match) => match.roundNumber)).size}, minmax(208px, 1fr))`,
+                  gridTemplateColumns: `repeat(${new Set(bracketMatches.map((match) => match.roundNumber)).size + 1}, minmax(208px, 1fr))`,
                 }}
               >
-                {Array.from(new Set(detail.matches.map((match) => match.roundNumber))).map(
+                {Array.from(new Set(bracketMatches.map((match) => match.roundNumber))).map(
                   (round) => (
                     <p
                       key={round}
@@ -804,21 +921,24 @@ export function GamesTab() {
                     </p>
                   ),
                 )}
+                <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Vencedor
+                </p>
               </div>
             )}
             <div className="relative flex min-h-[calc(100%_-_32px)] min-w-[720px] gap-8">
-              {!!detail.matches.length && (
+              {!!bracketMatches.length && (
                 <svg
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 z-0 size-full overflow-visible"
                   preserveAspectRatio="none"
-                  viewBox={`0 0 ${Math.max(1, maxRound) * 100} 100`}
+                  viewBox={`0 0 ${(Math.max(1, maxRound) + 1) * 100} 100`}
                 >
-                  {Array.from({ length: Math.max(0, maxRound - 1) }, (_, roundIndex) => {
+                  {Array.from({ length: Math.max(0, maxRound) }, (_, roundIndex) => {
                     const matchCount = detail.tournament.bracketSize / 2 ** (roundIndex + 1);
                     return Array.from({ length: matchCount }, (_, matchIndex) => {
                       const fromY = ((matchIndex + 0.5) / matchCount) * 100;
-                      const nextCount = matchCount / 2;
+                      const nextCount = Math.max(1, matchCount / 2);
                       const toY = ((Math.floor(matchIndex / 2) + 0.5) / nextCount) * 100;
                       const boundary = (roundIndex + 1) * 100;
                       return (
@@ -835,33 +955,11 @@ export function GamesTab() {
                   }).flat()}
                 </svg>
               )}
-              {!detail.matches.length && (
-                <PreviewBracket
-                  bracketSize={detail.tournament.bracketSize}
-                  participants={
-                    detail.tournament.mode === "team"
-                      ? detail.teams.map((team) => ({
-                          color: team.color,
-                          id: team.id,
-                          displayName: team.name,
-                          seed: team.seed,
-                        }))
-                      : detail.participants.map((participant) => ({ ...participant, color: null }))
-                  }
-                  onDrop={(participantId, seed) => {
-                    if (detail.tournament.mode === "individual")
-                      void tournaments.reorderParticipant(participantId, seed);
-                    else void tournaments.reorderTeam(participantId, seed);
-                    setDraggedParticipantId(null);
-                  }}
-                  onDragStart={setDraggedParticipantId}
-                />
-              )}
-              {Array.from(new Set(detail.matches.map((match) => match.roundNumber))).map(
+              {Array.from(new Set(bracketMatches.map((match) => match.roundNumber))).map(
                 (round) => (
                   <div key={round} className="bracket-round z-10 flex min-w-52 flex-1 flex-col">
                     <div className="flex flex-1 flex-col justify-around gap-4 py-3">
-                      {detail.matches
+                      {bracketMatches
                         .filter((match) => match.roundNumber === round)
                         .map((match) => {
                           const left = bracketEntries.find(
@@ -875,15 +973,20 @@ export function GamesTab() {
                             match.status === "in_progress";
                           return (
                             <div
-                              role="button"
-                              tabIndex={0}
+                              role={detail.matches.length ? "button" : undefined}
+                              tabIndex={detail.matches.length ? 0 : undefined}
                               key={match.id}
                               onClick={() => {
-                                setSelectedMatchId(match.id);
-                                setOperatingMatchId(match.id);
+                                if (detail.matches.length) {
+                                  setSelectedMatchId(match.id);
+                                  setOperatingMatchId(match.id);
+                                }
                               }}
                               onKeyDown={(event) => {
-                                if (event.key === "Enter" || event.key === " ") {
+                                if (
+                                  detail.matches.length &&
+                                  (event.key === "Enter" || event.key === " ")
+                                ) {
                                   setSelectedMatchId(match.id);
                                   setOperatingMatchId(match.id);
                                 }
@@ -893,37 +996,27 @@ export function GamesTab() {
                                 active ? "border-primary ring-2 ring-primary/25" : "border-border",
                               )}
                             >
-                              <div className="pointer-events-none absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-popover/95 p-1 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-visible:pointer-events-auto group-focus-visible:opacity-100">
-                                {match.status === "ready" &&
-                                  detail.tournament.status === "in_progress" && (
-                                    <Button
-                                      size="sm"
-                                      className="h-7"
-                                      disabled={
-                                        tournaments.busy ||
-                                        detail.matches.some((item) => item.status === "in_progress")
-                                      }
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        void tournaments.startMatch(match.id);
-                                      }}
-                                    >
-                                      <Play className="size-3" /> Começar
-                                    </Button>
-                                  )}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    setSelectedMatchId(match.id);
-                                    setOperatingMatchId(match.id);
-                                  }}
-                                >
-                                  Abrir partida
-                                </Button>
-                                {match.status === "finished" && (
+                              {!!detail.matches.length && (
+                                <div className="pointer-events-none absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-popover/95 p-1 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-visible:pointer-events-auto group-focus-visible:opacity-100">
+                                  {match.status === "ready" &&
+                                    detail.tournament.status === "in_progress" && (
+                                      <Button
+                                        size="sm"
+                                        className="h-7"
+                                        disabled={
+                                          tournaments.busy ||
+                                          detail.matches.some(
+                                            (item) => item.status === "in_progress",
+                                          )
+                                        }
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          void tournaments.startMatch(match.id);
+                                        }}
+                                      >
+                                        <Play className="size-3" /> Começar
+                                      </Button>
+                                    )}
                                   <Button
                                     size="sm"
                                     variant="ghost"
@@ -931,13 +1024,27 @@ export function GamesTab() {
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       setSelectedMatchId(match.id);
-                                      setCorrectingMatchId(match.id);
+                                      setOperatingMatchId(match.id);
                                     }}
                                   >
-                                    Corrigir
+                                    Abrir partida
                                   </Button>
-                                )}
-                              </div>
+                                  {match.status === "finished" && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setSelectedMatchId(match.id);
+                                        setCorrectingMatchId(match.id);
+                                      }}
+                                    >
+                                      Corrigir
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
                               <p className="px-2 pb-1 text-[10px] text-muted-foreground">
                                 Partida {match.matchNumber}
                               </p>
@@ -946,6 +1053,38 @@ export function GamesTab() {
                                 return (
                                   <div
                                     key={index}
+                                    draggable={
+                                      !detail.matches.length &&
+                                      match.roundNumber === 1 &&
+                                      Boolean(entry)
+                                    }
+                                    onDragStart={(event) => {
+                                      if (
+                                        !entry ||
+                                        detail.matches.length ||
+                                        match.roundNumber !== 1
+                                      )
+                                        return;
+                                      event.dataTransfer.setData("text/plain", entry.sourceId);
+                                      event.dataTransfer.effectAllowed = "move";
+                                      setDraggedParticipantId(entry.sourceId);
+                                    }}
+                                    onDragEnd={() => setDraggedParticipantId(null)}
+                                    onDragOver={(event) => {
+                                      if (!detail.matches.length && match.roundNumber === 1)
+                                        event.preventDefault();
+                                    }}
+                                    onDrop={(event) => {
+                                      if (detail.matches.length || match.roundNumber !== 1) return;
+                                      const sourceId = event.dataTransfer.getData("text/plain");
+                                      const seed = (match.matchNumber - 1) * 2 + index + 1;
+                                      if (sourceId) {
+                                        if (detail.tournament.mode === "individual")
+                                          void tournaments.reorderParticipant(sourceId, seed);
+                                        else void tournaments.reorderTeam(sourceId, seed);
+                                      }
+                                      setDraggedParticipantId(null);
+                                    }}
                                     className={cn(
                                       "flex items-center gap-2 px-2 py-2 text-[13px]",
                                       index === 0 && "border-b border-border",
@@ -997,6 +1136,21 @@ export function GamesTab() {
                     </div>
                   </div>
                 ),
+              )}
+              {!!bracketMatches.length && (
+                <div className="z-10 flex min-w-52 flex-1 items-center py-3">
+                  <div className="flex w-full items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 text-[12.5px]">
+                    <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                      {champion?.name ?? "A definir"}
+                    </span>
+                    {champion?.color && (
+                      <span
+                        className="size-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: champion.color }}
+                      />
+                    )}
+                  </div>
+                </div>
               )}
             </div>
             {selectedMatch && (
@@ -1270,97 +1424,5 @@ export function GamesTab() {
         <FocusedChatPanel target="tournaments" targetId={detail.tournament.id} />
       )}
     </div>
-  );
-}
-
-function PreviewBracket({
-  bracketSize,
-  participants,
-  onDrop,
-  onDragStart,
-}: {
-  bracketSize: number;
-  participants: Array<{
-    color: string | null;
-    id: string;
-    displayName: string;
-    seed: number | null;
-  }>;
-  onDrop(participantId: string, seed: number): void;
-  onDragStart(participantId: string | null): void;
-}) {
-  const bySeed = new Map(participants.map((participant) => [participant.seed, participant]));
-  const rounds = Math.log2(bracketSize);
-
-  return (
-    <>
-      <div className="flex flex-col gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Primeira rodada
-        </p>
-        {Array.from({ length: bracketSize / 2 }, (_, matchIndex) => (
-          <div
-            key={matchIndex}
-            className="overflow-hidden rounded-2xl border border-border bg-card"
-          >
-            {[matchIndex * 2 + 1, matchIndex * 2 + 2].map((seed, slotIndex) => {
-              const participant = bySeed.get(seed);
-              return (
-                <div
-                  key={seed}
-                  draggable={Boolean(participant)}
-                  onDragStart={(event) => {
-                    if (!participant) return;
-                    event.dataTransfer.setData("text/plain", participant.id);
-                    event.dataTransfer.effectAllowed = "move";
-                    onDragStart(participant.id);
-                  }}
-                  onDragEnd={() => onDragStart(null)}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => {
-                    const participantId = event.dataTransfer.getData("text/plain");
-                    if (participantId) onDrop(participantId, seed);
-                  }}
-                  className={cn(
-                    "flex min-h-9 items-center px-3 text-[12.5px] transition-colors",
-                    slotIndex === 0 && "border-b border-border",
-                    participant ? "text-foreground" : "border-dashed text-muted-foreground",
-                  )}
-                >
-                  <span className="mr-2 text-[10px] tabular-nums opacity-50">{seed}</span>
-                  <span className="min-w-0 flex-1 truncate">
-                    {participant?.displayName ?? "Arraste um participante"}
-                  </span>
-                  {participant?.color && (
-                    <span
-                      className="ml-2 size-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: participant.color }}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-      {Array.from({ length: rounds - 1 }, (_, roundIndex) => (
-        <div key={roundIndex} className="flex flex-col justify-around gap-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {roundIndex === rounds - 2 ? "Final" : `Rodada ${roundIndex + 2}`}
-          </p>
-          {Array.from({ length: bracketSize / 2 ** (roundIndex + 2) }, (_, matchIndex) => (
-            <div
-              key={matchIndex}
-              className="overflow-hidden rounded-2xl border border-border bg-card/60 opacity-60"
-            >
-              <div className="border-b border-border px-3 py-2 text-[12px] text-muted-foreground">
-                A definir
-              </div>
-              <div className="px-3 py-2 text-[12px] text-muted-foreground">A definir</div>
-            </div>
-          ))}
-        </div>
-      ))}
-    </>
   );
 }

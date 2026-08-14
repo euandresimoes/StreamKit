@@ -311,5 +311,17 @@ describe('Tournament API', () => {
       'Wolves',
       'Dragons',
     ])
+    const resized = await call(`/api/v1/tournaments/${tournament.id}`, 'PATCH', {
+      bracketSize: 4,
+      description: null,
+      mode: 'team',
+      name: tournament.name,
+      teamCapacity: 2,
+    })
+    expect(resized.status).toBe(200)
+    const resizedDetail = TournamentDetailSchema.parse(
+      await (await call(`/api/v1/tournaments/${tournament.id}`)).json(),
+    )
+    expect(resizedDetail.teams.every((team) => team.capacity === 2)).toBe(true)
   })
 })

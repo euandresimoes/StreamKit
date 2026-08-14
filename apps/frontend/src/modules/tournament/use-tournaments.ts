@@ -132,7 +132,11 @@ export function useTournaments() {
       detail
         ? mutate(() => tournamentApi.update(detail.tournament.id, { name, description }))
         : undefined,
-    updateStructure: (mode: "individual" | "team", bracketSize: 4 | 8 | 16 | 32) =>
+    updateStructure: (
+      mode: "individual" | "team",
+      bracketSize: 4 | 8 | 16 | 32,
+      teamCapacity?: number,
+    ) =>
       detail
         ? mutate(() =>
             tournamentApi.update(detail.tournament.id, {
@@ -140,7 +144,8 @@ export function useTournaments() {
               description: detail.tournament.description,
               mode,
               bracketSize,
-              teamCapacity: mode === "team" ? (detail.tournament.teamCapacity ?? 3) : null,
+              teamCapacity:
+                mode === "team" ? (teamCapacity ?? detail.tournament.teamCapacity ?? 3) : null,
             }),
           )
         : undefined,

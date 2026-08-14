@@ -95,7 +95,7 @@ describe('SQLite infrastructure', () => {
           {
             destructive: false,
             name: 'broken',
-            sql: 'CREATE TABLE partial_write (id TEXT); THIS IS INVALID SQL;',
+            sql: 'CREATE TABLE partial_write (id TEXT); INSERT INTO partial_write (',
             version: 99,
           },
         ],
