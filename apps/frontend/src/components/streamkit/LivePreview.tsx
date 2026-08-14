@@ -26,11 +26,15 @@ export function LivePreview({ stream }: { stream: LiveStream | null }) {
     );
   const parent =
     typeof window === "undefined" ? "localhost" : window.location.hostname || "localhost";
+  const playerOrigin =
+    typeof window === "undefined" || window.location.origin === "null"
+      ? "http://localhost"
+      : window.location.origin;
   const url =
     stream.provider === "twitch"
       ? `https://player.twitch.tv/?channel=${encodeURIComponent(stream.preview.channel)}&parent=${encodeURIComponent(parent)}`
       : stream.preview.videoId
-        ? `https://www.youtube.com/embed/${encodeURIComponent(stream.preview.videoId)}`
+        ? `https://www.youtube.com/embed/${encodeURIComponent(stream.preview.videoId)}?enablejsapi=1&origin=${encodeURIComponent(playerOrigin)}&widget_referrer=${encodeURIComponent(playerOrigin)}`
         : null;
   if (!url)
     return (
@@ -45,7 +49,7 @@ export function LivePreview({ stream }: { stream: LiveStream | null }) {
         src={url}
         allow="autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
-        referrerPolicy="no-referrer"
+        referrerPolicy="strict-origin-when-cross-origin"
         sandbox="allow-scripts allow-same-origin allow-presentation"
         className="size-full"
       />

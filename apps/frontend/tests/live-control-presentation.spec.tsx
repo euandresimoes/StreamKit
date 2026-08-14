@@ -46,6 +46,22 @@ describe("Live Control presentation", () => {
     expect(markup).toContain("parent=");
   });
 
+  it("identifies the YouTube embed origin to avoid player configuration errors", () => {
+    const markup = renderToStaticMarkup(
+      <LivePreview
+        stream={stream({
+          preview: { channel: "streamer", state: "ready", videoId: "youtube-video-id" },
+          provider: "youtube",
+        })}
+      />,
+    );
+
+    expect(markup).toContain("https://www.youtube.com/embed/youtube-video-id");
+    expect(markup).toContain("enablejsapi=1");
+    expect(markup).toContain("origin=http%3A%2F%2Flocalhost");
+    expect(markup).toContain('referrerPolicy="strict-origin-when-cross-origin"');
+  });
+
   it("does not render an iframe when the provider has no official preview", () => {
     const markup = renderToStaticMarkup(
       <LivePreview
