@@ -8,6 +8,7 @@ import {
 
 type PanelMode = "vertical" | "horizontal";
 type ResizeEdge = "top" | "left" | "bottom" | "right";
+type ResizeOption = ResizeEdge | "both-horizontal";
 
 const STORAGE_PREFIX = "streamkit.panel-size.";
 const SNAP_STEP = 8;
@@ -29,6 +30,15 @@ function readSize(panelId: string, fallback: number, minSize: number, maxSize: n
   }
 }
 
+function edgeClassFor(edge: ResizeEdge) {
+  return {
+    top: "top-0 left-0 right-0 h-2 cursor-ns-resize",
+    left: "left-0 top-0 bottom-0 w-2 cursor-ew-resize",
+    bottom: "bottom-0 left-0 right-0 h-2 cursor-ns-resize",
+    right: "right-0 top-0 bottom-0 w-2 cursor-ew-resize",
+  }[edge];
+}
+
 export function BaseResizablePanel({
   children,
   className = "",
@@ -48,10 +58,10 @@ export function BaseResizablePanel({
   mode: PanelMode;
   onSizeChange?: (size: number) => void;
   panelId: string;
-  resize: ResizeEdge;
+  resize: ResizeOption;
 }) {
   const [size, setSize] = useState(() => readSize(panelId, defaultSize, minSize, maxSize));
-  const startRef = useRef<{ coordinate: number; size: number } | null>(null);
+  const startRef = useRef<{ coordinate: number; edge: ResizeEdge; size: number } | null>(null);
 
   useEffect(() => {
     try {
@@ -66,8 +76,9 @@ export function BaseResizablePanel({
     const move = (event: PointerEvent) => {
       const start = startRef.current;
       if (!start) return;
-      const coordinate = resize === "left" || resize === "right" ? event.clientX : event.clientY;
-      const direction = resize === "left" || resize === "top" ? -1 : 1;
+      const coordinate =
+        start.edge === "left" || start.edge === "right" ? event.clientX : event.clientY;
+      const direction = start.edge === "left" || start.edge === "top" ? -1 : 1;
       const raw = start.size + (coordinate - start.coordinate) * direction;
       const snappedToEdge =
         Math.abs(raw - minSize) <= SNAP_THRESHOLD
@@ -89,38 +100,37 @@ export function BaseResizablePanel({
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", stop);
     };
-  }, [maxSize, minSize, resize]);
+  }, [maxSize, minSize]);
 
-  const startResize = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const startResize = (edge: ResizeEdge) => (event: ReactPointerEvent<HTMLDivElement>) => {
     event.preventDefault();
-    const coordinate = resize === "left" || resize === "right" ? event.clientX : event.clientY;
-    startRef.current = { coordinate, size };
-    document.body.style.cursor =
-      resize === "left" || resize === "right" ? "ew-resize" : "ns-resize";
+    const coordinate = edge === "left" || edge === "right" ? event.clientX : event.clientY;
+    startRef.current = { coordinate, edge, size };
+    document.body.style.cursor = edge === "left" || edge === "right" ? "ew-resize" : "ns-resize";
     document.body.style.userSelect = "none";
   };
 
-  const sizeStyle = resize === "left" || resize === "right" ? { width: size } : { height: size };
-  const edgeClass = {
-    top: "top-0 left-0 right-0 h-2 cursor-ns-resize",
-    left: "left-0 top-0 bottom-0 w-2 cursor-ew-resize",
-    bottom: "bottom-0 left-0 right-0 h-2 cursor-ns-resize",
-    right: "right-0 top-0 bottom-0 w-2 cursor-ew-resize",
-  }[resize];
+  const horizontalResize = resize === "left" || resize === "right" || resize === "both-horizontal";
+  const sizeStyle = horizontalResize ? { width: size } : { height: size };
+
+  const handles: ResizeEdge[] = resize === "both-horizontal" ? ["left", "right"] : [resize];
 
   return (
     <section
-      className={`relative flex min-h-0 min-w-0 overflow-hidden ${mode === "vertical" ? "flex-col" : "flex-row"} ${className}`}
+      className={`relative flex min-h-0 min-w-0 max-w-full overflow-hidden ${mode === "vertical" ? "flex-col" : "flex-row"} ${className}`}
       style={sizeStyle}
       data-panel-id={panelId}
     >
-      <div
-        aria-label={`Redimensionar painel ${panelId}`}
-        className={`absolute z-20 touch-none rounded-sm bg-transparent transition-colors hover:bg-primary/60 ${edgeClass}`}
-        onPointerDown={startResize}
-        role="separator"
-        aria-orientation={resize === "left" || resize === "right" ? "vertical" : "horizontal"}
-      />
+      {handles.map((edge) => (
+        <div
+          key={edge}
+          aria-label={`Redimensionar painel ${panelId} pela borda ${edge}`}
+          className={`absolute z-20 touch-none rounded-sm bg-transparent transition-colors hover:bg-primary/60 ${edgeClassFor(edge)}`}
+          onPointerDown={startResize(edge)}
+          role="separator"
+          aria-orientation={edge === "left" || edge === "right" ? "vertical" : "horizontal"}
+        />
+      ))}
       {children}
     </section>
   );
