@@ -9,7 +9,7 @@ export function LiveQuickControlsPanel({ connected }: { connected: boolean }) {
       title="Controles rápidos"
       icon={SlidersHorizontal}
       defaultSize={300}
-      resize="left"
+      resize="right"
     >
       <div className="grid content-start gap-2 p-3">
         <Button size="sm" variant="outline" disabled={!connected}>
