@@ -18,6 +18,7 @@ import { YouTubeBroadcastService } from './youtube/youtube-broadcast.service'
 type ProviderLive = {
   channel?: string
   category?: string | null
+  description?: string | null
   gameName?: string | null
   language?: string | null
   startedAt?: string | null
@@ -40,7 +41,8 @@ export class LiveControlService {
   public async list() {
     await this.syncYouTubeBroadcasts()
     const connections = await this.integrations.listConnections()
-    return Promise.all(connections.map((connection) => this.snapshot(connection)))
+    const streams = await Promise.all(connections.map((connection) => this.snapshot(connection)))
+    return streams.filter((stream) => stream.state === 'online')
   }
 
   private async syncYouTubeBroadcasts(): Promise<void> {
@@ -99,10 +101,10 @@ export class LiveControlService {
             'YouTube live broadcast is no longer active',
             409,
           )
-        await this.youtube.updateTitle(broadcast.videoId, input.title)
+        await this.youtube.updateMetadata(broadcast.videoId, input)
       }
     }
-    return this.snapshot(connection, input)
+    return this.snapshot(connection)
   }
 
   public async channelChat(id: string) {
@@ -164,7 +166,7 @@ export class LiveControlService {
     const live = await this.providerLive(connection)
     const metadata = LiveMetadataSchema.parse({
       category: live.category ?? live.gameName ?? null,
-      description: null,
+      description: live.description ?? null,
       emotesEnabled: null,
       followersOnly: null,
       language: live.language ?? null,
@@ -241,11 +243,20 @@ export class LiveControlService {
         } catch {
           // Live status remains useful when the optional analytics fields are unavailable.
         }
+        let metadata: Awaited<ReturnType<YouTubeBroadcastService['videoMetadata']>> = null
+        try {
+          metadata = await this.youtube.videoMetadata(broadcast.videoId)
+        } catch {
+          // Metadata remains available with the broadcast title when details are unavailable.
+        }
         return {
+          category: metadata?.category ?? null,
           channel: broadcast.title,
+          description: metadata?.description ?? null,
+          language: metadata?.language ?? null,
           startedAt: details.startedAt ?? broadcast.scheduledStartAt,
           state: 'online',
-          title: broadcast.title,
+          title: metadata?.title ?? broadcast.title,
           videoId: broadcast.videoId,
           viewerCount: details.viewerCount,
         }

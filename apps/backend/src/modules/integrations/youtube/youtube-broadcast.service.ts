@@ -93,6 +93,121 @@ export class YouTubeBroadcastService {
     if (!response.ok) throw await this.apiError(response)
   }
 
+  public async updateMetadata(
+    videoId: string,
+    input: {
+      category?: string | null | undefined
+      description?: string | null | undefined
+      language?: string | null | undefined
+      title?: string | undefined
+    },
+  ): Promise<void> {
+    const token = await this.auth.getAccessToken()
+    const readUrl = new URL('https://www.googleapis.com/youtube/v3/videos')
+    readUrl.search = new URLSearchParams({ id: videoId, part: 'snippet' }).toString()
+    const readResponse = await fetch(readUrl, {
+      headers: { authorization: `Bearer ${token.accessToken}` },
+    })
+    if (!readResponse.ok) throw await this.apiError(readResponse)
+    const payload = z
+      .object({ items: z.array(z.object({ snippet: z.record(z.string(), z.unknown()) })) })
+      .parse(await readResponse.json())
+    const snippet = payload.items[0]?.snippet
+    if (!snippet)
+      throw new ApiApplicationError(
+        'INTEGRATION_PROVIDER_ERROR',
+        'YouTube video metadata is unavailable',
+        503,
+      )
+    const currentCategoryId = typeof snippet.categoryId === 'string' ? snippet.categoryId : null
+    const categoryId =
+      input.category && input.category !== currentCategoryId
+        ? await this.resolveCategoryId(input.category, currentCategoryId)
+        : currentCategoryId
+    const response = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet', {
+      body: JSON.stringify({
+        id: videoId,
+        snippet: {
+          ...snippet,
+          categoryId,
+          defaultLanguage:
+            input.language === undefined ? snippet.defaultLanguage : input.language || undefined,
+          description:
+            input.description === undefined ? snippet.description : (input.description ?? ''),
+          title: input.title ?? snippet.title,
+        },
+      }),
+      headers: { authorization: `Bearer ${token.accessToken}`, 'content-type': 'application/json' },
+      method: 'PUT',
+    })
+    if (!response.ok) throw await this.apiError(response)
+  }
+
+  public async videoMetadata(videoId: string) {
+    const token = await this.auth.getAccessToken()
+    const url = new URL('https://www.googleapis.com/youtube/v3/videos')
+    url.search = new URLSearchParams({ id: videoId, part: 'snippet' }).toString()
+    const response = await fetch(url, { headers: { authorization: `Bearer ${token.accessToken}` } })
+    if (!response.ok) throw await this.apiError(response)
+    const payload = z
+      .object({
+        items: z.array(
+          z.object({
+            snippet: z.object({
+              categoryId: z.string().optional(),
+              defaultLanguage: z.string().optional(),
+              description: z.string().optional(),
+              title: z.string(),
+            }),
+          }),
+        ),
+      })
+      .parse(await response.json())
+    const snippet = payload.items[0]?.snippet
+    return snippet
+      ? {
+          category: snippet.categoryId ? await this.resolveCategoryName(snippet.categoryId) : null,
+          description: snippet.description ?? null,
+          language: snippet.defaultLanguage ?? null,
+          title: snippet.title,
+        }
+      : null
+  }
+
+  private async resolveCategoryId(value: string, fallback: string | null) {
+    if (/^\d+$/.test(value)) return value
+    const token = await this.auth.getAccessToken()
+    const url = new URL('https://www.googleapis.com/youtube/v3/videoCategories')
+    url.search = new URLSearchParams({
+      maxResults: '50',
+      part: 'snippet',
+      regionCode: 'BR',
+    }).toString()
+    const response = await fetch(url, { headers: { authorization: `Bearer ${token.accessToken}` } })
+    if (!response.ok) return fallback
+    const payload = z
+      .object({
+        items: z.array(z.object({ id: z.string(), snippet: z.object({ title: z.string() }) })),
+      })
+      .parse(await response.json())
+    return (
+      payload.items.find((item) => item.snippet.title.toLowerCase() === value.toLowerCase())?.id ??
+      fallback
+    )
+  }
+
+  private async resolveCategoryName(categoryId: string): Promise<string> {
+    const token = await this.auth.getAccessToken()
+    const url = new URL('https://www.googleapis.com/youtube/v3/videoCategories')
+    url.search = new URLSearchParams({ id: categoryId, part: 'snippet' }).toString()
+    const response = await fetch(url, { headers: { authorization: `Bearer ${token.accessToken}` } })
+    if (!response.ok) return categoryId
+    const payload = z
+      .object({ items: z.array(z.object({ snippet: z.object({ title: z.string() }) })) })
+      .parse(await response.json())
+    return payload.items[0]?.snippet.title ?? categoryId
+  }
+
   public async deleteMessage(messageId: string): Promise<void> {
     const token = await this.auth.getAccessToken()
     const url = new URL('https://www.googleapis.com/youtube/v3/liveChat/messages')

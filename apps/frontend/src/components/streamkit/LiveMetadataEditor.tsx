@@ -21,11 +21,25 @@ export function LiveMetadataEditor({
   showHeader?: boolean;
 }) {
   const [title, setTitle] = useState(metadata.title ?? "");
+  const [category, setCategory] = useState(metadata.category ?? "");
+  const [language, setLanguage] = useState(metadata.language ?? "");
+  const [description, setDescription] = useState(metadata.description ?? "");
+  const [slowMode, setSlowMode] = useState(Boolean(metadata.slowMode));
   const [draft, setDraft] = useState(false);
   useEffect(() => {
     setTitle(metadata.title ?? "");
+    setCategory(metadata.category ?? "");
+    setLanguage(metadata.language ?? "");
+    setDescription(metadata.description ?? "");
+    setSlowMode(Boolean(metadata.slowMode));
     setDraft(false);
-  }, [metadata.title]);
+  }, [
+    metadata.category,
+    metadata.description,
+    metadata.language,
+    metadata.slowMode,
+    metadata.title,
+  ]);
   return (
     <section className="flex h-full w-full min-h-0 flex-col overflow-y-auto bg-card p-4">
       {showHeader && (
@@ -56,16 +70,40 @@ export function LiveMetadataEditor({
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <label className="grid gap-1 text-xs font-medium">
           Categoria / jogo
-          <Input value={metadata.category ?? "Não informado"} disabled aria-readonly="true" />
+          <Input
+            value={category}
+            placeholder="Não informado"
+            disabled={!canEdit}
+            onChange={(event) => {
+              setCategory(event.target.value);
+              setDraft(true);
+            }}
+          />
         </label>
         <label className="grid gap-1 text-xs font-medium">
           Idioma
-          <Input value={metadata.language ?? "Não informado"} disabled aria-readonly="true" />
+          <Input
+            value={language}
+            placeholder="Não informado"
+            disabled={!canEdit}
+            onChange={(event) => {
+              setLanguage(event.target.value);
+              setDraft(true);
+            }}
+          />
         </label>
       </div>
       <label className="mt-3 grid gap-1 text-xs font-medium">
         Descrição
-        <Textarea value={metadata.description ?? "Não informado"} disabled aria-readonly="true" />
+        <Textarea
+          value={description}
+          placeholder="Não informado"
+          disabled={!canEdit}
+          onChange={(event) => {
+            setDescription(event.target.value);
+            setDraft(true);
+          }}
+        />
       </label>
       <div className="mt-3 grid gap-2 md:grid-cols-3">
         {controls.map(({ id, label, editable }) => (
@@ -75,9 +113,15 @@ export function LiveMetadataEditor({
           >
             {label}
             <Switch
-              checked={Boolean(metadata[id as keyof typeof metadata])}
+              checked={
+                id === "slowMode" ? slowMode : Boolean(metadata[id as keyof typeof metadata])
+              }
               disabled={!canEdit || !editable}
               aria-label={label}
+              onCheckedChange={(checked) => {
+                if (id === "slowMode") setSlowMode(checked);
+                setDraft(true);
+              }}
             />
           </label>
         ))}
@@ -87,7 +131,15 @@ export function LiveMetadataEditor({
           size="sm"
           loading={busy}
           disabled={!canEdit || !draft || !title.trim()}
-          onClick={() => void onSave({ title })}
+          onClick={() =>
+            void onSave({
+              category: category || null,
+              description: description || null,
+              language: language || null,
+              slowMode,
+              title,
+            })
+          }
         >
           Salvar
         </Button>
@@ -97,6 +149,10 @@ export function LiveMetadataEditor({
           disabled={!draft || busy}
           onClick={() => {
             setTitle(metadata.title ?? "");
+            setCategory(metadata.category ?? "");
+            setLanguage(metadata.language ?? "");
+            setDescription(metadata.description ?? "");
+            setSlowMode(Boolean(metadata.slowMode));
             setDraft(false);
           }}
         >

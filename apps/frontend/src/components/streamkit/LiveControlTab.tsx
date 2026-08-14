@@ -8,7 +8,6 @@ import { LivePlatformSelector } from "./LivePlatformSelector";
 import { LivePreview } from "./LivePreview";
 import { LiveChatPanel } from "./LiveChatPanel";
 import { LiveMetadataEditor } from "./LiveMetadataEditor";
-import { LiveActivityPanel } from "./LiveActivityPanel";
 
 const EMPTY_METADATA = {
   category: null,
@@ -106,7 +105,6 @@ export function LiveControlTab() {
                     showHeader={false}
                   />
                 </BaseDockPanel>
-                <LiveActivityPanel connected={Boolean(selected)} />
               </div>
             </BaseResizablePanel>
           </div>

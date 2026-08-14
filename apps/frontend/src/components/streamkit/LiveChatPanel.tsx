@@ -53,6 +53,7 @@ function Avatar({ message }: { message: FocusedChatMessage }) {
 }
 
 export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
+  const connectionId = stream?.connectionId ?? null;
   const [thread, setThread] = useState<FocusedChatThread | null>(null);
   const [displayedMessages, setDisplayedMessages] = useState<FocusedChatMessage[]>([]);
   const [privateUser, setPrivateUser] = useState<FocusedChatMessage | null>(null);
@@ -66,15 +67,13 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
   const drainTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    if (!stream) {
-      setThread(null);
-      setDisplayedMessages([]);
-      displayedIds.current.clear();
-      queuedIds.current.clear();
-      queue.current = [];
-      setError(null);
-      return;
-    }
+    setThread(null);
+    setDisplayedMessages([]);
+    displayedIds.current.clear();
+    queuedIds.current.clear();
+    queue.current = [];
+    setError(null);
+    if (!connectionId) return;
     let active = true;
     let timer: number | undefined;
     let delay = 1_500;
@@ -94,7 +93,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
     };
     const load = async () => {
       try {
-        const next = await liveControlApi.chat(stream.connectionId);
+        const next = await liveControlApi.chat(connectionId);
         if (active) {
           setThread(next);
           const incoming = next.messages.filter(
@@ -132,7 +131,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
       if (timer) window.clearTimeout(timer);
       if (drainTimer.current) window.clearTimeout(drainTimer.current);
     };
-  }, [stream]);
+  }, [connectionId]);
 
   const writer = thread?.connections.find(
     (item) => item.status === "connected" && item.capabilities.includes("chat.write"),
