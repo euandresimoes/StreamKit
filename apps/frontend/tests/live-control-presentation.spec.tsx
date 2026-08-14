@@ -31,6 +31,13 @@ const stream = (overrides: Partial<LiveStream> = {}): LiveStream => ({
 });
 
 describe("Live Control presentation", () => {
+  it("keeps the preview panel visible while no transmission is connected", () => {
+    const markup = renderToStaticMarkup(<LivePreview stream={null} />);
+
+    expect(markup).not.toContain("<iframe");
+    expect(markup).toContain("aguardando uma transmissão conectada");
+  });
+
   it("uses the official Twitch player with the required parent", () => {
     const markup = renderToStaticMarkup(<LivePreview stream={stream()} />);
 

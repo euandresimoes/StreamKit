@@ -2,7 +2,13 @@ import type { LiveStream } from "@streamkit/contracts";
 import { ExternalLink, Radio } from "lucide-react";
 import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 
-export function LivePreview({ stream }: { stream: LiveStream }) {
+export function LivePreview({ stream }: { stream: LiveStream | null }) {
+  if (!stream)
+    return (
+      <div className="flex min-h-64 items-center justify-center rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
+        <p>Preview oficial aguardando uma transmissão conectada.</p>
+      </div>
+    );
   if (stream.preview.state !== "ready")
     return (
       <div className="flex min-h-64 items-center justify-center rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">

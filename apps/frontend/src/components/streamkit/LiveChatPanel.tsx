@@ -8,12 +8,17 @@ import { integrationApi } from "@/modules/integration/integration-api";
 import { liveControlApi } from "@/modules/live-control/live-control-api";
 import { MAX_VISIBLE_CHAT_MESSAGES } from "@/modules/performance/bounded-render-window";
 
-export function LiveChatPanel({ stream }: { stream: LiveStream }) {
+export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
   const [thread, setThread] = useState<FocusedChatThread | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   useEffect(() => {
+    if (!stream) {
+      setThread(null);
+      setError(null);
+      return;
+    }
     let active = true;
     let timer: number | undefined;
     let delay = 1_500;
@@ -44,7 +49,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream }) {
       active = false;
       if (timer) window.clearTimeout(timer);
     };
-  }, [stream.connectionId]);
+  }, [stream]);
   const writer = thread?.connections.find(
     (item) => item.status === "connected" && item.capabilities.includes("chat.write"),
   );
@@ -64,7 +69,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream }) {
   return (
     <section className="flex min-h-64 flex-col rounded-2xl border border-border bg-card">
       <header className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-semibold">
-        <BaseBrandIcon provider={stream.provider} />
+        {stream && <BaseBrandIcon provider={stream.provider} />}
         Chat da live
       </header>
       <div role="log" aria-live="polite" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
@@ -81,7 +86,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream }) {
         )}
         {!thread?.messages.length && (
           <p className="py-8 text-center text-xs text-muted-foreground">
-            Nenhuma mensagem recente.
+            {stream ? "Nenhuma mensagem recente." : "Chat aguardando uma transmissão conectada."}
           </p>
         )}
       </div>

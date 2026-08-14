@@ -28,7 +28,9 @@ export function LiveMetadataEditor({
         <div>
           <h3 className="text-sm font-semibold">Metadados da live</h3>
           <p className="text-xs text-muted-foreground">
-            Valores atuais do provider; alterações ficam marcadas como rascunho.
+            {canEdit
+              ? "Valores atuais do provider; alterações ficam marcadas como rascunho."
+              : "Conecte uma plataforma para habilitar a edição dos metadados."}
           </p>
         </div>
         {draft && <span className="text-xs text-warning">Alterado localmente</span>}
