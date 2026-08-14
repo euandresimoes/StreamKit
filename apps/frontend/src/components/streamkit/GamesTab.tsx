@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -928,32 +928,10 @@ export function GamesTab() {
             )}
             <div className="relative flex min-h-[calc(100%_-_32px)] min-w-[720px] gap-8">
               {!!bracketMatches.length && (
-                <svg
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 z-0 size-full overflow-visible"
-                  preserveAspectRatio="none"
-                  viewBox={`0 0 ${(Math.max(1, maxRound) + 1) * 100} 100`}
-                >
-                  {Array.from({ length: Math.max(0, maxRound) }, (_, roundIndex) => {
-                    const matchCount = detail.tournament.bracketSize / 2 ** (roundIndex + 1);
-                    return Array.from({ length: matchCount }, (_, matchIndex) => {
-                      const fromY = ((matchIndex + 0.5) / matchCount) * 100;
-                      const nextCount = Math.max(1, matchCount / 2);
-                      const toY = ((Math.floor(matchIndex / 2) + 0.5) / nextCount) * 100;
-                      const boundary = (roundIndex + 1) * 100;
-                      return (
-                        <polyline
-                          key={`${roundIndex}-${matchIndex}`}
-                          fill="none"
-                          points={`${boundary - 5},${fromY} ${boundary},${fromY} ${boundary},${toY} ${boundary + 5},${toY}`}
-                          stroke="var(--border-strong)"
-                          strokeWidth="1"
-                          vectorEffect="non-scaling-stroke"
-                        />
-                      );
-                    });
-                  }).flat()}
-                </svg>
+                <BracketConnections
+                  roundCount={maxRound}
+                  version={bracketMatches.map((match) => match.id).join(":")}
+                />
               )}
               {Array.from(new Set(bracketMatches.map((match) => match.roundNumber))).map(
                 (round) => (
@@ -961,7 +939,7 @@ export function GamesTab() {
                     <div className="flex flex-1 flex-col justify-around gap-4 py-3">
                       {bracketMatches
                         .filter((match) => match.roundNumber === round)
-                        .map((match) => {
+                        .map((match, matchIndex) => {
                           const left = bracketEntries.find(
                             (entry) => entry.id === match.leftEntryId,
                           );
@@ -974,6 +952,8 @@ export function GamesTab() {
                           return (
                             <div
                               role={detail.matches.length ? "button" : undefined}
+                              data-bracket-index={matchIndex}
+                              data-bracket-round={round}
                               tabIndex={detail.matches.length ? 0 : undefined}
                               key={match.id}
                               onClick={() => {
@@ -1138,7 +1118,10 @@ export function GamesTab() {
                 ),
               )}
               {!!bracketMatches.length && (
-                <div className="z-10 flex min-w-52 flex-1 items-center py-3">
+                <div
+                  data-bracket-champion="true"
+                  className="z-10 flex min-w-52 flex-1 items-center py-3"
+                >
                   <div className="flex w-full items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 text-[12.5px]">
                     <span className="min-w-0 flex-1 truncate text-muted-foreground">
                       {champion?.name ?? "A definir"}
@@ -1424,5 +1407,91 @@ export function GamesTab() {
         <FocusedChatPanel target="tournaments" targetId={detail.tournament.id} />
       )}
     </div>
+  );
+}
+
+type BracketLine = {
+  id: string;
+  points: string;
+};
+
+function BracketConnections({ roundCount, version }: { roundCount: number; version: string }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [geometry, setGeometry] = useState<{ height: number; lines: BracketLine[]; width: number }>(
+    {
+      height: 0,
+      lines: [],
+      width: 0,
+    },
+  );
+
+  useLayoutEffect(() => {
+    const svg = svgRef.current;
+    const container = svg?.parentElement;
+    if (!svg || !container) return;
+
+    const measure = () => {
+      const containerRect = container.getBoundingClientRect();
+      const champion = container.querySelector<HTMLElement>("[data-bracket-champion]");
+      const lines: BracketLine[] = [];
+      for (let round = 1; round <= roundCount; round += 1) {
+        const matches = Array.from(
+          container.querySelectorAll<HTMLElement>(`[data-bracket-round="${round}"]`),
+        );
+        const nextMatches = Array.from(
+          container.querySelectorAll<HTMLElement>(`[data-bracket-round="${round + 1}"]`),
+        );
+        matches.forEach((match, index) => {
+          const target = round === roundCount ? champion : nextMatches[Math.floor(index / 2)];
+          if (!target) return;
+          const sourceRect = match.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          const x1 = sourceRect.right - containerRect.left;
+          const y1 = sourceRect.top + sourceRect.height / 2 - containerRect.top;
+          const x2 = targetRect.left - containerRect.left;
+          const y2 = targetRect.top + targetRect.height / 2 - containerRect.top;
+          const middle = x1 + (x2 - x1) / 2;
+          lines.push({
+            id: `${round}-${index}`,
+            points: `${x1},${y1} ${middle},${y1} ${middle},${y2} ${x2},${y2}`,
+          });
+        });
+      }
+      setGeometry({ height: container.scrollHeight, lines, width: container.scrollWidth });
+    };
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    container
+      .querySelectorAll<HTMLElement>("[data-bracket-round], [data-bracket-champion]")
+      .forEach((element) => observer.observe(element));
+    window.addEventListener("resize", measure);
+    measure();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [roundCount, version]);
+
+  return (
+    <svg
+      ref={svgRef}
+      aria-hidden="true"
+      className="pointer-events-none absolute left-0 top-0 z-0 overflow-visible"
+      height={geometry.height}
+      width={geometry.width}
+      viewBox={`0 0 ${geometry.width} ${geometry.height}`}
+    >
+      {geometry.lines.map((line) => (
+        <polyline
+          key={line.id}
+          fill="none"
+          points={line.points}
+          stroke="var(--border-strong)"
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+        />
+      ))}
+    </svg>
   );
 }
