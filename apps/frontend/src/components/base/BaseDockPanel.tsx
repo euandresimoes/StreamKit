@@ -38,7 +38,7 @@ export function BaseDockPanel({
   if (!resize)
     return (
       <section
-        className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-card ${stretch ? "flex-1" : "flex-none"} ${className}`}
+        className={`flex min-h-0 min-w-0 flex-col overflow-hidden border border-border bg-card ${stretch ? "flex-1" : "flex-none"} ${className}`}
       >
         {content}
       </section>
