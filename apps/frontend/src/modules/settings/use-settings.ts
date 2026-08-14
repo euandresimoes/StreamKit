@@ -4,6 +4,17 @@ import { useCallback, useEffect, useState } from "react";
 import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 import { settingsApi } from "./settings-api";
 
+function applyTheme(theme: AppSettings["theme"]) {
+  const resolved =
+    theme === "system"
+      ? window.matchMedia("(prefers-color-scheme: light)").matches
+        ? "light"
+        : "dark"
+      : theme;
+  document.documentElement.classList.toggle("dark", resolved === "dark");
+  document.documentElement.classList.toggle("light", resolved === "light");
+}
+
 export function useSettings(active: boolean) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [credentialConfigured, setCredentialConfigured] = useState(false);
@@ -18,6 +29,7 @@ export function useSettings(active: boolean) {
         settingsApi.credentialStatus(),
       ]);
       setSettings(nextSettings);
+      applyTheme(nextSettings.theme);
       document.documentElement.dataset["reduceMotion"] = String(nextSettings["reduceMotion"]);
       setCredentialConfigured(credential.configured);
     } catch (cause) {
@@ -47,6 +59,7 @@ export function useSettings(active: boolean) {
       const saved = await settingsApi.update(input);
       await getDesktopBridge().applySettings(input);
       setSettings(saved);
+      applyTheme(saved.theme);
       document.documentElement.dataset["reduceMotion"] = String(saved["reduceMotion"]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível salvar a configuração.");

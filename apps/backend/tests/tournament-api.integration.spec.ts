@@ -275,4 +275,41 @@ describe('Tournament API', () => {
       expect.arrayContaining(['team_member.added', 'team_member.moved', 'match.winner_set']),
     )
   })
+
+  it('shrinks an automatically prepared team bracket without foreign key violations', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    backend = await startLocalBackend({
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+    const tournament = TournamentSchema.parse(
+      await (
+        await call('/api/v1/tournaments', 'POST', {
+          bracketSize: 8,
+          description: null,
+          mode: 'team',
+          name: 'International teams',
+          teamCapacity: 3,
+        })
+      ).json(),
+    )
+    const response = await call(`/api/v1/tournaments/${tournament.id}`, 'PATCH', {
+      bracketSize: 4,
+      description: null,
+      mode: 'team',
+      name: tournament.name,
+      teamCapacity: 3,
+    })
+    expect(response.status).toBe(200)
+    const detail = TournamentDetailSchema.parse(
+      await (await call(`/api/v1/tournaments/${tournament.id}`)).json(),
+    )
+    expect(detail.teams).toHaveLength(4)
+    expect(detail.teams.map((team) => team.name)).toEqual([
+      'Phoenix',
+      'Titans',
+      'Wolves',
+      'Dragons',
+    ])
+  })
 })

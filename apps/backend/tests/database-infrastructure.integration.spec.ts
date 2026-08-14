@@ -95,7 +95,7 @@ describe('SQLite infrastructure', () => {
           {
             destructive: false,
             name: 'broken',
-            sql: 'CREATE TABLE partial_write (id TEXT); INSERT INTO migration_target_that_does_not_exist VALUES (1);',
+            sql: 'CREATE TABLE partial_write (id TEXT); THIS IS INVALID SQL;',
             version: 99,
           },
         ],

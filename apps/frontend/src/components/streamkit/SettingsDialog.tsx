@@ -19,10 +19,9 @@ const nav: { id: Section; label: string; icon: typeof Palette; hint: string }[] 
 ];
 
 const themes = [
-  { id: "graphite", label: "Grafite quente", swatch: "oklch(0.24 0.006 70)" },
-  { id: "black", label: "Preto neutro", swatch: "oklch(0.12 0 0)" },
-  { id: "slate", label: "Grafite frio", swatch: "oklch(0.26 0.01 260)" },
-];
+  { id: "dark" as const, label: "Escuro", swatch: "oklch(0.12 0 0)" },
+  { id: "light" as const, label: "Branco", swatch: "oklch(0.97 0.004 75)" },
+] as const;
 
 function Row({
   title,
@@ -102,19 +101,14 @@ export function SettingsDialog({
                 <p className="text-[12px] text-muted-foreground">
                   Escolha o tema e o conforto visual para lives longas.
                 </p>
-                <div className="mt-4 grid grid-cols-3 gap-3">
+                <div className="mt-4 grid grid-cols-2 gap-3">
                   {themes.map((t) => (
                     <button
                       key={t.id}
-                      onClick={() =>
-                        void persisted.update({ theme: t.id === "black" ? "dark" : "system" })
-                      }
+                      onClick={() => void persisted.update({ theme: t.id })}
                       className={cn(
                         "raise rounded-2xl border p-3 text-left",
-                        (theme === "dark" && t.id === "black") ||
-                          (theme === "system" && t.id !== "black")
-                          ? "border-primary bg-surface-2/70"
-                          : "border-border",
+                        theme === t.id ? "border-primary bg-surface-2/70" : "border-border",
                       )}
                     >
                       <span
@@ -123,10 +117,7 @@ export function SettingsDialog({
                       />
                       <span className="mt-2 flex items-center gap-1 text-[12px] font-medium">
                         {t.label}
-                        {((theme === "dark" && t.id === "black") ||
-                          (theme === "system" && t.id === "graphite")) && (
-                          <Check className="size-3 text-primary" />
-                        )}
+                        {theme === t.id && <Check className="size-3 text-primary" />}
                       </span>
                     </button>
                   ))}

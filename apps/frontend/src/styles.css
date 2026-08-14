@@ -115,6 +115,33 @@
   --ease-mac: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+:root.light {
+  --background: oklch(0.97 0.004 75);
+  --foreground: oklch(0.2 0.008 70);
+  --surface: oklch(0.99 0.002 75);
+  --surface-2: oklch(0.93 0.006 75);
+  --card: oklch(0.985 0.003 75);
+  --card-foreground: oklch(0.2 0.008 70);
+  --popover: oklch(0.99 0.002 75);
+  --popover-foreground: oklch(0.2 0.008 70);
+  --secondary: oklch(0.91 0.008 75);
+  --secondary-foreground: oklch(0.24 0.008 70);
+  --muted: oklch(0.92 0.006 75);
+  --muted-foreground: oklch(0.48 0.012 70);
+  --accent: oklch(0.9 0.012 70);
+  --accent-foreground: oklch(0.2 0.008 70);
+  --border: oklch(0.2 0.008 70 / 10%);
+  --border-strong: oklch(0.2 0.008 70 / 18%);
+  --input: oklch(0.2 0.008 70 / 12%);
+  --sidebar: oklch(0.945 0.005 75);
+  --sidebar-foreground: oklch(0.24 0.008 70);
+  --sidebar-accent: oklch(0.9 0.01 75);
+  --sidebar-accent-foreground: oklch(0.2 0.008 70);
+  --sidebar-border: oklch(0.2 0.008 70 / 10%);
+  --shadow-float: 0 1px 0 oklch(1 0 0 / 80%) inset, 0 12px 32px -20px oklch(0 0 0 / 28%);
+  --shadow-panel: 0 1px 0 oklch(1 0 0 / 90%) inset, 0 24px 60px -32px oklch(0 0 0 / 32%);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

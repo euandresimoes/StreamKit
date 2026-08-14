@@ -90,6 +90,10 @@ export function useTournaments() {
         : undefined,
     shuffleTeamMembers: () =>
       detail ? mutate(() => tournamentApi.shuffleTeamMembers(detail.tournament.id)) : undefined,
+    reorderTeam: (teamId: string, seed: number) =>
+      detail
+        ? mutate(() => tournamentApi.reorderTeam(detail.tournament.id, teamId, seed))
+        : undefined,
     reorderParticipant: (participantId: string, seed: number) =>
       detail
         ? mutate(() => tournamentApi.reorderParticipant(detail.tournament.id, participantId, seed))

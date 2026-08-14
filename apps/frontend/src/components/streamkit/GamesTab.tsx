@@ -383,7 +383,7 @@ export function GamesTab() {
             </div>
             {teamsExpanded && (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="flex gap-1.5 pb-3">
+                <div className="flex min-w-0 gap-2 pb-3">
                   <Input
                     value={name}
                     onChange={(event) => setName(event.target.value)}
@@ -395,7 +395,7 @@ export function GamesTab() {
                   />
                   <Button
                     size="icon-sm"
-                    className="shrink-0"
+                    className="size-8 shrink-0"
                     disabled={tournaments.busy || detail.matches.length > 0 || !name.trim()}
                     onClick={() => {
                       if (name.trim()) {
@@ -689,6 +689,13 @@ export function GamesTab() {
                       {overflowParticipants.map((participant) => (
                         <div
                           key={participant.id}
+                          draggable={!tournaments.busy && !detail.matches.length}
+                          onDragStart={(event) => {
+                            event.dataTransfer.setData("text/plain", participant.id);
+                            event.dataTransfer.effectAllowed = "move";
+                            setDraggedParticipantId(participant.id);
+                          }}
+                          onDragEnd={() => setDraggedParticipantId(null)}
                           className="flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 text-xs"
                         >
                           <UserX className="size-3.5 shrink-0 text-red-400/70" />
@@ -780,26 +787,71 @@ export function GamesTab() {
           </aside>
 
           <div className="glass-panel min-w-0 flex-1 overflow-auto rounded-3xl p-5">
-            <div className="flex items-center gap-2 pb-4">
-              <Trophy className="size-4 text-primary" />
-              <h3 className="text-[13px] font-semibold">Chaveamento real</h3>
-            </div>
-            <div className="flex min-w-[720px] gap-5">
+            {!!detail.matches.length && (
+              <div
+                className="sticky top-0 z-20 mb-3 grid min-w-[720px] gap-8 border-b border-border bg-background/90 pb-3 backdrop-blur-xl"
+                style={{
+                  gridTemplateColumns: `repeat(${new Set(detail.matches.map((match) => match.roundNumber)).size}, minmax(208px, 1fr))`,
+                }}
+              >
+                {Array.from(new Set(detail.matches.map((match) => match.roundNumber))).map(
+                  (round) => (
+                    <p
+                      key={round}
+                      className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      {round === maxRound ? "Final" : `Rodada ${round}`}
+                    </p>
+                  ),
+                )}
+              </div>
+            )}
+            <div className="relative flex min-h-[calc(100%_-_32px)] min-w-[720px] gap-8">
+              {!!detail.matches.length && (
+                <svg
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 z-0 size-full overflow-visible"
+                  preserveAspectRatio="none"
+                  viewBox={`0 0 ${Math.max(1, maxRound) * 100} 100`}
+                >
+                  {Array.from({ length: Math.max(0, maxRound - 1) }, (_, roundIndex) => {
+                    const matchCount = detail.tournament.bracketSize / 2 ** (roundIndex + 1);
+                    return Array.from({ length: matchCount }, (_, matchIndex) => {
+                      const fromY = ((matchIndex + 0.5) / matchCount) * 100;
+                      const nextCount = matchCount / 2;
+                      const toY = ((Math.floor(matchIndex / 2) + 0.5) / nextCount) * 100;
+                      const boundary = (roundIndex + 1) * 100;
+                      return (
+                        <polyline
+                          key={`${roundIndex}-${matchIndex}`}
+                          fill="none"
+                          points={`${boundary - 5},${fromY} ${boundary},${fromY} ${boundary},${toY} ${boundary + 5},${toY}`}
+                          stroke="var(--border-strong)"
+                          strokeWidth="1"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      );
+                    });
+                  }).flat()}
+                </svg>
+              )}
               {!detail.matches.length && (
                 <PreviewBracket
                   bracketSize={detail.tournament.bracketSize}
                   participants={
                     detail.tournament.mode === "team"
                       ? detail.teams.map((team) => ({
+                          color: team.color,
                           id: team.id,
                           displayName: team.name,
                           seed: team.seed,
                         }))
-                      : detail.participants
+                      : detail.participants.map((participant) => ({ ...participant, color: null }))
                   }
                   onDrop={(participantId, seed) => {
                     if (detail.tournament.mode === "individual")
                       void tournaments.reorderParticipant(participantId, seed);
+                    else void tournaments.reorderTeam(participantId, seed);
                     setDraggedParticipantId(null);
                   }}
                   onDragStart={setDraggedParticipantId}
@@ -807,11 +859,8 @@ export function GamesTab() {
               )}
               {Array.from(new Set(detail.matches.map((match) => match.roundNumber))).map(
                 (round) => (
-                  <div key={round} className="flex min-w-52 flex-1 flex-col">
-                    <p className="mb-3 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                      {round === maxRound ? "Final" : `Rodada ${round}`}
-                    </p>
-                    <div className="flex flex-1 flex-col justify-around gap-4">
+                  <div key={round} className="bracket-round z-10 flex min-w-52 flex-1 flex-col">
+                    <div className="flex flex-1 flex-col justify-around gap-4 py-3">
                       {detail.matches
                         .filter((match) => match.roundNumber === round)
                         .map((match) => {
@@ -840,7 +889,7 @@ export function GamesTab() {
                                 }
                               }}
                               className={cn(
-                                "group relative rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-accent/40",
+                                "bracket-match group relative rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-accent/40",
                                 active ? "border-primary ring-2 ring-primary/25" : "border-border",
                               )}
                             >
@@ -908,11 +957,6 @@ export function GamesTab() {
                                         alt=""
                                         className="size-5 shrink-0 rounded-full object-cover"
                                       />
-                                    ) : entry?.color ? (
-                                      <span
-                                        className="size-2.5 rounded-full"
-                                        style={{ backgroundColor: entry.color }}
-                                      />
                                     ) : detail.tournament.mode === "individual" && entry ? (
                                       <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-surface-2">
                                         <User className="size-3" />
@@ -937,6 +981,12 @@ export function GamesTab() {
                                               ? "Desistiu"
                                               : "Empate"}
                                       </span>
+                                    )}
+                                    {entry?.color && (
+                                      <span
+                                        className="size-2.5 shrink-0 rounded-full"
+                                        style={{ backgroundColor: entry.color }}
+                                      />
                                     )}
                                   </div>
                                 );
@@ -1230,7 +1280,12 @@ function PreviewBracket({
   onDragStart,
 }: {
   bracketSize: number;
-  participants: Array<{ id: string; displayName: string; seed: number | null }>;
+  participants: Array<{
+    color: string | null;
+    id: string;
+    displayName: string;
+    seed: number | null;
+  }>;
   onDrop(participantId: string, seed: number): void;
   onDragStart(participantId: string | null): void;
 }) {
@@ -1273,7 +1328,15 @@ function PreviewBracket({
                   )}
                 >
                   <span className="mr-2 text-[10px] tabular-nums opacity-50">{seed}</span>
-                  {participant?.displayName ?? "Arraste um participante"}
+                  <span className="min-w-0 flex-1 truncate">
+                    {participant?.displayName ?? "Arraste um participante"}
+                  </span>
+                  {participant?.color && (
+                    <span
+                      className="ml-2 size-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: participant.color }}
+                    />
+                  )}
                 </div>
               );
             })}

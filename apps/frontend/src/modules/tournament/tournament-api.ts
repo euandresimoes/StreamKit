@@ -89,6 +89,11 @@ export const tournamentApi = {
     apiClient.request(`/api/v1/tournaments/${id}/team-members/${memberId}`, { method: "DELETE" }),
   shuffleTeamMembers: (id: string) =>
     apiClient.request(`/api/v1/tournaments/${id}/team-members/shuffle`, { method: "POST" }),
+  reorderTeam: (id: string, teamId: string, seed: number) =>
+    apiClient.request(`/api/v1/tournaments/${id}/teams/${teamId}/reorder`, {
+      method: "POST",
+      body: { seed },
+    }),
   reorderParticipant: (id: string, participantId: string, seed: number) =>
     apiClient.request(`/api/v1/tournaments/${id}/participants/${participantId}/reorder`, {
       method: "POST",

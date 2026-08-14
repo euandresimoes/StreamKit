@@ -235,17 +235,10 @@ describe('desktop E2E harness', () => {
           })
         ).json(),
       )
-      let detail: ReturnType<typeof TournamentDetailSchema.parse> | undefined
-      for (const name of ['A', 'B', 'C', 'D'])
-        detail = TournamentDetailSchema.parse(
-          await (
-            await call(`/api/v1/tournaments/${tournament.id}/teams`, 'POST', {
-              color: '#D97757',
-              name,
-            })
-          ).json(),
-        )
-      const [first, second] = detail!.teams
+      let detail = TournamentDetailSchema.parse(
+        await (await call(`/api/v1/tournaments/${tournament.id}`)).json(),
+      )
+      const [first, second] = detail.teams
       detail = TournamentDetailSchema.parse(
         await (
           await call(`/api/v1/tournaments/${tournament.id}/teams/${first!.id}/members`, 'POST', {

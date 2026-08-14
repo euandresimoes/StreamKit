@@ -9,7 +9,17 @@ import {
   BackendConnectionSchema,
   type UpdateAppSettingsRequest,
 } from '@streamkit/contracts'
-import { app, BrowserWindow, Menu, nativeImage, powerMonitor, session, shell, Tray } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  Menu,
+  nativeImage,
+  nativeTheme,
+  powerMonitor,
+  session,
+  shell,
+  Tray,
+} from 'electron'
 import { z } from 'zod'
 
 import { registerNativeIpcHandlers, removeNativeIpcHandlers } from './ipc'
@@ -49,6 +59,16 @@ const LocalRendererUrlSchema = z
 
 function applyDesktopSettings(settings: UpdateAppSettingsRequest): void {
   desktopSettings = settings
+  if (process.platform !== 'darwin' && mainWindow) {
+    const light =
+      settings.theme === 'light' ||
+      (settings.theme === 'system' && !nativeTheme.shouldUseDarkColors)
+    mainWindow.setTitleBarOverlay({
+      color: '#00000000',
+      height: 40,
+      symbolColor: light ? '#292725' : '#f1efeb',
+    })
+  }
   app.setLoginItemSettings({ openAtLogin: settings.openAtLogin })
   if (settings.minimizeToTray && !tray) {
     const icon = nativeImage.createFromDataURL(
@@ -98,7 +118,7 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
       process.platform === 'darwin'
         ? true
         : {
-            color: '#1f1e1d',
+            color: '#00000000',
             height: 40,
             symbolColor: '#f1efeb',
           },

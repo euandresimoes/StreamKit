@@ -29,20 +29,20 @@ import {
 import { canOccupySlot, normalizedPersonName, reorderSeededValues } from './domain/team-slots'
 
 const DEFAULT_TEAM_NAMES = [
-  'Fênix',
-  'Titãs',
-  'Lobos',
-  'Dragões',
+  'Phoenix',
+  'Titans',
+  'Wolves',
+  'Dragons',
   'Ravens',
-  'Valkírias',
+  'Valkyries',
   'Orion',
   'Atlas',
   'Nova',
   'Hydra',
   'Eclipse',
-  'Tempestade',
-  'Sentinelas',
-  'Vórtice',
+  'Tempest',
+  'Sentinels',
+  'Vortex',
   'Aurora',
   'Nexus',
   'Spartans',
@@ -816,8 +816,14 @@ export class TournamentRepository {
       .where(eq(tournamentTeams.tournamentId, id))
       .orderBy(asc(tournamentTeams.seed))
       .all()
-    for (const team of teams.slice(bracketSize))
+    for (const team of teams.slice(bracketSize)) {
+      this.database.orm
+        .delete(tournamentTeamMembers)
+        .where(eq(tournamentTeamMembers.teamId, team.id))
+        .run()
+      this.database.orm.delete(tournamentEntries).where(eq(tournamentEntries.teamId, team.id)).run()
       this.database.orm.delete(tournamentTeams).where(eq(tournamentTeams.id, team.id)).run()
+    }
     const now = new Date().toISOString()
     for (let index = teams.length; index < bracketSize; index += 1) {
       const teamId = randomUUID()
@@ -886,7 +892,44 @@ export class TournamentRepository {
       .where(eq(tournamentEntries.tournamentId, id))
       .orderBy(asc(tournamentEntries.seed))
     const index = entries.findIndex((entry) => entry.participantId === participantId)
-    if (index < 0) return 'missing' as const
+    if (index < 0) {
+      const participant = this.database.orm
+        .select()
+        .from(tournamentParticipants)
+        .where(
+          and(
+            eq(tournamentParticipants.id, participantId),
+            eq(tournamentParticipants.tournamentId, id),
+          ),
+        )
+        .get()
+      if (!participant || seed < 1 || seed > tournament.bracketSize) return 'missing' as const
+      const displaced = entries.find((entry) => entry.seed === seed)
+      this.database.transaction(() => {
+        if (displaced)
+          this.database.orm
+            .delete(tournamentEntries)
+            .where(eq(tournamentEntries.id, displaced.id))
+            .run()
+        this.database.orm
+          .insert(tournamentEntries)
+          .values({
+            createdAt: new Date().toISOString(),
+            id: randomUUID(),
+            participantId,
+            seed,
+            teamId: null,
+            tournamentId: id,
+          })
+          .run()
+        this.audit(id, 'participant.promoted', {
+          displacedParticipantId: displaced?.participantId ?? null,
+          participantId,
+          seed,
+        })
+      })
+      return this.detail(id)
+    }
     const reordered = reorderSeededValues(entries, index, seed)
     this.database.transaction(() => {
       this.applySeeds(reordered)

@@ -182,11 +182,10 @@ describe('focused chat buffer', () => {
       name: 'Focused team cup',
       teamCapacity: 2,
     })
-    let detail = tournamentDetail(
-      await tournaments.addTeam(tournament.id, 'Campeões', '#3B82F6', 2),
+    let detail = tournamentDetail(await tournaments.detail(tournament.id))
+    detail = tournamentDetail(
+      await tournaments.updateTeam(tournament.id, detail.teams[0]!.id, 'Campeões', '#3B82F6', 2),
     )
-    for (const name of ['B', 'C', 'D'])
-      detail = tournamentDetail(await tournaments.addTeam(tournament.id, name, '#D97757', 2))
     const championTeam = detail.teams.find((team) => team.name === 'Campeões')!
     const captures = new TournamentCaptureRepository(database)
     const rule = await captures.save(tournament.id, {
