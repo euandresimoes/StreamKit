@@ -133,9 +133,9 @@ export function GamesTab() {
         }).flat()
       : [];
   const bracketMatches = detail?.matches.length ? detail.matches : previewMatches;
-  const maxRound =
-    detail?.matches.reduce((maximum, match) => Math.max(maximum, match.roundNumber), 0) ??
-    Math.log2(detail?.tournament.bracketSize ?? 4);
+  const maxRound = detail?.matches.length
+    ? detail.matches.reduce((maximum, match) => Math.max(maximum, match.roundNumber), 0)
+    : Math.log2(detail?.tournament.bracketSize ?? 4);
   const champion = detail?.championEntryId
     ? (bracketEntries.find((entry) => entry.id === detail.championEntryId) ?? null)
     : null;
