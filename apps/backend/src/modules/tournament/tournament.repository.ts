@@ -28,6 +28,55 @@ import {
 } from './domain/single-elimination'
 import { canOccupySlot, normalizedPersonName, reorderSeededValues } from './domain/team-slots'
 
+const DEFAULT_TEAM_NAMES = [
+  'Fênix',
+  'Titãs',
+  'Lobos',
+  'Dragões',
+  'Ravens',
+  'Valkírias',
+  'Orion',
+  'Atlas',
+  'Nova',
+  'Hydra',
+  'Eclipse',
+  'Tempestade',
+  'Sentinelas',
+  'Vórtice',
+  'Aurora',
+  'Nexus',
+  'Spartans',
+  'Kraken',
+  'Apex',
+  'Pulse',
+  'Quantum',
+  'Blaze',
+  'Storm',
+  'Cosmos',
+  'Legacy',
+  'Prime',
+  'Vertex',
+  'Zenith',
+  'Guardians',
+  'Rebels',
+  'Legends',
+  'Impact',
+] as const
+const DEFAULT_TEAM_COLORS = [
+  '#EF4444',
+  '#F97316',
+  '#EAB308',
+  '#22C55E',
+  '#14B8A6',
+  '#06B6D4',
+  '#3B82F6',
+  '#6366F1',
+  '#8B5CF6',
+  '#A855F7',
+  '#EC4899',
+  '#F43F5E',
+] as const
+
 @Injectable()
 export class TournamentRepository {
   public constructor(@Inject(SQLITE_DATABASE) private readonly database: SqliteDatabase) {}
@@ -42,8 +91,11 @@ export class TournamentRepository {
       status: 'draft' as const,
       updatedAt: now,
     }
-    await this.database.orm.insert(tournaments).values(row)
-    this.audit(row.id, 'tournament.created', { bracketSize: row.bracketSize, mode: row.mode })
+    this.database.transaction(() => {
+      this.database.orm.insert(tournaments).values(row).run()
+      if (row.mode === 'team') this.reconcileTeams(row.id, row.bracketSize, row.teamCapacity ?? 3)
+      this.audit(row.id, 'tournament.created', { bracketSize: row.bracketSize, mode: row.mode })
+    })
     return TournamentSchema.parse(row)
   }
   public async list() {
@@ -76,6 +128,8 @@ export class TournamentRepository {
         this.adaptTournamentMode(id, current.mode, input.mode, teamCapacity ?? 3)
       if (mode === 'individual' && input.bracketSize !== undefined)
         this.reconcileIndividualEntries(id, input.bracketSize)
+      if (mode === 'team' && (input.bracketSize !== undefined || current.mode !== mode))
+        this.reconcileTeams(id, input.bracketSize ?? current.bracketSize, teamCapacity ?? 3)
       this.database.orm.update(tournaments).set(next).where(eq(tournaments.id, id)).run()
       this.audit(id, 'tournament.structure.updated', {
         bracketSize: input.bracketSize ?? current.bracketSize,
@@ -546,9 +600,9 @@ export class TournamentRepository {
       .select()
       .from(tournamentParticipants)
       .where(eq(tournamentParticipants.tournamentId, id))
-    if (!teams.length || participants.length > teams.reduce((sum, team) => sum + team.capacity, 0))
-      return 'conflict' as const
-    const shuffled = secureShuffle(participants)
+    if (!teams.length) return 'conflict' as const
+    const totalCapacity = teams.reduce((sum, team) => sum + team.capacity, 0)
+    const shuffled = secureShuffle(participants).slice(0, totalCapacity)
     this.database.transaction(() => {
       this.database.orm
         .delete(tournamentTeamMembers)
@@ -753,6 +807,44 @@ export class TournamentRepository {
         .get()!.count < bracketSize
     ) {
       if (!this.promoteQueuedParticipant(id, bracketSize)) break
+    }
+  }
+  private reconcileTeams(id: string, bracketSize: number, capacity: number): void {
+    const teams = this.database.orm
+      .select()
+      .from(tournamentTeams)
+      .where(eq(tournamentTeams.tournamentId, id))
+      .orderBy(asc(tournamentTeams.seed))
+      .all()
+    for (const team of teams.slice(bracketSize))
+      this.database.orm.delete(tournamentTeams).where(eq(tournamentTeams.id, team.id)).run()
+    const now = new Date().toISOString()
+    for (let index = teams.length; index < bracketSize; index += 1) {
+      const teamId = randomUUID()
+      this.database.orm
+        .insert(tournamentTeams)
+        .values({
+          capacity,
+          color: DEFAULT_TEAM_COLORS[index % DEFAULT_TEAM_COLORS.length]!,
+          createdAt: now,
+          id: teamId,
+          name: DEFAULT_TEAM_NAMES[index % DEFAULT_TEAM_NAMES.length]!,
+          seed: index + 1,
+          tournamentId: id,
+          updatedAt: now,
+        })
+        .run()
+      this.database.orm
+        .insert(tournamentEntries)
+        .values({
+          createdAt: now,
+          id: randomUUID(),
+          participantId: null,
+          seed: index + 1,
+          teamId,
+          tournamentId: id,
+        })
+        .run()
     }
   }
   private promoteQueuedParticipant(id: string, bracketSize: number): boolean {

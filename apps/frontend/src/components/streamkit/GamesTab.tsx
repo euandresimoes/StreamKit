@@ -382,7 +382,7 @@ export function GamesTab() {
               </Button>
             </div>
             {teamsExpanded && (
-              <>
+              <div className="flex min-h-0 flex-1 flex-col">
                 <div className="flex gap-1.5 pb-3">
                   <Input
                     value={name}
@@ -420,7 +420,12 @@ export function GamesTab() {
                     <Sparkles /> Sortear participantes
                   </Button>
                 )}
-                <div className="space-y-2 overflow-y-auto">
+                <div
+                  className={cn(
+                    "min-h-0 space-y-2 overflow-y-auto",
+                    detail.tournament.mode === "individual" ? "flex-[4_1_0%]" : "flex-1",
+                  )}
+                >
                   {detail.tournament.mode === "team"
                     ? detail.teams.map((team) => {
                         const members = detail.teamMembers.filter(
@@ -611,7 +616,11 @@ export function GamesTab() {
                         <div
                           key={participant.id}
                           draggable={!tournaments.busy && !detail.matches.length}
-                          onDragStart={() => setDraggedParticipantId(participant.id)}
+                          onDragStart={(event) => {
+                            event.dataTransfer.setData("text/plain", participant.id);
+                            event.dataTransfer.effectAllowed = "move";
+                            setDraggedParticipantId(participant.id);
+                          }}
                           onDragEnd={() => setDraggedParticipantId(null)}
                           className="raise flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[13px]"
                         >
@@ -654,13 +663,14 @@ export function GamesTab() {
                 {detail.tournament.mode === "individual" && !detail.matches.length && (
                   <section
                     className={cn(
-                      "mt-3 max-h-36 overflow-hidden rounded-xl border border-red-500/20 bg-red-500/[0.06] p-2 transition-colors",
+                      "mt-3 flex min-h-0 flex-[1_1_0%] flex-col overflow-hidden rounded-xl border border-red-500/20 bg-red-500/[0.06] p-2 transition-colors",
                       draggedParticipantId && "border-red-400/50 bg-red-500/10",
                     )}
                     onDragOver={(event) => event.preventDefault()}
-                    onDrop={() => {
-                      if (draggedParticipantId)
-                        void tournaments.queueParticipant(draggedParticipantId);
+                    onDrop={(event) => {
+                      const participantId =
+                        event.dataTransfer.getData("text/plain") || draggedParticipantId;
+                      if (participantId) void tournaments.queueParticipant(participantId);
                       setDraggedParticipantId(null);
                     }}
                   >
@@ -675,7 +685,7 @@ export function GamesTab() {
                         Arraste uma pessoa do chaveamento para cá
                       </p>
                     )}
-                    <div className="max-h-40 space-y-1 overflow-y-auto">
+                    <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
                       {overflowParticipants.map((participant) => (
                         <div
                           key={participant.id}
@@ -706,7 +716,7 @@ export function GamesTab() {
                     </div>
                   </section>
                 )}
-              </>
+              </div>
             )}
             {!teamsExpanded && (
               <TooltipProvider delayDuration={250}>
@@ -787,9 +797,9 @@ export function GamesTab() {
                         }))
                       : detail.participants
                   }
-                  onDrop={(seed) => {
-                    if (draggedParticipantId && detail.tournament.mode === "individual")
-                      void tournaments.reorderParticipant(draggedParticipantId, seed);
+                  onDrop={(participantId, seed) => {
+                    if (detail.tournament.mode === "individual")
+                      void tournaments.reorderParticipant(participantId, seed);
                     setDraggedParticipantId(null);
                   }}
                   onDragStart={setDraggedParticipantId}
@@ -1221,7 +1231,7 @@ function PreviewBracket({
 }: {
   bracketSize: number;
   participants: Array<{ id: string; displayName: string; seed: number | null }>;
-  onDrop(seed: number): void;
+  onDrop(participantId: string, seed: number): void;
   onDragStart(participantId: string | null): void;
 }) {
   const bySeed = new Map(participants.map((participant) => [participant.seed, participant]));
@@ -1244,10 +1254,18 @@ function PreviewBracket({
                 <div
                   key={seed}
                   draggable={Boolean(participant)}
-                  onDragStart={() => participant && onDragStart(participant.id)}
+                  onDragStart={(event) => {
+                    if (!participant) return;
+                    event.dataTransfer.setData("text/plain", participant.id);
+                    event.dataTransfer.effectAllowed = "move";
+                    onDragStart(participant.id);
+                  }}
                   onDragEnd={() => onDragStart(null)}
                   onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => onDrop(seed)}
+                  onDrop={(event) => {
+                    const participantId = event.dataTransfer.getData("text/plain");
+                    if (participantId) onDrop(participantId, seed);
+                  }}
                   className={cn(
                     "flex min-h-9 items-center px-3 text-[12.5px] transition-colors",
                     slotIndex === 0 && "border-b border-border",

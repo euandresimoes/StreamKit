@@ -148,14 +148,19 @@ describe('Tournament API', () => {
     let detail = TournamentDetailSchema.parse(
       await (await call(`/api/v1/tournaments/${tournament.id}`)).json(),
     )
-    expect(detail.teams).toEqual([])
-    for (const name of ['Azul', 'Verde', 'Roxo', 'Laranja'])
+    expect(detail.teams).toHaveLength(4)
+    for (const [index, name] of ['Azul', 'Verde', 'Roxo', 'Laranja'].entries())
       detail = TournamentDetailSchema.parse(
         await (
-          await call(`/api/v1/tournaments/${tournament.id}/teams`, 'POST', {
-            color: '#D97757',
-            name,
-          })
+          await call(
+            `/api/v1/tournaments/${tournament.id}/teams/${detail.teams[index]!.id}`,
+            'PATCH',
+            {
+              capacity: 2,
+              color: '#D97757',
+              name,
+            },
+          )
         ).json(),
       )
     const [blue, green, purple, orange] = detail.teams
@@ -267,12 +272,7 @@ describe('Tournament API', () => {
     )
     expect(detail.championEntryId).toBe(final.leftEntryId)
     expect(detail.auditLog.map((entry) => entry.action)).toEqual(
-      expect.arrayContaining([
-        'team.added',
-        'team_member.added',
-        'team_member.moved',
-        'match.winner_set',
-      ]),
+      expect.arrayContaining(['team_member.added', 'team_member.moved', 'match.winner_set']),
     )
   })
 })

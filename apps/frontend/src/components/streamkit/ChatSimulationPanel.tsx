@@ -1,6 +1,6 @@
 import type { ChatSimulationStatus } from "@streamkit/contracts";
 import { FlaskConical, Square } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,23 +17,36 @@ export function ChatSimulationPanel({
   channelId,
   defaultMessage,
   enabled,
+  onProgress,
   provider,
 }: {
   channelId: string;
   defaultMessage: string;
   enabled: boolean;
+  onProgress?: () => Promise<void>;
   provider: "kick" | "twitch" | "youtube";
 }) {
   const [status, setStatus] = useState<ChatSimulationStatus | null>(null);
   const [count, setCount] = useState<8 | 16 | 32 | 1000 | 10000>(32);
   const [message, setMessage] = useState(defaultMessage);
+  const processedCountRef = useRef(0);
+  const onProgressRef = useRef(onProgress);
   useEffect(() => setMessage(defaultMessage), [defaultMessage]);
+  useEffect(() => {
+    onProgressRef.current = onProgress;
+  }, [onProgress]);
   useEffect(() => {
     const timer = window.setInterval(
       () =>
         void integrationApi
           .simulationStatus()
-          .then(setStatus)
+          .then((next) => {
+            setStatus(next);
+            if (next.processedCount !== processedCountRef.current) {
+              processedCountRef.current = next.processedCount;
+              void onProgressRef.current?.();
+            }
+          })
           .catch(() => undefined),
       500,
     );

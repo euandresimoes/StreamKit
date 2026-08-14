@@ -185,6 +185,7 @@ export function ParticipantChatCapturePanel({
               channelId={currentConnection.channelId}
               defaultMessage={match === "any" ? "mensagem simulada" : matchValue.trim()}
               enabled={Boolean(isCapturing)}
+              onProgress={onRefresh}
               provider={currentConnection.provider}
             />
           )}
