@@ -16,12 +16,57 @@ import { YouTubeAuthService } from './youtube-auth.service'
 
 @Injectable()
 export class YouTubeBroadcastService {
+  private static readonly BROADCASTS_CACHE_TTL_MS = 30_000
+  private static readonly LIVE_DETAILS_CACHE_TTL_MS = 10_000
+  private static readonly VIDEO_METADATA_CACHE_TTL_MS = 30_000
+  private static readonly CATEGORY_CACHE_TTL_MS = 10 * 60_000
+
+  private broadcastsCache: {
+    expiresAt: number
+    value: Awaited<ReturnType<YouTubeBroadcastService['listFromApi']>>
+  } | null = null
+  private broadcastsRequest: Promise<
+    Awaited<ReturnType<YouTubeBroadcastService['listFromApi']>>
+  > | null = null
+  private readonly liveDetailsCache = new Map<
+    string,
+    { expiresAt: number; value: { startedAt: string | null; viewerCount: number | null } }
+  >()
+  private readonly videoMetadataCache = new Map<
+    string,
+    {
+      expiresAt: number
+      value: Awaited<ReturnType<YouTubeBroadcastService['videoMetadataFromApi']>>
+    }
+  >()
+  private readonly categoryNameCache = new Map<string, { expiresAt: number; value: string }>()
+  private categoryListCache: {
+    expiresAt: number
+    value: Array<{ id: string; title: string }>
+  } | null = null
+
   public constructor(
     @Inject(YouTubeAuthService) private readonly auth: YouTubeAuthService,
     @Inject(IntegrationRepository) private readonly integrations: IntegrationRepository,
   ) {}
 
   public async list() {
+    if (this.broadcastsCache && this.broadcastsCache.expiresAt > Date.now())
+      return this.broadcastsCache.value
+    if (!this.broadcastsRequest) {
+      this.broadcastsRequest = this.listFromApi().finally(() => {
+        this.broadcastsRequest = null
+      })
+    }
+    const value = await this.broadcastsRequest
+    this.broadcastsCache = {
+      expiresAt: Date.now() + YouTubeBroadcastService.BROADCASTS_CACHE_TTL_MS,
+      value,
+    }
+    return value
+  }
+
+  private async listFromApi() {
     const token = await this.auth.getAccessToken()
     const url = new URL('https://www.googleapis.com/youtube/v3/liveBroadcasts')
     url.search = new URLSearchParams({
@@ -94,6 +139,7 @@ export class YouTubeBroadcastService {
       method: 'PUT',
     })
     if (!response.ok) throw await this.apiError(response)
+    this.videoMetadataCache.delete(videoId)
   }
 
   public async updateMetadata(
@@ -144,9 +190,21 @@ export class YouTubeBroadcastService {
       method: 'PUT',
     })
     if (!response.ok) throw await this.apiError(response)
+    this.videoMetadataCache.delete(videoId)
   }
 
   public async videoMetadata(videoId: string) {
+    const cached = this.videoMetadataCache.get(videoId)
+    if (cached && cached.expiresAt > Date.now()) return cached.value
+    const value = await this.videoMetadataFromApi(videoId)
+    this.videoMetadataCache.set(videoId, {
+      expiresAt: Date.now() + YouTubeBroadcastService.VIDEO_METADATA_CACHE_TTL_MS,
+      value,
+    })
+    return value
+  }
+
+  private async videoMetadataFromApi(videoId: string) {
     const token = await this.auth.getAccessToken()
     const url = new URL('https://www.googleapis.com/youtube/v3/videos')
     url.search = new URLSearchParams({ id: videoId, part: 'snippet' }).toString()
@@ -167,18 +225,34 @@ export class YouTubeBroadcastService {
       })
       .parse(await response.json())
     const snippet = payload.items[0]?.snippet
-    return snippet
-      ? {
-          category: snippet.categoryId ? await this.resolveCategoryName(snippet.categoryId) : null,
-          description: snippet.description ?? null,
-          language: snippet.defaultLanguage ?? null,
-          title: snippet.title,
-        }
-      : null
+    if (!snippet) return null
+    let category = snippet.categoryId ?? null
+    if (category) {
+      try {
+        category = await this.resolveCategoryName(category)
+      } catch {
+        // Category is optional; preserve the rest of the metadata if its lookup is unavailable.
+      }
+    }
+    return {
+      category,
+      description: snippet.description ?? null,
+      language: snippet.defaultLanguage ?? null,
+      title: snippet.title,
+    }
   }
 
   private async resolveCategoryId(value: string, fallback: string | null) {
     if (/^\d+$/.test(value)) return value
+    const categories = await this.categoryList()
+    return (
+      categories.find((item) => item.title.toLowerCase() === value.toLowerCase())?.id ?? fallback
+    )
+  }
+
+  private async categoryList() {
+    if (this.categoryListCache && this.categoryListCache.expiresAt > Date.now())
+      return this.categoryListCache.value
     const token = await this.auth.getAccessToken()
     const url = new URL('https://www.googleapis.com/youtube/v3/videoCategories')
     url.search = new URLSearchParams({
@@ -187,19 +261,23 @@ export class YouTubeBroadcastService {
       regionCode: 'BR',
     }).toString()
     const response = await fetch(url, { headers: { authorization: `Bearer ${token.accessToken}` } })
-    if (!response.ok) return fallback
+    if (!response.ok) return []
     const payload = z
       .object({
         items: z.array(z.object({ id: z.string(), snippet: z.object({ title: z.string() }) })),
       })
       .parse(await response.json())
-    return (
-      payload.items.find((item) => item.snippet.title.toLowerCase() === value.toLowerCase())?.id ??
-      fallback
-    )
+    const value = payload.items.map((item) => ({ id: item.id, title: item.snippet.title }))
+    this.categoryListCache = {
+      expiresAt: Date.now() + YouTubeBroadcastService.CATEGORY_CACHE_TTL_MS,
+      value,
+    }
+    return value
   }
 
   private async resolveCategoryName(categoryId: string): Promise<string> {
+    const cached = this.categoryNameCache.get(categoryId)
+    if (cached && cached.expiresAt > Date.now()) return cached.value
     const token = await this.auth.getAccessToken()
     const url = new URL('https://www.googleapis.com/youtube/v3/videoCategories')
     url.search = new URLSearchParams({ id: categoryId, part: 'snippet' }).toString()
@@ -208,7 +286,12 @@ export class YouTubeBroadcastService {
     const payload = z
       .object({ items: z.array(z.object({ snippet: z.object({ title: z.string() }) })) })
       .parse(await response.json())
-    return payload.items[0]?.snippet.title ?? categoryId
+    const value = payload.items[0]?.snippet.title ?? categoryId
+    this.categoryNameCache.set(categoryId, {
+      expiresAt: Date.now() + YouTubeBroadcastService.CATEGORY_CACHE_TTL_MS,
+      value,
+    })
+    return value
   }
 
   public async deleteMessage(messageId: string): Promise<void> {
@@ -321,6 +404,8 @@ export class YouTubeBroadcastService {
   }
 
   public async liveDetails(videoId: string) {
+    const cached = this.liveDetailsCache.get(videoId)
+    if (cached && cached.expiresAt > Date.now()) return cached.value
     const token = await this.auth.getAccessToken()
     const url = new URL('https://www.googleapis.com/youtube/v3/videos')
     url.search = new URLSearchParams({ id: videoId, part: 'liveStreamingDetails' }).toString()
@@ -330,10 +415,15 @@ export class YouTubeBroadcastService {
     if (!response.ok) throw await this.apiError(response)
     const payload = YouTubeVideoLiveDetailsResponseSchema.parse(await response.json())
     const details = payload.items[0]?.liveStreamingDetails
-    return {
+    const value = {
       startedAt: details?.actualStartTime ?? null,
       viewerCount: details?.concurrentViewers ? Number(details.concurrentViewers) : null,
     }
+    this.liveDetailsCache.set(videoId, {
+      expiresAt: Date.now() + YouTubeBroadcastService.LIVE_DETAILS_CACHE_TTL_MS,
+      value,
+    })
+    return value
   }
 
   private async apiError(response: Response): Promise<ApiApplicationError> {
@@ -353,6 +443,13 @@ export class YouTubeBroadcastService {
         'INTEGRATION_AUTH_REVOKED',
         providerReason ?? 'YouTube authorization expired',
         401,
+      )
+    if (providerReason?.toLowerCase().includes('quota'))
+      return new ApiApplicationError(
+        'INTEGRATION_PROVIDER_ERROR',
+        'YouTube API quota exceeded. Wait for the project quota to reset or increase the quota in Google Cloud.',
+        429,
+        { providerReason, reason: 'quotaExceeded' },
       )
     if (status === 403)
       return new ApiApplicationError(
