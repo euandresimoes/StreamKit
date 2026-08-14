@@ -795,64 +795,66 @@ export function GamesTab() {
                               role="button"
                               tabIndex={0}
                               key={match.id}
-                              onClick={() => setSelectedMatchId(match.id)}
+                              onClick={() => {
+                                setSelectedMatchId(match.id);
+                                setOperatingMatchId(match.id);
+                              }}
                               onKeyDown={(event) => {
-                                if (event.key === "Enter" || event.key === " ")
+                                if (event.key === "Enter" || event.key === " ") {
                                   setSelectedMatchId(match.id);
+                                  setOperatingMatchId(match.id);
+                                }
                               }}
                               className={cn(
-                                "relative rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-accent/40",
+                                "group relative rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-accent/40",
                                 active ? "border-primary ring-2 ring-primary/25" : "border-border",
-                                selectedMatch?.id === match.id && !active && "border-border-strong",
                               )}
                             >
-                              {selectedMatch?.id === match.id && (
-                                <div className="absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
-                                  {match.status === "ready" &&
-                                    detail.tournament.status === "in_progress" && (
-                                      <Button
-                                        size="sm"
-                                        className="h-7"
-                                        disabled={
-                                          tournaments.busy ||
-                                          detail.matches.some(
-                                            (item) => item.status === "in_progress",
-                                          )
-                                        }
-                                        onClick={(event) => {
-                                          event.stopPropagation();
-                                          void tournaments.startMatch(match.id);
-                                        }}
-                                      >
-                                        <Play className="size-3" /> Começar
-                                      </Button>
-                                    )}
+                              <div className="pointer-events-none absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-popover/95 p-1 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-visible:pointer-events-auto group-focus-visible:opacity-100">
+                                {match.status === "ready" &&
+                                  detail.tournament.status === "in_progress" && (
+                                    <Button
+                                      size="sm"
+                                      className="h-7"
+                                      disabled={
+                                        tournaments.busy ||
+                                        detail.matches.some((item) => item.status === "in_progress")
+                                      }
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        void tournaments.startMatch(match.id);
+                                      }}
+                                    >
+                                      <Play className="size-3" /> Começar
+                                    </Button>
+                                  )}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedMatchId(match.id);
+                                    setOperatingMatchId(match.id);
+                                  }}
+                                >
+                                  Abrir partida
+                                </Button>
+                                {match.status === "finished" && (
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     className="h-7"
                                     onClick={(event) => {
                                       event.stopPropagation();
-                                      setOperatingMatchId(match.id);
+                                      setSelectedMatchId(match.id);
+                                      setCorrectingMatchId(match.id);
                                     }}
                                   >
-                                    Abrir partida
+                                    Corrigir
                                   </Button>
-                                  {match.status === "finished" && (
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-7"
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        setCorrectingMatchId(match.id);
-                                      }}
-                                    >
-                                      Corrigir
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
+                                )}
+                              </div>
                               <p className="px-2 pb-1 text-[10px] text-muted-foreground">
                                 Partida {match.matchNumber}
                               </p>
