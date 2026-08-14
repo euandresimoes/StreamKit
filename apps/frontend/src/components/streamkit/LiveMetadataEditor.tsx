@@ -9,11 +9,13 @@ export function LiveMetadataEditor({
   metadata,
   busy,
   canEdit,
+  controls = [],
   onSave,
 }: {
   metadata: LiveMetadata;
   busy: boolean;
   canEdit: boolean;
+  controls?: { editable: boolean; id: string; label: string }[];
   onSave: (input: LiveMetadataUpdate) => Promise<void>;
 }) {
   const [title, setTitle] = useState(metadata.title ?? "");
@@ -62,17 +64,17 @@ export function LiveMetadataEditor({
         <Textarea value={metadata.description ?? "Não informado"} disabled aria-readonly="true" />
       </label>
       <div className="mt-3 grid gap-2 md:grid-cols-3">
-        {[
-          ["Modo lento", metadata.slowMode],
-          ["Somente seguidores", metadata.followersOnly],
-          ["Somente inscritos", metadata.subscribersOnly],
-        ].map(([label, checked]) => (
+        {controls.map(({ id, label, editable }) => (
           <label
-            key={label as string}
+            key={id}
             className="flex items-center justify-between rounded-xl border border-border px-3 py-2 text-xs"
           >
-            {label as string}
-            <Switch checked={Boolean(checked)} disabled aria-label={label as string} />
+            {label}
+            <Switch
+              checked={Boolean(metadata[id as keyof typeof metadata])}
+              disabled={!canEdit || !editable}
+              aria-label={label}
+            />
           </label>
         ))}
       </div>

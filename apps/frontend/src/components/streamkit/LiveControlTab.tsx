@@ -29,17 +29,40 @@ export function LiveControlTab() {
     if (!live.selectedId && selected) live.select(selected.connectionId);
   }, [live.selectedId, live.select, selected]);
 
+  const metrics = [
+    ["Status", selected?.state ?? "offline"],
+    ["Espectadores", selected?.viewerCount?.toLocaleString() ?? "—"],
+    [
+      "Duração",
+      selected?.durationSeconds ? `${Math.floor(selected.durationSeconds / 60)} min` : "—",
+    ],
+    ["Canal", selected?.channelDisplayName ?? "Nenhum canal"],
+  ];
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="flex h-12 shrink-0 items-center justify-end border-b border-border px-5">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Atualizar controle da live"
-          onClick={() => void live.load()}
-        >
-          <RefreshCw />
-        </Button>
+      <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-4 border-b border-border px-5 py-2">
+        <LivePlatformSelector
+          streams={live.streams}
+          selectedId={selected?.connectionId ?? null}
+          onSelect={live.select}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          {metrics.map(([label, value]) => (
+            <div key={label} className="hidden min-w-20 border-l border-border pl-3 sm:block">
+              <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="max-w-32 truncate text-xs font-semibold">{value}</p>
+            </div>
+          ))}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Atualizar controle da live"
+            onClick={() => void live.load()}
+          >
+            <RefreshCw />
+          </Button>
+        </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col gap-4 p-5">
         {live.error && (
@@ -50,38 +73,12 @@ export function LiveControlTab() {
             {live.error}
           </div>
         )}
-
-        <LivePlatformSelector
-          streams={live.streams}
-          selectedId={selected?.connectionId ?? null}
-          onSelect={live.select}
-        />
-
         <div className="grid min-h-0 gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,.75fr)]">
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-              {[
-                ["Status", selected?.state ?? "offline"],
-                ["Espectadores", selected?.viewerCount?.toLocaleString() ?? "—"],
-                [
-                  "Duração",
-                  selected?.durationSeconds
-                    ? `${Math.floor(selected.durationSeconds / 60)} min`
-                    : "—",
-                ],
-                ["Canal", selected?.channelDisplayName ?? "Nenhum canal conectado"],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-xl border border-border bg-card p-3">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {label}
-                  </p>
-                  <p className="mt-1 truncate text-sm font-semibold">{value}</p>
-                </div>
-              ))}
-            </div>
             <LivePreview stream={selected} />
             <LiveMetadataEditor
               metadata={selected?.metadata ?? EMPTY_METADATA}
+              controls={selected?.metadataControls ?? []}
               busy={live.busy}
               canEdit={Boolean(selected?.capabilities.includes("live.metadata.write"))}
               onSave={live.updateMetadata}

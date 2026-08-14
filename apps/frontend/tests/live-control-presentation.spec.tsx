@@ -9,6 +9,7 @@ const stream = (overrides: Partial<LiveStream> = {}): LiveStream => ({
   channelId: "channel-id",
   connectionId: "12b28c21-cdd2-405a-824e-a54f20383195",
   durationSeconds: 120,
+  metadataControls: [],
   metadata: {
     category: null,
     description: null,

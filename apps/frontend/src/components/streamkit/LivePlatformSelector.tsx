@@ -11,26 +11,50 @@ export function LivePlatformSelector({
   onSelect: (id: string) => void;
 }) {
   const providers: IntegrationProvider[] = ["twitch", "youtube", "kick"];
+  const current = streams.find((stream) => stream.connectionId === selectedId);
+
   return (
-    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Plataforma da transmissão">
-      {providers.map((provider) => {
-        const stream = streams.find((item) => item.provider === provider);
-        return (
-          <button
-            key={provider}
-            type="button"
-            role="tab"
-            aria-selected={selectedId === stream?.connectionId}
-            disabled={!stream}
-            onClick={() => stream && onSelect(stream.connectionId)}
-            className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs transition-colors ${selectedId === stream?.connectionId ? "border-primary bg-primary/10" : "border-border hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50"}`}
-          >
-            <BaseBrandIcon provider={provider} />
-            <span>{brandName(provider)}</span>
-            <span className="text-muted-foreground">· {stream?.state ?? "não conectado"}</span>
-          </button>
-        );
-      })}
+    <div className="flex min-w-0 items-center gap-3">
+      <label className="flex min-w-0 items-center gap-2 text-xs font-medium">
+        <span className="sr-only">Plataforma da transmissão</span>
+        <BaseBrandIcon provider={current?.provider ?? "twitch"} />
+        <select
+          aria-label="Plataforma da transmissão"
+          value={selectedId ?? ""}
+          onChange={(event) => {
+            const stream = streams.find((item) => item.connectionId === event.target.value);
+            if (stream) onSelect(stream.connectionId);
+          }}
+          className="h-8 max-w-52 rounded-lg border border-border bg-card px-2 text-xs outline-none transition focus:border-primary"
+        >
+          <option value="">Selecionar plataforma</option>
+          {providers.map((provider) => {
+            const stream = streams.find((item) => item.provider === provider);
+            return (
+              <option key={provider} value={stream?.connectionId ?? provider} disabled={!stream}>
+                {brandName(provider)} · {stream?.state ?? "não conectado"}
+              </option>
+            );
+          })}
+        </select>
+      </label>
+      <div className="hidden items-center gap-2 sm:flex" aria-label="Status das plataformas">
+        {providers.map((provider) => {
+          const stream = streams.find((item) => item.provider === provider);
+          return (
+            <span
+              key={provider}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground"
+              title={`${brandName(provider)}: ${stream?.state ?? "não conectado"}`}
+            >
+              <span
+                className={`size-1.5 rounded-full ${stream ? "bg-emerald-500" : "bg-muted-foreground/40"}`}
+              />
+              {brandName(provider)}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }

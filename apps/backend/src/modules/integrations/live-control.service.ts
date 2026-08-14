@@ -110,6 +110,7 @@ export class LiveControlService {
         ? Math.max(0, Math.floor((Date.now() - Date.parse(live.startedAt)) / 1_000))
         : null,
       metadata,
+      metadataControls: this.metadataControls(connection.provider),
       preview: {
         channel: live.channel ?? connection.channelDisplayName,
         state:
@@ -122,6 +123,19 @@ export class LiveControlService {
       title: metadata.title,
       viewerCount: live.viewerCount ?? null,
     })
+  }
+
+  private metadataControls(provider: 'kick' | 'twitch' | 'youtube') {
+    const controls = {
+      twitch: [
+        { editable: false, id: 'slowMode', label: 'Modo lento' },
+        { editable: false, id: 'followersOnly', label: 'Somente seguidores' },
+        { editable: false, id: 'subscribersOnly', label: 'Somente inscritos' },
+      ],
+      youtube: [{ editable: false, id: 'slowMode', label: 'Modo lento' }],
+      kick: [],
+    } as const
+    return controls[provider]
   }
 
   private async providerLive(

@@ -16,6 +16,11 @@ export const LiveMetadataSchema = z.object({
   title: z.string().max(200).nullable(),
   visibility: z.enum(['public', 'unlisted', 'private']).nullable(),
 })
+export const LiveMetadataControlSchema = z.object({
+  editable: z.boolean(),
+  id: z.string().trim().min(1).max(80),
+  label: z.string().trim().min(1).max(100),
+})
 export const LiveStreamSchema = z.object({
   capabilities: z.array(IntegrationCapabilitySchema),
   channelDisplayName: z.string().min(1),
@@ -23,6 +28,7 @@ export const LiveStreamSchema = z.object({
   connectionId: z.uuid(),
   durationSeconds: z.number().int().nonnegative().nullable(),
   metadata: LiveMetadataSchema,
+  metadataControls: z.array(LiveMetadataControlSchema).max(30).default([]),
   preview: z.object({
     channel: z.string().min(1),
     state: LivePreviewStateSchema,
