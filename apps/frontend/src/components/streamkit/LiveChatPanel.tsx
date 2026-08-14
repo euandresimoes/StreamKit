@@ -18,7 +18,10 @@ import {
 import { BaseBrandIcon } from "@/components/base/BaseBrandIcon";
 import { integrationApi } from "@/modules/integration/integration-api";
 import { liveControlApi } from "@/modules/live-control/live-control-api";
-import { MAX_VISIBLE_CHAT_MESSAGES } from "@/modules/performance/bounded-render-window";
+import {
+  MAX_QUEUED_CHAT_MESSAGES,
+  MAX_VISIBLE_CHAT_MESSAGES,
+} from "@/modules/performance/bounded-render-window";
 
 function initials(displayName: string) {
   return displayName.trim().slice(0, 2).toUpperCase();
@@ -81,6 +84,11 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
       if (!next) return;
       queuedIds.current.delete(next.id);
       displayedIds.current.add(next.id);
+      while (displayedIds.current.size > MAX_QUEUED_CHAT_MESSAGES) {
+        const oldest = displayedIds.current.values().next().value;
+        if (!oldest) break;
+        displayedIds.current.delete(oldest);
+      }
       setDisplayedMessages((items) => [...items, next].slice(-MAX_VISIBLE_CHAT_MESSAGES));
       drainTimer.current = window.setTimeout(drain, 120);
     };
@@ -95,6 +103,10 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
           for (const item of incoming.slice(-MAX_VISIBLE_CHAT_MESSAGES)) {
             queuedIds.current.add(item.id);
             queue.current.push(item);
+          }
+          while (queue.current.length > MAX_QUEUED_CHAT_MESSAGES) {
+            const dropped = queue.current.shift();
+            if (dropped) queuedIds.current.delete(dropped.id);
           }
           drain();
           setError(null);

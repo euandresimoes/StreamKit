@@ -114,7 +114,7 @@ export const FocusedChatIdentitySchema = ExternalUserIdentitySchema.extend({
 export const FocusedChatThreadSchema = z.object({
   connections: z.array(IntegrationConnectionSchema),
   identities: z.array(FocusedChatIdentitySchema),
-  messages: z.array(FocusedChatMessageSchema).max(200),
+  messages: z.array(FocusedChatMessageSchema).max(100),
   subject: z.string().min(1).max(200),
 })
 

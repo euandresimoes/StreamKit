@@ -13,11 +13,11 @@ import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import { chatMessageBuffer, integrationConnections } from '../../infrastructure/database/schema'
 import type { SqliteDatabase } from '../../infrastructure/database/sqlite-database'
 
-export const CHAT_BUFFER_MAX_MESSAGES = 10_000
+export const CHAT_BUFFER_MAX_MESSAGES = 100
 export const CHAT_BUFFER_RETENTION_MS = 24 * 60 * 60 * 1_000
 const CHAT_PRUNE_INTERVAL_MS = 5_000
-const CHAT_PRUNE_EVERY_MESSAGES = 250
-const FOCUSED_THREAD_MAX_MESSAGES = 200
+const CHAT_PRUNE_EVERY_MESSAGES = 25
+const FOCUSED_THREAD_MAX_MESSAGES = 100
 
 export type FocusedChatKey = {
   channelId: string
@@ -222,7 +222,7 @@ export class FocusedChatRepository {
         ),
       )
       .orderBy(desc(chatMessageBuffer.occurredAt))
-      .limit(200)
+      .limit(FOCUSED_THREAD_MAX_MESSAGES)
     const identities = new Map<string, (typeof rows)[number]>()
     for (const row of rows) identities.set(row.providerUserId, row)
     return FocusedChatThreadSchema.parse({
@@ -231,7 +231,6 @@ export class FocusedChatRepository {
         avatarUrl: row.avatarUrl,
         channelId: row.channelId,
         displayName: row.displayName,
-        externalEventId: row.externalEventId,
         handle: row.handle,
         provider: row.provider,
         providerUserId: row.providerUserId,
@@ -242,6 +241,7 @@ export class FocusedChatRepository {
         channelId: row.channelId,
         connectionId: connection.id,
         displayName: row.displayName,
+        externalEventId: row.externalEventId,
         handle: row.handle,
         id: row.id,
         message: row.message,

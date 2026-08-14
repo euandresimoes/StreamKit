@@ -1,5 +1,6 @@
 export const MAX_VISIBLE_PARTICIPANTS = 50;
 export const MAX_VISIBLE_CHAT_MESSAGES = 50;
+export const MAX_QUEUED_CHAT_MESSAGES = 100;
 
 export function selectBoundedItems<T extends { id: string }>(
   items: readonly T[],
