@@ -150,7 +150,7 @@ export class FocusedChatRepository {
         ] as const
       }),
     )
-    const avatars = new Map(avatarRows)
+    const avatars = new Map<string, string | null>(avatarRows)
     const connections = connectionRows.map((row) => ({
       ...row,
       capabilities: JSON.parse(row.capabilitiesJson) as unknown,
@@ -174,7 +174,8 @@ export class FocusedChatRepository {
         }
       }),
       messages: rows.reverse().map((row) => ({
-        avatarUrl: row.avatarUrl,
+        avatarUrl:
+          avatars.get(`${row.provider}:${row.channelId}:${row.providerUserId}`) ?? row.avatarUrl,
         badges: JSON.parse(row.badgesJson) as unknown,
         channelId: row.channelId,
         connectionId:
@@ -225,10 +226,15 @@ export class FocusedChatRepository {
       .limit(FOCUSED_THREAD_MAX_MESSAGES)
     const identities = new Map<string, (typeof rows)[number]>()
     for (const row of rows) identities.set(row.providerUserId, row)
+    const avatars = new Map<string, string>()
+    for (const row of rows) {
+      if (row.avatarUrl && !avatars.has(row.providerUserId))
+        avatars.set(row.providerUserId, row.avatarUrl)
+    }
     return FocusedChatThreadSchema.parse({
       connections: [connection],
       identities: [...identities.values()].map((row) => ({
-        avatarUrl: row.avatarUrl,
+        avatarUrl: avatars.get(row.providerUserId) ?? row.avatarUrl,
         channelId: row.channelId,
         displayName: row.displayName,
         handle: row.handle,
@@ -236,7 +242,7 @@ export class FocusedChatRepository {
         providerUserId: row.providerUserId,
       })),
       messages: rows.reverse().map((row) => ({
-        avatarUrl: row.avatarUrl,
+        avatarUrl: avatars.get(row.providerUserId) ?? row.avatarUrl,
         badges: JSON.parse(row.badgesJson) as string[],
         channelId: row.channelId,
         connectionId: connection.id,
