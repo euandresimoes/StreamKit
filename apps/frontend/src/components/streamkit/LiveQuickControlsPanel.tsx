@@ -4,14 +4,8 @@ import { BaseDockPanel } from "@/components/base/BaseDockPanel";
 
 export function LiveQuickControlsPanel({ connected }: { connected: boolean }) {
   return (
-    <BaseDockPanel
-      panelId="live-quick-controls"
-      title="Controles rápidos"
-      icon={SlidersHorizontal}
-      defaultSize={300}
-      resize="right"
-    >
-      <div className="grid content-start gap-2 p-3">
+    <BaseDockPanel panelId="live-quick-controls" title="Controles rápidos" icon={SlidersHorizontal}>
+      <div className="grid w-full content-start gap-2 p-3">
         <Button size="sm" variant="outline" disabled={!connected}>
           Iniciar transmissão
         </Button>

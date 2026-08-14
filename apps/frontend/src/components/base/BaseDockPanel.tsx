@@ -16,7 +16,7 @@ export function BaseDockPanel({
 }: {
   children: ReactNode;
   className?: string;
-  defaultSize: number;
+  defaultSize?: number;
   icon?: LucideIcon;
   maxSize?: number;
   minSize?: number;
