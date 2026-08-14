@@ -75,8 +75,27 @@ export function LiveControlTab() {
           </div>
         )}
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          <div className="min-h-0 min-w-0 flex-1">
-            <LivePreview stream={selected} />
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 min-w-0 flex-1">
+              <LivePreview stream={selected} />
+            </div>
+            <BaseResizablePanel
+              panelId="live-metadata"
+              mode="horizontal"
+              resize="top"
+              defaultSize={260}
+              minSize={180}
+              maxSize={520}
+              className="w-full shrink-0 border-t border-border"
+            >
+              <LiveMetadataEditor
+                metadata={selected?.metadata ?? EMPTY_METADATA}
+                controls={selected?.metadataControls ?? []}
+                busy={live.busy}
+                canEdit={Boolean(selected?.capabilities.includes("live.metadata.write"))}
+                onSave={live.updateMetadata}
+              />
+            </BaseResizablePanel>
           </div>
           <BaseResizablePanel
             panelId="live-chat"
@@ -90,23 +109,6 @@ export function LiveControlTab() {
             <LiveChatPanel stream={selected} />
           </BaseResizablePanel>
         </div>
-        <BaseResizablePanel
-          panelId="live-metadata"
-          mode="horizontal"
-          resize="top"
-          defaultSize={260}
-          minSize={180}
-          maxSize={520}
-          className="w-full shrink-0 border-t border-border"
-        >
-          <LiveMetadataEditor
-            metadata={selected?.metadata ?? EMPTY_METADATA}
-            controls={selected?.metadataControls ?? []}
-            busy={live.busy}
-            canEdit={Boolean(selected?.capabilities.includes("live.metadata.write"))}
-            onSave={live.updateMetadata}
-          />
-        </BaseResizablePanel>
       </div>
     </div>
   );

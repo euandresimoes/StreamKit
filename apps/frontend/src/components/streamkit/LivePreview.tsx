@@ -5,13 +5,13 @@ import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 export function LivePreview({ stream }: { stream: LiveStream | null }) {
   if (!stream)
     return (
-      <div className="flex min-h-64 items-center justify-center rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
+      <div className="flex h-full min-h-0 items-center justify-center border border-border bg-card p-6 text-center text-sm text-muted-foreground">
         <p>Preview oficial aguardando uma transmissão conectada.</p>
       </div>
     );
   if (stream.preview.state !== "ready")
     return (
-      <div className="flex min-h-64 items-center justify-center rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+      <div className="flex h-full min-h-0 items-center justify-center border border-border bg-card p-6 text-center text-sm text-muted-foreground">
         <div>
           <Radio className="mx-auto mb-3 size-6" />
           <p>
@@ -34,12 +34,12 @@ export function LivePreview({ stream }: { stream: LiveStream | null }) {
         : null;
   if (!url)
     return (
-      <div className="flex min-h-64 items-center justify-center rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+      <div className="flex h-full min-h-0 items-center justify-center border border-border p-6 text-sm text-muted-foreground">
         Identificador oficial do player ainda não foi retornado pelo provider.
       </div>
     );
   return (
-    <div className="relative h-full min-h-[420px] overflow-hidden border border-border bg-black">
+    <div className="relative h-full min-h-0 overflow-hidden border border-border bg-black">
       <iframe
         title={`Preview oficial de ${stream.channelDisplayName}`}
         src={url}
