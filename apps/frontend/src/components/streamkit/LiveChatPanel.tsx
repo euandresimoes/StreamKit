@@ -2,9 +2,20 @@ import type {
   ChatModerationAction,
   FocusedChatMessage,
   FocusedChatThread,
+  IntegrationCapability,
   LiveStream,
 } from "@streamkit/contracts";
-import { ArrowLeft, MoreHorizontal, Send, Shield, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  Ban,
+  MoreHorizontal,
+  Pin,
+  Send,
+  Shield,
+  UserCheck,
+  UserRound,
+  UserX,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +72,8 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [moderating, setModerating] = useState<string | null>(null);
+  const [bannedUsers, setBannedUsers] = useState(new Set<string>());
+  const [moderators, setModerators] = useState(new Set<string>());
   const displayedIds = useRef(new Set<string>());
   const queuedIds = useRef(new Set<string>());
   const queue = useRef<FocusedChatMessage[]>([]);
@@ -72,6 +85,8 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
     displayedIds.current.clear();
     queuedIds.current.clear();
     queue.current = [];
+    setBannedUsers(new Set());
+    setModerators(new Set());
     setError(null);
     if (!connectionId) return;
     let active = true;
@@ -154,12 +169,14 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
 
   const canModerate = (action: ChatModerationAction) => {
     if (!writer) return false;
-    const capability =
-      action === "delete_message"
-        ? "chat.message.delete"
-        : action === "pin_message"
-          ? "chat.message.pin"
-          : "chat.user.ban";
+    const capability: IntegrationCapability = {
+      add_moderator: "chat.user.moderator.add",
+      ban_user: "chat.user.ban",
+      delete_message: "chat.message.delete",
+      pin_message: "chat.message.pin",
+      remove_moderator: "chat.user.moderator.remove",
+      unban_user: "chat.user.unban",
+    }[action] as IntegrationCapability;
     return writer.capabilities.includes(capability);
   };
 
@@ -174,6 +191,21 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
       });
       if (action === "delete_message")
         setDisplayedMessages((items) => items.filter((messageItem) => messageItem.id !== item.id));
+      const userKey = `${item.provider}:${item.providerUserId}`;
+      if (action === "ban_user") setBannedUsers((users) => new Set(users).add(userKey));
+      if (action === "unban_user")
+        setBannedUsers((users) => {
+          const next = new Set(users);
+          next.delete(userKey);
+          return next;
+        });
+      if (action === "add_moderator") setModerators((users) => new Set(users).add(userKey));
+      if (action === "remove_moderator")
+        setModerators((users) => {
+          const next = new Set(users);
+          next.delete(userKey);
+          return next;
+        });
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível executar a ação.");
@@ -226,71 +258,104 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
         Chat da live
       </header>
       <div role="log" aria-live="polite" className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
-        {displayedMessages.map((item) => (
-          <article
-            key={item.id}
-            className="group flex gap-2 rounded-lg px-2 py-2 text-xs transition-colors hover:bg-surface-2 motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:fade-in motion-reduce:animate-none"
-          >
-            <Avatar message={item} />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  className="truncate font-semibold hover:text-primary"
-                  onClick={() => setPrivateUser(item)}
-                >
-                  {item.displayName}
-                </button>
-                {item.badges.slice(0, 4).map((badge) => (
-                  <span
-                    key={badge}
-                    className="rounded bg-primary/10 px-1 text-[9px] text-primary"
-                    title={badge}
-                  >
-                    {badgeLabel(badge)}
-                  </span>
-                ))}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="ml-auto size-6 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                      aria-label={`Ações para ${item.displayName}`}
+        {displayedMessages.map((item) =>
+          (() => {
+            const userKey = `${item.provider}:${item.providerUserId}`;
+            const isBanned = bannedUsers.has(userKey);
+            const isModerator = moderators.has(userKey);
+            return (
+              <article
+                key={item.id}
+                className={`group flex gap-2 rounded-lg px-2 py-2 text-xs transition-colors hover:bg-surface-2 motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:fade-in motion-reduce:animate-none ${isBanned ? "text-destructive" : ""}`}
+              >
+                <Avatar message={item} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      className="truncate font-semibold hover:text-primary"
+                      onClick={() => setPrivateUser(item)}
                     >
-                      <MoreHorizontal />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => setPrivateUser(item)}>
-                      <UserRound /> Abrir chat privado
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      disabled={!canModerate("delete_message") || moderating !== null}
-                      onSelect={() => void moderate(item, "delete_message")}
-                    >
-                      <Shield /> Excluir mensagem
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      disabled={!canModerate("pin_message") || moderating !== null}
-                      onSelect={() => void moderate(item, "pin_message")}
-                    >
-                      Fixar mensagem
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      disabled={!canModerate("ban_user") || moderating !== null}
-                      onSelect={() => void moderate(item, "ban_user")}
-                    >
-                      Banir usuário
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <p className="break-words text-muted-foreground">{item.message}</p>
-            </div>
-          </article>
-        ))}
+                      {item.displayName}
+                    </button>
+                    {isBanned && (
+                      <span className="rounded bg-destructive/15 px-1 text-[9px] text-destructive">
+                        BANIDO
+                      </span>
+                    )}
+                    {isModerator && (
+                      <span className="rounded bg-primary/10 px-1 text-[9px] text-primary">
+                        MOD
+                      </span>
+                    )}
+                    {item.badges.slice(0, 4).map((badge) => (
+                      <span
+                        key={badge}
+                        className="rounded bg-primary/10 px-1 text-[9px] text-primary"
+                        title={badge}
+                      >
+                        {badgeLabel(badge)}
+                      </span>
+                    ))}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="ml-auto size-6 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                          aria-label={`Ações para ${item.displayName}`}
+                        >
+                          <MoreHorizontal />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => setPrivateUser(item)}>
+                          <UserRound /> Abrir chat privado
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={!canModerate("delete_message") || moderating !== null}
+                          onSelect={() => void moderate(item, "delete_message")}
+                        >
+                          <Shield /> Excluir mensagem
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={!canModerate("pin_message") || moderating !== null}
+                          onSelect={() => void moderate(item, "pin_message")}
+                        >
+                          <Pin /> Fixar mensagem
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={
+                            !canModerate(isBanned ? "unban_user" : "ban_user") ||
+                            moderating !== null
+                          }
+                          onSelect={() => void moderate(item, isBanned ? "unban_user" : "ban_user")}
+                        >
+                          {isBanned ? <UserX /> : <Ban />}
+                          {isBanned ? "Desbanir usuário" : "Banir usuário"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={
+                            !canModerate(isModerator ? "remove_moderator" : "add_moderator") ||
+                            moderating !== null
+                          }
+                          onSelect={() =>
+                            void moderate(item, isModerator ? "remove_moderator" : "add_moderator")
+                          }
+                        >
+                          {isModerator ? <UserX /> : <UserCheck />}
+                          {isModerator ? "Remover moderador" : "Dar moderador"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <p className="break-words text-muted-foreground">{item.message}</p>
+                </div>
+              </article>
+            );
+          })(),
+        )}
         {!displayedMessages.length && (
           <p className="py-8 text-center text-xs text-muted-foreground">
             {stream ? "Nenhuma mensagem recente." : "Chat aguardando uma transmissão conectada."}

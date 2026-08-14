@@ -51,6 +51,9 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
     'chat.message.delete',
     'chat.message.pin',
     'chat.user.ban',
+    'chat.user.unban',
+    'chat.user.moderator.add',
+    'chat.user.moderator.remove',
     'live.metadata.write',
     'live.read',
     'user.identity',
@@ -109,6 +112,54 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
     await this.moderationRequest('https://api.twitch.tv/helix/moderation/bans', 'POST', channelId, {
       data: { user_id: userId },
     })
+  }
+
+  public async unbanUser(channelId: string, userId: string): Promise<void> {
+    await this.queryRequest('https://api.twitch.tv/helix/moderation/bans', 'DELETE', channelId, {
+      user_id: userId,
+    })
+  }
+
+  public async addModerator(channelId: string, userId: string): Promise<void> {
+    await this.queryRequest(
+      'https://api.twitch.tv/helix/moderation/moderators',
+      'POST',
+      channelId,
+      {
+        user_id: userId,
+      },
+    )
+  }
+
+  public async removeModerator(channelId: string, userId: string): Promise<void> {
+    await this.queryRequest(
+      'https://api.twitch.tv/helix/moderation/moderators',
+      'DELETE',
+      channelId,
+      {
+        user_id: userId,
+      },
+    )
+  }
+
+  private async queryRequest(
+    endpoint: string,
+    method: 'DELETE' | 'POST',
+    channelId: string,
+    params: Record<string, string>,
+  ): Promise<void> {
+    const clientId = this.config.twitchClientId
+    if (!clientId) throw new Error('INTEGRATION_CLIENT_NOT_CONFIGURED')
+    const token = await this.auth.getAccessToken()
+    const url = new URL(endpoint)
+    url.searchParams.set('broadcaster_id', channelId)
+    if (endpoint.endsWith('/bans')) url.searchParams.set('moderator_id', token.userId)
+    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value)
+    const response = await fetch(url, {
+      headers: { authorization: `Bearer ${token.accessToken}`, 'client-id': clientId },
+      method,
+    })
+    if (!response.ok) throw new Error(`TWITCH_CHAT_MODERATION_${response.status}`)
   }
 
   private async moderationRequest(

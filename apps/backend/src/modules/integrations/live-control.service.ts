@@ -56,6 +56,9 @@ export class LiveControlService {
               'chat.write',
               'chat.message.delete',
               'chat.user.ban',
+              'chat.user.unban',
+              'chat.user.moderator.add',
+              'chat.user.moderator.remove',
               'live.metadata.write',
               'live.read',
               'user.identity',
@@ -130,7 +133,13 @@ export class LiveControlService {
         ? 'chat.message.delete'
         : request.action === 'pin_message'
           ? 'chat.message.pin'
-          : 'chat.user.ban'
+          : request.action === 'ban_user'
+            ? 'chat.user.ban'
+            : request.action === 'unban_user'
+              ? 'chat.user.unban'
+              : request.action === 'add_moderator'
+                ? 'chat.user.moderator.add'
+                : 'chat.user.moderator.remove'
     if (!connection.capabilities.includes(capability))
       throw new ApiApplicationError(
         'INTEGRATION_CAPABILITY_UNAVAILABLE',
@@ -144,11 +153,23 @@ export class LiveControlService {
         await this.twitchChat.pinMessage(connection.channelId, request.externalMessageId)
       if (request.action === 'ban_user')
         await this.twitchChat.banUser(connection.channelId, request.providerUserId)
+      if (request.action === 'unban_user')
+        await this.twitchChat.unbanUser(connection.channelId, request.providerUserId)
+      if (request.action === 'add_moderator')
+        await this.twitchChat.addModerator(connection.channelId, request.providerUserId)
+      if (request.action === 'remove_moderator')
+        await this.twitchChat.removeModerator(connection.channelId, request.providerUserId)
     } else if (connection.provider === 'youtube') {
       if (request.action === 'delete_message')
         await this.youtube.deleteMessage(request.externalMessageId)
       if (request.action === 'ban_user')
         await this.youtube.banUser(connection.channelId, request.providerUserId)
+      if (request.action === 'unban_user')
+        await this.youtube.unbanUser(connection.channelId, request.providerUserId)
+      if (request.action === 'add_moderator')
+        await this.youtube.addModerator(connection.channelId, request.providerUserId)
+      if (request.action === 'remove_moderator')
+        await this.youtube.removeModerator(connection.channelId, request.providerUserId)
     } else {
       throw new ApiApplicationError(
         'INTEGRATION_CAPABILITY_UNAVAILABLE',

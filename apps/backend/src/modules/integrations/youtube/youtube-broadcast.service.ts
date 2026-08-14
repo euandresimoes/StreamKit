@@ -57,6 +57,9 @@ export class YouTubeBroadcastService {
         'chat.write',
         'chat.message.delete',
         'chat.user.ban',
+        'chat.user.unban',
+        'chat.user.moderator.add',
+        'chat.user.moderator.remove',
         'live.metadata.write',
         'live.read',
         'user.identity',
@@ -229,6 +232,90 @@ export class YouTubeBroadcastService {
       }),
       headers: { authorization: `Bearer ${token.accessToken}`, 'content-type': 'application/json' },
       method: 'POST',
+    })
+    if (!response.ok) throw await this.apiError(response)
+  }
+
+  public async unbanUser(liveChatId: string, userId: string): Promise<void> {
+    const token = await this.auth.getAccessToken()
+    const listUrl = new URL('https://www.googleapis.com/youtube/v3/liveChat/bans')
+    listUrl.search = new URLSearchParams({
+      liveChatId,
+      maxResults: '50',
+      part: 'snippet',
+    }).toString()
+    const listResponse = await fetch(listUrl, {
+      headers: { authorization: `Bearer ${token.accessToken}` },
+    })
+    if (!listResponse.ok) throw await this.apiError(listResponse)
+    const payload = z
+      .object({
+        items: z.array(
+          z.object({
+            id: z.string(),
+            snippet: z.object({ bannedUserDetails: z.object({ channelId: z.string() }) }),
+          }),
+        ),
+      })
+      .parse(await listResponse.json())
+    const ban = payload.items.find((item) => item.snippet.bannedUserDetails.channelId === userId)
+    if (!ban) return
+    const url = new URL('https://www.googleapis.com/youtube/v3/liveChat/bans')
+    url.searchParams.set('id', ban.id)
+    const response = await fetch(url, {
+      headers: { authorization: `Bearer ${token.accessToken}` },
+      method: 'DELETE',
+    })
+    if (!response.ok) throw await this.apiError(response)
+  }
+
+  public async addModerator(liveChatId: string, userId: string): Promise<void> {
+    const token = await this.auth.getAccessToken()
+    const response = await fetch(
+      'https://www.googleapis.com/youtube/v3/liveChat/moderators?part=snippet',
+      {
+        body: JSON.stringify({ snippet: { liveChatId, moderatorDetails: { channelId: userId } } }),
+        headers: {
+          authorization: `Bearer ${token.accessToken}`,
+          'content-type': 'application/json',
+        },
+        method: 'POST',
+      },
+    )
+    if (!response.ok) throw await this.apiError(response)
+  }
+
+  public async removeModerator(liveChatId: string, userId: string): Promise<void> {
+    const token = await this.auth.getAccessToken()
+    const listUrl = new URL('https://www.googleapis.com/youtube/v3/liveChat/moderators')
+    listUrl.search = new URLSearchParams({
+      liveChatId,
+      maxResults: '50',
+      part: 'snippet',
+    }).toString()
+    const listResponse = await fetch(listUrl, {
+      headers: { authorization: `Bearer ${token.accessToken}` },
+    })
+    if (!listResponse.ok) throw await this.apiError(listResponse)
+    const payload = z
+      .object({
+        items: z.array(
+          z.object({
+            id: z.string(),
+            snippet: z.object({ moderatorDetails: z.object({ channelId: z.string() }) }),
+          }),
+        ),
+      })
+      .parse(await listResponse.json())
+    const moderator = payload.items.find(
+      (item) => item.snippet.moderatorDetails.channelId === userId,
+    )
+    if (!moderator) return
+    const url = new URL('https://www.googleapis.com/youtube/v3/liveChat/moderators')
+    url.searchParams.set('id', moderator.id)
+    const response = await fetch(url, {
+      headers: { authorization: `Bearer ${token.accessToken}` },
+      method: 'DELETE',
     })
     if (!response.ok) throw await this.apiError(response)
   }

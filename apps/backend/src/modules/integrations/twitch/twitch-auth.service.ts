@@ -27,6 +27,7 @@ import { IntegrationRepository } from '../integration.repository'
 const CREDENTIAL_NAME = 'twitch.oauth'
 const TWITCH_SCOPES = [
   'channel:manage:broadcast',
+  'channel:manage:moderators',
   'moderator:manage:banned_users',
   'moderator:manage:chat_messages',
   'user:read:chat',
@@ -192,6 +193,9 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
         'chat.message.delete',
         'chat.message.pin',
         'chat.user.ban',
+        'chat.user.unban',
+        'chat.user.moderator.add',
+        'chat.user.moderator.remove',
         'live.metadata.write',
         'live.read',
         'user.identity',

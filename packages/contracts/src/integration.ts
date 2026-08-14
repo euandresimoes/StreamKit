@@ -7,6 +7,9 @@ export const IntegrationCapabilitySchema = z.enum([
   'chat.message.delete',
   'chat.message.pin',
   'chat.user.ban',
+  'chat.user.unban',
+  'chat.user.moderator.add',
+  'chat.user.moderator.remove',
   'live.metadata.write',
   'live.read',
   'user.identity',
@@ -48,7 +51,7 @@ export const ChatMessageReceivedSchema = z.object({
 })
 
 export const IntegrationConnectionSchema = z.object({
-  capabilities: z.array(IntegrationCapabilitySchema).max(10),
+  capabilities: z.array(IntegrationCapabilitySchema).max(15),
   channelDisplayName: z.string().trim().min(1).max(100),
   channelId: z.string().trim().min(1).max(200),
   createdAt: z.iso.datetime(),
@@ -62,7 +65,7 @@ export const IntegrationConnectionSchema = z.object({
 })
 
 export const SaveIntegrationConnectionRequestSchema = z.object({
-  capabilities: z.array(IntegrationCapabilitySchema).max(10).default([]),
+  capabilities: z.array(IntegrationCapabilitySchema).max(15).default([]),
   channelDisplayName: z.string().trim().min(1).max(100),
   channelId: z.string().trim().min(1).max(200),
   provider: IntegrationProviderSchema,
@@ -70,7 +73,14 @@ export const SaveIntegrationConnectionRequestSchema = z.object({
 export const SendChatMessageRequestSchema = z.object({
   message: z.string().trim().min(1).max(500),
 })
-export const ChatModerationActionSchema = z.enum(['delete_message', 'pin_message', 'ban_user'])
+export const ChatModerationActionSchema = z.enum([
+  'add_moderator',
+  'ban_user',
+  'delete_message',
+  'pin_message',
+  'remove_moderator',
+  'unban_user',
+])
 export const ChatModerationRequestSchema = z.object({
   action: ChatModerationActionSchema,
   externalMessageId: z.string().trim().min(1).max(300),
