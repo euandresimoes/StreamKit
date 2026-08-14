@@ -7,6 +7,8 @@ import { LivePlatformSelector } from "./LivePlatformSelector";
 import { LivePreview } from "./LivePreview";
 import { LiveChatPanel } from "./LiveChatPanel";
 import { LiveMetadataEditor } from "./LiveMetadataEditor";
+import { LiveActivityPanel } from "./LiveActivityPanel";
+import { LiveQuickControlsPanel } from "./LiveQuickControlsPanel";
 
 const EMPTY_METADATA = {
   category: null,
@@ -88,13 +90,19 @@ export function LiveControlTab() {
               maxSize={520}
               className="w-full shrink-0 border-t border-border"
             >
-              <LiveMetadataEditor
-                metadata={selected?.metadata ?? EMPTY_METADATA}
-                controls={selected?.metadataControls ?? []}
-                busy={live.busy}
-                canEdit={Boolean(selected?.capabilities.includes("live.metadata.write"))}
-                onSave={live.updateMetadata}
-              />
+              <div className="flex h-full w-full min-w-0 overflow-x-auto">
+                <div className="min-w-[360px] flex-[1.7]">
+                  <LiveMetadataEditor
+                    metadata={selected?.metadata ?? EMPTY_METADATA}
+                    controls={selected?.metadataControls ?? []}
+                    busy={live.busy}
+                    canEdit={Boolean(selected?.capabilities.includes("live.metadata.write"))}
+                    onSave={live.updateMetadata}
+                  />
+                </div>
+                <LiveActivityPanel connected={Boolean(selected)} />
+                <LiveQuickControlsPanel connected={Boolean(selected)} />
+              </div>
             </BaseResizablePanel>
           </div>
           <BaseResizablePanel
