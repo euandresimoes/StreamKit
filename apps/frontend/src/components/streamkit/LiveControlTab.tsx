@@ -98,7 +98,8 @@ export function LiveControlTab() {
                   defaultSize={600}
                   minSize={420}
                   maxSize={1000}
-                  className="border-l-0"
+                  className="basis-1/2 border-l-0"
+                  stretch={false}
                 >
                   <LiveMetadataEditor
                     metadata={selected?.metadata ?? EMPTY_METADATA}

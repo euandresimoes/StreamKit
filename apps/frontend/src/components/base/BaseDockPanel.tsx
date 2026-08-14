@@ -11,6 +11,7 @@ export function BaseDockPanel({
   minSize = 220,
   panelId,
   resize,
+  stretch = true,
   title,
 }: {
   children: ReactNode;
@@ -21,6 +22,7 @@ export function BaseDockPanel({
   minSize?: number;
   panelId: string;
   resize?: "left" | "right" | "both";
+  stretch?: boolean;
   title: string;
 }) {
   const content = (
@@ -36,7 +38,7 @@ export function BaseDockPanel({
   if (!resize)
     return (
       <section
-        className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card ${className}`}
+        className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-card ${stretch ? "flex-1" : "flex-none"} ${className}`}
       >
         {content}
       </section>
