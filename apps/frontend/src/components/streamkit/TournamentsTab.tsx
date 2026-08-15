@@ -206,7 +206,7 @@ export function TournamentsTab() {
                     <SelectContent>
                       {[4, 8, 16, 32].map((size) => (
                         <SelectItem key={size} value={String(size)}>
-                          {size} participantes
+                          {size} participants
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -233,7 +233,7 @@ export function TournamentsTab() {
                       <SelectContent>
                         {totalParticipantOptions.map((total) => (
                           <SelectItem key={total} value={String(total)}>
-                            {total} participantes
+                            {total} participants
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -256,7 +256,7 @@ export function TournamentsTab() {
                       <SelectContent>
                         {availableTeamCounts.map((count) => (
                           <SelectItem key={count} value={String(count)}>
-                            {count} equipes
+                            {count} teams
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -299,7 +299,7 @@ export function TournamentsTab() {
                   disabled={tournaments.busy || !slotsFilled || detail.matches.length > 0}
                   onClick={() => void tournaments.shuffle()}
                 >
-                  <Sparkles /> Sortear chaves
+                  <Sparkles /> Shuffle bracket
                 </Button>
               )}
               {detail.tournament.status === "finished" ||
@@ -366,7 +366,7 @@ export function TournamentsTab() {
                     <User className="size-4" />
                     {participantsExpanded && (
                       <>
-                        <h3 className="flex-1 text-[13px] font-semibold">Participantes</h3>
+                        <h3 className="flex-1 text-[13px] font-semibold">Participants</h3>
                         <span className="text-xs text-muted-foreground">{queued.length}</span>
                       </>
                     )}
@@ -374,7 +374,7 @@ export function TournamentsTab() {
                       variant="ghost"
                       size="icon-sm"
                       aria-label={
-                        participantsExpanded ? "Recolher participantes" : "Expandir participantes"
+                        participantsExpanded ? "Collapse participants" : "Expand participants"
                       }
                       onClick={() => setParticipantsExpanded((value) => !value)}
                     >
@@ -494,7 +494,7 @@ export function TournamentsTab() {
               {teamsExpanded && (
                 <>
                   <h3 className="flex-1 text-[13px] font-semibold">
-                    {detail.tournament.mode === "team" ? "Equipes" : "Participantes"}
+                    {detail.tournament.mode === "team" ? "Teams" : "Participants"}
                   </h3>
                   <span className="text-xs text-muted-foreground">
                     {entrantCount}/{detail.tournament.bracketSize}
@@ -504,7 +504,7 @@ export function TournamentsTab() {
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={teamsExpanded ? "Recolher painel" : "Expandir painel"}
+                aria-label={teamsExpanded ? "Collapse panel" : "Expand panel"}
                 onClick={() => setTeamsExpanded((value) => !value)}
               >
                 {teamsExpanded ? <ChevronLeft /> : <ChevronRight />}
@@ -548,7 +548,7 @@ export function TournamentsTab() {
                     disabled={tournaments.busy || detail.matches.length > 0}
                     onClick={() => void tournaments.shuffleTeamMembers()}
                   >
-                    <Sparkles /> Sortear participantes
+                    <Sparkles /> Shuffle participants
                   </Button>
                 )}
                 <div
@@ -769,7 +769,7 @@ export function TournamentsTab() {
                           <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
                           <CircleCheck
                             className="size-3.5 shrink-0 text-emerald-500"
-                            aria-label="No chaveamento"
+                            aria-label="Outside bracket"
                           />
                           {participant.source === "chat" && (
                             <span className="shrink-0" title={participant.provider ?? undefined}>
@@ -931,7 +931,7 @@ export function TournamentsTab() {
                       key={round}
                       className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
                     >
-                      {round === maxRound ? "Final" : `Rodada ${round}`}
+                      {round === maxRound ? "Final" : `Round ${round}`}
                     </p>
                   ),
                 )}
@@ -1040,7 +1040,7 @@ export function TournamentsTab() {
                                 </div>
                               )}
                               <p className="px-2 pb-1 text-[10px] text-muted-foreground">
-                                Partida {match.matchNumber}
+                                Match {match.matchNumber}
                               </p>
                               {[left, right].map((entry, index) => {
                                 const result = index === 0 ? match.leftResult : match.rightResult;
@@ -1102,17 +1102,17 @@ export function TournamentsTab() {
                                         ["lost", "forfeit"].includes(result) && "opacity-50",
                                       )}
                                     >
-                                      {entry?.name ?? "A definir"}
+                                      {entry?.name ?? "TBD"}
                                     </span>
                                     {result !== "pending" && (
                                       <span className="text-[9px] uppercase text-muted-foreground">
                                         {result === "won"
-                                          ? "Ganhou"
+                                          ? "Won"
                                           : result === "lost"
-                                            ? "Perdeu"
+                                            ? "Lost"
                                             : result === "forfeit"
-                                              ? "Desistiu"
-                                              : "Empate"}
+                                              ? "Forfeit"
+                                              : "Draw"}
                                       </span>
                                     )}
                                     {entry?.color && (
@@ -1138,7 +1138,7 @@ export function TournamentsTab() {
                 >
                   <div className="flex w-full items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 text-[12.5px]">
                     <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                      {champion?.name ?? "A definir"}
+                      {champion?.name ?? "TBD"}
                     </span>
                     {champion?.color && (
                       <span
@@ -1156,27 +1156,27 @@ export function TournamentsTab() {
                 onOpenChange={(open) => {
                   if (!open) setOperatingMatchId(null);
                 }}
-                title={`Partida ${selectedMatch.matchNumber}`}
+                title={`Match ${selectedMatch.matchNumber}`}
                 description={
                   selectedMatch.roundNumber === maxRound
                     ? "Final"
-                    : `Rodada ${selectedMatch.roundNumber}`
+                    : `Round ${selectedMatch.roundNumber}`
                 }
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-[13px] font-semibold">Partida {selectedMatch.matchNumber}</p>
+                    <p className="text-[13px] font-semibold">Match {selectedMatch.matchNumber}</p>
                     <p className="text-[11px] text-muted-foreground">
                       {selectedMatch.roundNumber === maxRound
                         ? "Final"
-                        : `Rodada ${selectedMatch.roundNumber}`}{" "}
+                        : `Round ${selectedMatch.roundNumber}`}{" "}
                       ·{" "}
                       {selectedMatch.status === "in_progress"
                         ? "In progress"
                         : selectedMatch.status === "finished"
-                          ? "Finalizada"
+                          ? "Finished"
                           : selectedMatch.status === "ready"
-                            ? "Pronta"
+                            ? "Ready"
                             : "Waiting"}
                     </p>
                   </div>
@@ -1217,7 +1217,7 @@ export function TournamentsTab() {
                       return (
                         <div key={side} className="rounded-xl border border-border p-3">
                           <p className="mb-3 truncate text-[12px] font-medium">
-                            {entry?.name ?? "A definir"}
+                            {entry?.name ?? "TBD"}
                           </p>
                           <div className="flex flex-wrap gap-2">
                             <Button
@@ -1231,7 +1231,7 @@ export function TournamentsTab() {
                                 )
                               }
                             >
-                              Ganhou
+                              Won
                             </Button>
                             <Button
                               size="sm"
@@ -1245,7 +1245,7 @@ export function TournamentsTab() {
                                 )
                               }
                             >
-                              Desistiu
+                              Forfeit
                             </Button>
                           </div>
                         </div>
@@ -1259,7 +1259,7 @@ export function TournamentsTab() {
                         void tournaments.completeMatch(selectedMatch.id, "draw", "draw")
                       }
                     >
-                      Registrar empate
+                      Register draw
                     </Button>
                   </div>
                 )}
@@ -1314,7 +1314,7 @@ export function TournamentsTab() {
               </div>
             </section>
             <section>
-              <h3 className="mb-2 text-[12px] font-semibold">Resumo das partidas</h3>
+              <h3 className="mb-2 text-[12px] font-semibold">Match summary</h3>
               <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
                 {detail.matches.map((match) => {
                   const left = bracketEntries.find((entry) => entry.id === match.leftEntryId);
@@ -1326,13 +1326,12 @@ export function TournamentsTab() {
                       className="grid grid-cols-[90px_1fr_auto] items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-[11px]"
                     >
                       <span className="text-muted-foreground">
-                        {match.roundNumber === maxRound ? "Final" : `Rodada ${match.roundNumber}`} ·
+                        {match.roundNumber === maxRound ? "Final" : `Round ${match.roundNumber}`} ·
                         #{match.matchNumber}
                       </span>
                       <span className="min-w-0 truncate">
                         {left?.name ?? "To be decided"}{" "}
-                        <span className="text-muted-foreground">×</span>{" "}
-                        {right?.name ?? "A definir"}
+                        <span className="text-muted-foreground">×</span> {right?.name ?? "TBD"}
                       </span>
                       <span className="max-w-32 truncate font-medium text-primary">
                         {winner?.name ?? (match.leftResult === "draw" ? "Draw" : "No result")}
@@ -1356,7 +1355,7 @@ export function TournamentsTab() {
         onSubmit={createTournament}
         options={[
           { label: "Individual", value: "individual" },
-          { label: "Times", value: "team" },
+          { label: "Teams", value: "team" },
         ]}
       />
       {detail && (

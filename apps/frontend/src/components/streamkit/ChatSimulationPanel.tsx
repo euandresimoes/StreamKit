@@ -118,7 +118,7 @@ export function ChatSimulationPanel({
               }
             }}
           >
-            Simular
+            Simulate
           </Button>
         )}
       </div>
@@ -129,8 +129,8 @@ export function ChatSimulationPanel({
       )}
       {status && (
         <p className="mt-2 text-[10px] text-muted-foreground">
-          {status.receivedCount} recebidos · {status.processedCount} processados ·{" "}
-          {status.duplicateCount} duplicados · fila {status.queueDepth}
+          {status.receivedCount} received · {status.processedCount} processed ·{" "}
+          {status.duplicateCount} duplicates · queue {status.queueDepth}
         </p>
       )}
       {error && <p className="mt-2 text-[10px] text-destructive">{error}</p>}

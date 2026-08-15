@@ -56,8 +56,19 @@ export function ParticipantChatCapturePanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {!captures.connections.length || !currentConnection ? (
-        <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-          Connect and start a chat provider in settings to capture participants.
+        <div className="space-y-3">
+          <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+            Connect and start a chat provider in settings to capture participants.
+          </div>
+          {import.meta.env.DEV && (
+            <ChatSimulationPanel
+              channelId={`debug-${target}-${targetId}`}
+              defaultMessage={match === "any" ? "simulated message" : matchValue.trim()}
+              enabled
+              onProgress={onRefresh}
+              provider="twitch"
+            />
+          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -78,7 +89,7 @@ export function ParticipantChatCapturePanel({
               <SelectContent>
                 <SelectItem value="any">Any message</SelectItem>
                 <SelectItem value="exact">Exact message</SelectItem>
-                <SelectItem value="prefix">Prefixo</SelectItem>
+                <SelectItem value="prefix">Prefix</SelectItem>
                 <SelectItem value="contains">Contains text</SelectItem>
               </SelectContent>
             </Select>

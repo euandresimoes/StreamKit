@@ -48,21 +48,21 @@ import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
 
 const PRIORITIES: TodoPriority[] = ["low", "normal", "high", "urgent"];
 const PRIORITY_LABELS: Record<TodoPriority, string> = {
-  low: "Baixa",
+  low: "Low",
   normal: "Normal",
-  high: "Alta",
-  urgent: "Urgente",
+  high: "High",
+  urgent: "Urgent",
 };
 const TODO_TEXT = {
   addCard: "Add card",
   addColumn: "New column",
-  boardHint: "Planeje, priorize e acompanhe o trabalho",
+  boardHint: "Plan, prioritize, and track your work",
   cardDetails: "Card details",
   cardTitle: "Card title",
   columnTitle: "Column title",
-  description: "Descricao",
-  notes: "Notas",
-  priority: "Prioridade",
+  description: "Description",
+  notes: "Notes",
+  priority: "Priority",
   searchWorkspace: "Search workspace",
   templates: "Templates",
   workspaces: "Workspaces",
