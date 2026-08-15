@@ -1,5 +1,3 @@
-import { RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { BaseResizablePanel } from "@/components/base/BaseResizablePanel";
 import { useLiveSelection } from "@/modules/live-control/use-live-control";
 import { LivePreview } from "./LivePreview";
@@ -11,22 +9,6 @@ export function LiveControlTab() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-4 border-b border-border px-5 py-2">
-        <div className="ml-auto flex items-center gap-2">
-          <div className="hidden border-l border-border pl-3 sm:block">
-            <p className="text-[9px] uppercase tracking-wide text-muted-foreground">Status</p>
-            <p className="text-xs font-semibold">{selected?.state ?? "offline"}</p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Atualizar controle da live"
-            onClick={() => void live.load()}
-          >
-            <RefreshCw />
-          </Button>
-        </div>
-      </header>
       <div className="flex min-h-0 flex-1 flex-col">
         {live.error && (
           <div
