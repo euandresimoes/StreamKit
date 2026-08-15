@@ -594,6 +594,9 @@ providers reais e oferece cenários até 10.000 eventos. O gate completo `pnpm v
 
 ## Batch 21 — LivePix
 
+> O escopo executável de LivePix foi reorganizado na Batch 27, depois da conclusão da infraestrutura
+> opcional da Batch 26. Esta seção permanece como histórico da decisão de adiar o provider.
+
 **Referências:** seções 6.10–6.11, 7.2, 7.7, 8.1 (LivePix), 11.4 (`integration_events`), 17.2, 21 e 22 (Fase 5).
 
 **Adiada por decisão do usuário em 2026-08-12:** não implementar até os fluxos manuais e a UI
@@ -836,6 +839,84 @@ eventos push. Providers que já oferecem WebSocket/streaming continuam usando se
 - [ ] Cobrir contrato, backend local, frontend de status e E2E do ciclo de vida.
 - [ ] Executar gate completo de format, lint, typecheck, testes, integração, build e E2E aplicável.
 - [ ] Revisar segurança, privacidade, retenção local e documentação antes de concluir a batch.
+
+## Batch 27 — LivePix Payment Gateway
+
+**Escopo:** implementar o provider de pagamentos recebidos do LivePix em uma fronteira própria,
+reutilizando somente os contratos e o transporte opcional da Batch 26. O núcleo manual de Giveaway,
+Games e Torneios deve continuar funcionando sem rede, LivePix ou qualquer outro gateway.
+
+**Documentação da batch:** `docs/batches/batch-27-livepix-payment-gateway/`.
+
+**Referências:** seções 6.10–6.11, 7.2, 7.7, 8.1, 11.4, 21.6 e Fase 6 da especificação; ADRs
+0013, 0027 e 0028; [API oficial do LivePix](https://docs.livepix.gg/api).
+
+### 27.1 Contrato e isolamento do provider
+
+- [ ] Criar `ContributionProvider` e `ContributionReceived` em contratos compartilhados, sem tipos do LivePix no domínio.
+- [ ] Criar `PaymentProviderRegistry` e a pasta isolada `providers/livepix/`.
+- [ ] Separar autenticação, cliente HTTP, webhook, normalização, erros e reconciliação em serviços próprios.
+- [ ] Garantir que Giveaway, Games e Torneios dependam do contrato interno, nunca do adapter LivePix.
+- [ ] Modelar tipos de evento, valores em centavos, moeda, referência, mensagem, handle exato e horário UTC.
+
+### 27.2 OAuth2, cofre e ciclo de conexão
+
+- [ ] Implementar OAuth2 com state/PKCE quando suportado pelo fluxo escolhido e escopos mínimos aprovados.
+- [ ] Armazenar client secret, access token e refresh token exclusivamente no cofre seguro do sistema operacional.
+- [ ] Reutilizar tokens até expiração e implementar renovação single-flight sem tempestade de requisições.
+- [ ] Exibir estados `disconnected`, `connecting`, `ready`, `degraded`, `reauthorization_required` e `stopped`.
+- [ ] Tratar revogação, escopo insuficiente, timeout, 401, 429 e 5xx com códigos estáveis e logs redigidos.
+- [ ] Permitir desconexão que revogue/limpe credenciais locais e remova webhooks conhecidos.
+
+### 27.3 Webhook, detalhes e idempotência
+
+- [ ] Criar webhook LivePix somente depois que o túnel estiver pronto e verificável.
+- [ ] Validar body, `userId`, `clientId`, `event`, `resource.id`, tipo e tamanho com Zod.
+- [ ] Persistir envelope durável antes de responder HTTP 200; duplicata conhecida também retorna 200.
+- [ ] Buscar detalhes autenticados do recurso antes de aceitar valor, mensagem ou identidade.
+- [ ] Deduplicar por identificador externo estável e proteger contra evento fora de ordem/reenvio.
+- [ ] Separar evento recebido, evento normalizado e efeito de campanha para permitir reprocessamento seguro.
+- [ ] Nunca executar comando administrativo ou regra de campanha dentro do controller do webhook.
+
+### 27.4 Reconexão e rotação automática da URL
+
+- [ ] Implementar máquina de estados do provider com backoff exponencial, jitter, limite e cancelamento.
+- [ ] Detectar queda do túnel, API ou webhook remoto e iniciar reconexão sem intervenção do usuário.
+- [ ] Criar nova geração de webhook, persistir a nova referência e remover a anterior somente após confirmação.
+- [ ] Manter janela de sobreposição quando possível e garantir segurança por deduplicação.
+- [ ] Reconciliar webhooks existentes após restart, falha no meio da troca ou encerramento inesperado.
+- [ ] Limpar webhooks órfãos conhecidos sem apagar webhooks de outra instalação/conta.
+- [ ] Atualizar automaticamente a URL no LivePix e só anunciar `ready` após confirmação remota.
+- [ ] Cobrir falha de rede durante cada etapa sem criar webhooks infinitos nem perder a referência local.
+
+### 27.5 Campanhas e identidade do StreamKit
+
+- [ ] Associar contribuição ao `participantHandle` exato e à plataforma global selecionada.
+- [ ] Usar Twitch/Kick por handle e YouTube exclusivamente por `channelId`, conforme ADR 0027.
+- [ ] Manter contribuição sem correspondência como pendente/manual, nunca inventar identidade.
+- [ ] Implementar somente após fechar as decisões de `DECISIONS.md`: tipos, valor mínimo, aprovação,
+      moeda, sinalização, retenção, repetição e janela de campanha.
+- [ ] Garantir que falha do LivePix não bloqueie entrada manual, sorteio ou torneio.
+
+### 27.6 Segurança, privacidade e operação
+
+- [ ] Não registrar tokens, headers, mensagens completas ou dados financeiros desnecessários.
+- [ ] Redigir logs e diagnósticos com request/correlation ID e códigos acionáveis.
+- [ ] Aplicar limites de body, taxa, timeout, consultas de detalhes e tamanho da fila.
+- [ ] Testar ausência de assinatura oficial sem inventar HMAC; usar apenas garantias documentadas pelo provider.
+- [ ] Documentar consentimento, retenção, remoção e impacto de o evento atravessar um túnel HTTPS temporário.
+- [ ] Expor no frontend somente estado, conta mascarada, erros recuperáveis e ações de conexão.
+
+### 27.7 Testes e saída
+
+- [ ] Testar contratos, normalização, OAuth, renovação single-flight, 401, 429, 5xx e rate limit.
+- [ ] Testar payload inválido, duplicata, replay, fora de ordem, detalhe indisponível e dead-letter.
+- [ ] Testar criação, troca, sobreposição, remoção e reconciliação de webhooks com adapter LivePix falso.
+- [ ] Testar queda do túnel durante evento e reconexão com nova URL.
+- [ ] Testar restart entre cada etapa da rotação e ausência de webhooks órfãos criados em loop.
+- [ ] Testar persistência, cofre, logs redigidos e funcionamento manual sem rede.
+- [ ] Executar ambiente real somente com conta autorizada, credenciais de teste e webhook controlado.
+- [ ] Executar gate completo e marcar tasks apenas após todos os critérios e decisões estarem fechados.
 
 ## Matriz de cobertura da especificação
 

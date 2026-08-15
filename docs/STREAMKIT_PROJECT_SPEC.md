@@ -1366,6 +1366,10 @@ arquitetura preserva pontos de extensão, mas não implementa essas features ant
 
 ### 21.6 LivePix — arquitetura futura
 
+> A implementação desta arquitetura foi detalhada na Batch 27. O provider deve permanecer isolado em
+> `apps/backend/src/modules/payments/providers/livepix/`, reutilizar o transporte opcional da Batch 26
+> e manter o núcleo manual independente do gateway.
+
 #### 21.6.1 Adapter do provedor
 
 O domínio não deve depender diretamente do LivePix. Criar uma interface conceitual:
