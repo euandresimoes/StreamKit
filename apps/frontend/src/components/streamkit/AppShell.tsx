@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ListTodo, Swords, Gift, Settings, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { useSettings } from "@/modules/settings/use-settings";
 import { LiveControlTab } from "./LiveControlTab";
 import { LivePlatformSelector } from "./LivePlatformSelector";
 import { LiveSelectionProvider, useLiveSelection } from "@/modules/live-control/use-live-control";
+import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 
 type Tab = "todo" | "games" | "giveaways" | "live";
 
@@ -33,12 +34,23 @@ function AppShellContent() {
   const live = useLiveSelection();
   const [tab, setTab] = useState<Tab>("todo");
   const [settings, setSettings] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (!window.streamkit?.onFullscreenState) return;
+    return getDesktopBridge().onFullscreenState(setFullscreen);
+  }, []);
 
   return (
     <main className="h-screen w-screen overflow-hidden">
       <div className="flex h-full w-full flex-col overflow-hidden bg-background/60 backdrop-blur-3xl">
         <header className="streamkit-titlebar h-10 shrink-0 border-b border-border">
-          <div className="streamkit-titlebar__content flex h-full items-center gap-4 px-4">
+          <div
+            className={cn(
+              "streamkit-titlebar__content flex h-full items-center gap-4",
+              fullscreen && "streamkit-titlebar__content--fullscreen",
+            )}
+          >
             <nav className="streamkit-titlebar__interactive flex gap-1">
               {tabs.map((tabItem) => (
                 <button

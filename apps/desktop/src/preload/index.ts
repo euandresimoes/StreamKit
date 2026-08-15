@@ -19,6 +19,7 @@ export type StreamKitBridge = {
   updateState: () => Promise<UpdateState | undefined>
   setUpdateActivity: (active: boolean) => Promise<void>
   onUpdateState: (listener: (state: UpdateState) => void) => () => void
+  onFullscreenState: (listener: (fullscreen: boolean) => void) => () => void
 }
 
 const streamKitBridge: StreamKitBridge = {
@@ -36,6 +37,11 @@ const streamKitBridge: StreamKitBridge = {
     const handler = (_event: Electron.IpcRendererEvent, state: UpdateState) => listener(state)
     ipcRenderer.on('streamkit:update-state', handler)
     return () => ipcRenderer.removeListener('streamkit:update-state', handler)
+  },
+  onFullscreenState: (listener) => {
+    const handler = (_event: Electron.IpcRendererEvent, fullscreen: boolean) => listener(fullscreen)
+    ipcRenderer.on('streamkit:fullscreen-state', handler)
+    return () => ipcRenderer.removeListener('streamkit:fullscreen-state', handler)
   },
 }
 

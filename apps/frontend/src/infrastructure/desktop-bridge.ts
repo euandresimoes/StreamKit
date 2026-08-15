@@ -16,6 +16,7 @@ declare global {
       openLogsDirectory(): Promise<void>;
       updateCommand(command: UpdateCommand): Promise<UpdateState>;
       updateState(): Promise<UpdateState | undefined>;
+      onFullscreenState(listener: (fullscreen: boolean) => void): () => void;
     };
   }
 }

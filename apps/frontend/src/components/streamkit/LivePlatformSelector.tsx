@@ -17,10 +17,8 @@ export function LivePlatformSelector({
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
-  const providers = ["twitch", "youtube", "kick"] as const;
-
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 items-center">
       <label className="flex min-w-0 items-center gap-2 text-xs font-medium">
         <span className="sr-only">Plataforma da transmissão</span>
         <Select value={selectedId ?? ""} onValueChange={onSelect}>
@@ -47,25 +45,6 @@ export function LivePlatformSelector({
           </SelectContent>
         </Select>
       </label>
-      <div className="hidden items-center gap-2 sm:flex" aria-label="Status das plataformas">
-        {providers.map((provider) => {
-          const connected = streams.some(
-            (stream) => stream.provider === provider && stream.state === "online",
-          );
-          return (
-            <span
-              key={provider}
-              className="flex items-center gap-1 text-[10px] text-muted-foreground"
-              title={`${brandName(provider)}: ${connected ? "online" : "não conectado"}`}
-            >
-              <span
-                className={`size-1.5 rounded-full ${connected ? "bg-emerald-500" : "bg-muted-foreground/40"}`}
-              />
-              {brandName(provider)}
-            </span>
-          );
-        })}
-      </div>
     </div>
   );
 }

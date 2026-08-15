@@ -22,5 +22,6 @@ describe('native window titlebar', () => {
     expect(appShell).not.toContain('rounded-[26px]')
     expect(styles).toContain('-webkit-app-region: drag')
     expect(styles).toContain('env(titlebar-area-width, 100%)')
+    expect(styles).toContain('streamkit-titlebar__content--fullscreen')
   })
 })

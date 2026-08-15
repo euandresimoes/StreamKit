@@ -219,6 +219,11 @@
   width: env(titlebar-area-width, 100%);
 }
 
+.streamkit-titlebar__content--fullscreen {
+  margin-left: 0;
+  width: 100%;
+}
+
 .streamkit-titlebar__interactive,
 .streamkit-titlebar button,
 .streamkit-titlebar a,

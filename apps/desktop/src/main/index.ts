@@ -126,6 +126,12 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
     webPreferences: createSecureWebPreferences(preloadPath),
     width: 1280,
   })
+  mainWindow.on('enter-full-screen', () => {
+    mainWindow?.webContents.send('streamkit:fullscreen-state', true)
+  })
+  mainWindow.on('leave-full-screen', () => {
+    mainWindow?.webContents.send('streamkit:fullscreen-state', false)
+  })
 
   renderWindows = new RenderWindowManager({
     appId: STREAMKIT_APP_ID,
