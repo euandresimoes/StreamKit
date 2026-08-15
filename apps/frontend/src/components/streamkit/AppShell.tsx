@@ -38,7 +38,20 @@ function AppShellContent() {
 
   useEffect(() => {
     if (!window.streamkit?.onFullscreenState) return;
-    return getDesktopBridge().onFullscreenState(setFullscreen);
+    const updateFullscreen = () => {
+      const nativeFullscreen =
+        window.outerWidth >= window.screen.width && window.outerHeight >= window.screen.height;
+      setFullscreen(document.fullscreenElement !== null || nativeFullscreen);
+    };
+    const removeBridgeListener = getDesktopBridge().onFullscreenState(setFullscreen);
+    updateFullscreen();
+    window.addEventListener("resize", updateFullscreen);
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => {
+      removeBridgeListener();
+      window.removeEventListener("resize", updateFullscreen);
+      document.removeEventListener("fullscreenchange", updateFullscreen);
+    };
   }, []);
 
   return (
