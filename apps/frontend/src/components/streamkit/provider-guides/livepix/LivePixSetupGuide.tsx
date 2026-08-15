@@ -15,7 +15,7 @@ export const livePixSetupGuide: ProviderGuide = {
     {
       title: "Open your LivePix dashboard",
       description:
-        "Open the main LivePix website, sign in to the account that receives the payments, go to Settings > API and create a new application named StreamKit. Copy the Client ID and Client Secret into the secure fields below. If the form shows a notification URL/webhook field, leave it empty: StreamKit creates the temporary public URL and registers the webhook automatically after connecting. Do not look for the create button on docs.livepix.gg; that page is only the API reference.",
+        "Open the main LivePix website, sign in to the account that receives the payments, go to Settings > API and create a new application named StreamKit.\n\nCopy the Client ID and Client Secret into the secure fields below.",
       actionLabel: "Open LivePix",
       actionUrl: "https://livepix.gg/",
       imageUrl: "/assets/provider-guides/livepix/step-1.png",

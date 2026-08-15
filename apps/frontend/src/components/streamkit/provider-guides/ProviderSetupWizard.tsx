@@ -85,7 +85,7 @@ export function ProviderSetupWizard({
               Account setup
             </p>
             <h2 className="mt-2 text-base font-semibold">{guide.steps[step]?.title}</h2>
-            <p className="mt-2 max-w-[560px] text-xs leading-5 text-muted-foreground">
+            <p className="mt-2 max-w-[560px] whitespace-pre-line text-xs leading-5 text-muted-foreground">
               {guide.steps[step]?.description}
             </p>
             {guide.steps[step]?.imageUrl && (
