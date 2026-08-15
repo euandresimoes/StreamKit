@@ -14,14 +14,16 @@ export const twitchSetupGuide: ProviderGuide = {
     {
       title: "Register the application",
       description:
-        "Create a Twitch application and use the Client ID already included in this build.",
+        "Create a Twitch application, then enter its Client ID in the secure field at the end of this guide.",
       actionLabel: "Open Twitch developer console",
       actionUrl: "https://dev.twitch.tv/console/apps",
+      imageUrl: "/assets/provider-guides/twitch/create-app.png",
     },
     {
       title: "Authorize the channel",
       description:
         "StreamKit opens the official Twitch authorization page. Confirm the requested permissions for the channel owner.",
+      imageUrl: "/assets/provider-guides/twitch/connect-account.png",
     },
     {
       title: "Start the chat connection",

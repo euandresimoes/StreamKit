@@ -7,6 +7,7 @@ export type ProviderGuideStep = {
   description: string;
   actionLabel?: string;
   actionUrl?: string;
+  imageUrl?: string;
   visual?: ReactNode;
 };
 

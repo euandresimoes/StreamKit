@@ -88,6 +88,13 @@ export function ProviderSetupWizard({
             <p className="mt-2 max-w-[560px] text-xs leading-5 text-muted-foreground">
               {guide.steps[step]?.description}
             </p>
+            {guide.steps[step]?.imageUrl && (
+              <img
+                src={guide.steps[step]!.imageUrl}
+                alt=""
+                className="mt-4 max-h-[270px] w-full rounded-md border border-border object-contain object-left-top"
+              />
+            )}
             {guide.steps[step]?.actionUrl && (
               <Button
                 className="mt-4"
