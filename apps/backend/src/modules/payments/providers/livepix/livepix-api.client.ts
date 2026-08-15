@@ -10,6 +10,8 @@ import {
   LivePixWebhooksResponseSchema,
 } from './livepix.schemas'
 
+const LIVEPIX_REQUEST_TIMEOUT_MS = 15_000
+
 @Injectable()
 export class LivePixApiClient {
   public constructor(@Inject(LivePixAuthService) private readonly auth: LivePixAuthService) {}
@@ -47,6 +49,7 @@ export class LivePixApiClient {
     const response = await fetch(`https://api.livepix.gg${path}`, {
       ...init,
       headers: { authorization: `Bearer ${await this.auth.getAccessToken()}`, ...init.headers },
+      signal: AbortSignal.timeout(LIVEPIX_REQUEST_TIMEOUT_MS),
     })
     if (response.status === 401)
       throw new ApiApplicationError(

@@ -75,6 +75,7 @@ export function SettingsDialog({
     ReturnType<typeof settingsApi.livepixStatus>
   > | null>(null);
   const [livepixBusy, setLivepixBusy] = useState(false);
+  const [livepixError, setLivepixError] = useState<string | null>(null);
   const [setupProvider, setSetupProvider] = useState<ProviderGuideId | null>(null);
   const { t } = useTranslation(undefined, { i18n });
   const persisted = useSettings(open);
@@ -90,10 +91,13 @@ export function SettingsDialog({
 
   const saveLivepix = async (credentials: { clientId: string; clientSecret: string }) => {
     setLivepixBusy(true);
+    setLivepixError(null);
     try {
       await settingsApi.saveCredential(JSON.stringify(credentials));
       setLivepixStatus(await settingsApi.connectLivepix());
       setSetupProvider(null);
+    } catch (cause) {
+      setLivepixError(cause instanceof Error ? cause.message : "Could not connect LivePix.");
     } finally {
       setLivepixBusy(false);
     }
@@ -286,7 +290,10 @@ export function SettingsDialog({
                     <Button
                       size="sm"
                       loading={livepixBusy}
-                      onClick={() => setSetupProvider("livepix")}
+                      onClick={() => {
+                        setLivepixError(null);
+                        setSetupProvider("livepix");
+                      }}
                     >
                       {t("settings.connectLivepix")}
                     </Button>
@@ -522,6 +529,7 @@ export function SettingsDialog({
             open
             provider={setupProvider}
             busy={setupProvider === "livepix" ? livepixBusy : integrations.busy}
+            error={setupProvider === "livepix" ? livepixError : null}
             onOpenChange={(open) => {
               if (!open) setSetupProvider(null);
             }}

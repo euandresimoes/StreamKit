@@ -3,6 +3,8 @@ import { access } from 'node:fs/promises'
 import { Injectable } from '@nestjs/common'
 import { CLOUDFLARED_VERSION, install, Tunnel, use } from 'cloudflared'
 
+const CLOUDFLARED_INSTALL_TIMEOUT_MS = 30_000
+
 export type ExternalTunnelHandle = {
   onFailure?: (callback: (error: Error) => void) => void
   publicUrl: string
@@ -22,7 +24,11 @@ export class CloudflareQuickTunnelAdapter implements ExternalTunnelAdapter {
       try {
         await access(this.binaryPath)
       } catch {
-        await install(this.binaryPath, CLOUDFLARED_VERSION)
+        await withTimeout(
+          install(this.binaryPath, CLOUDFLARED_VERSION),
+          CLOUDFLARED_INSTALL_TIMEOUT_MS,
+          'EXTERNAL_TUNNEL_INSTALL_TIMEOUT',
+        )
       }
       use(this.binaryPath)
     }
@@ -60,5 +66,17 @@ export class CloudflareQuickTunnelAdapter implements ExternalTunnelAdapter {
         tunnel.stop()
       },
     }
+  }
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, code: string): Promise<T> {
+  let timeout: NodeJS.Timeout | undefined
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => reject(new Error(code)), timeoutMs)
+  })
+  try {
+    return await Promise.race([promise, timeoutPromise])
+  } finally {
+    if (timeout) clearTimeout(timeout)
   }
 }

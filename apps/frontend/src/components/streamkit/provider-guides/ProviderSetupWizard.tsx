@@ -23,12 +23,14 @@ export function ProviderSetupWizard({
   onOpenChange,
   provider,
   busy = false,
+  error,
   onConnect,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   provider: ProviderGuideId;
   busy?: boolean;
+  error?: string | null;
   onConnect: (credentials?: { clientId: string; clientSecret: string }) => void;
 }) {
   const guide = guides[provider];
@@ -175,6 +177,11 @@ export function ProviderSetupWizard({
                 )}
               </div>
             </div>
+            {error && (
+              <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive">
+                {error}
+              </p>
+            )}
           </main>
         </div>
       </DialogContent>

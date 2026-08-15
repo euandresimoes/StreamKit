@@ -10,6 +10,7 @@ import {
 import { LivePixTokenResponseSchema } from './livepix.schemas'
 
 const CREDENTIAL = 'livepix'
+const LIVEPIX_REQUEST_TIMEOUT_MS = 15_000
 const StoredCredentialSchema = z.object({
   accessToken: z.string().min(1).optional(),
   clientId: z.string().min(1),
@@ -76,6 +77,7 @@ export class LivePixAuthService {
       body,
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       method: 'POST',
+      signal: AbortSignal.timeout(LIVEPIX_REQUEST_TIMEOUT_MS),
     })
     if (!response.ok)
       throw new ApiApplicationError('INTEGRATION_AUTH_REVOKED', 'LivePix authorization failed', 401)
