@@ -1,29 +1,17 @@
 import { RefreshCw } from "lucide-react";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { BaseResizablePanel } from "@/components/base/BaseResizablePanel";
-import { useLiveControl } from "@/modules/live-control/use-live-control";
-import { LivePlatformSelector } from "./LivePlatformSelector";
+import { useLiveSelection } from "@/modules/live-control/use-live-control";
 import { LivePreview } from "./LivePreview";
 import { LiveChatPanel } from "./LiveChatPanel";
 
 export function LiveControlTab() {
-  const live = useLiveControl(true);
-  const selected =
-    live.streams.find((item) => item.connectionId === live.selectedId) ?? live.streams[0] ?? null;
-
-  useEffect(() => {
-    if (!live.selectedId && selected) live.select(selected.connectionId);
-  }, [live.selectedId, live.select, selected]);
+  const live = useLiveSelection();
+  const selected = live.selected;
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
       <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-4 border-b border-border px-5 py-2">
-        <LivePlatformSelector
-          streams={live.streams}
-          selectedId={selected?.connectionId ?? null}
-          onSelect={live.select}
-        />
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden border-l border-border pl-3 sm:block">
             <p className="text-[9px] uppercase tracking-wide text-muted-foreground">Status</p>

@@ -8,6 +8,8 @@ import { GiveawaysTab } from "./GiveawaysTab";
 import { SettingsDialog } from "./SettingsDialog";
 import { useSettings } from "@/modules/settings/use-settings";
 import { LiveControlTab } from "./LiveControlTab";
+import { LivePlatformSelector } from "./LivePlatformSelector";
+import { LiveSelectionProvider, useLiveSelection } from "@/modules/live-control/use-live-control";
 
 type Tab = "todo" | "games" | "giveaways" | "live";
 
@@ -19,7 +21,16 @@ const tabs: { id: Tab; label: string; icon: typeof ListTodo }[] = [
 ];
 
 export function AppShell() {
+  return (
+    <LiveSelectionProvider>
+      <AppShellContent />
+    </LiveSelectionProvider>
+  );
+}
+
+function AppShellContent() {
   useSettings(true);
+  const live = useLiveSelection();
   const [tab, setTab] = useState<Tab>("todo");
   const [settings, setSettings] = useState(false);
 
@@ -47,6 +58,11 @@ export function AppShell() {
             </nav>
 
             <div className="streamkit-titlebar__interactive ml-auto flex items-center gap-1.5">
+              <LivePlatformSelector
+                streams={live.streams}
+                selectedId={live.selectedId}
+                onSelect={live.select}
+              />
               <Button
                 variant="ghost"
                 size="icon-sm"

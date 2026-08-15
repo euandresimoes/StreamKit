@@ -1,6 +1,6 @@
 import type { GiveawayCaptureEntryPolicy, GiveawayCaptureMatch } from "@streamkit/contracts";
 import { Radio } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { BaseDateTimePicker } from "@/components/base/BaseDateTimePicker";
 import { BaseBrandIcon, brandName } from "@/components/base/BaseBrandIcon";
@@ -16,6 +16,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { captureButtonLabel } from "@/modules/integration/capture-presentation";
 import { useParticipantCaptureRules } from "@/modules/integration/use-participant-capture-rules";
+import { useLiveSelection } from "@/modules/live-control/use-live-control";
 import { ChatSimulationPanel } from "./ChatSimulationPanel";
 
 export function ParticipantChatCapturePanel({
@@ -32,7 +33,7 @@ export function ParticipantChatCapturePanel({
   onRefresh: () => Promise<void>;
 }) {
   const captures = useParticipantCaptureRules(target, targetId, onRefresh);
-  const [connectionId, setConnectionId] = useState("");
+  const { selectedId: connectionId } = useLiveSelection();
   const [match, setMatch] = useState<GiveawayCaptureMatch>("exact");
   const [matchValue, setMatchValue] = useState("!participar");
   const [entryPolicy, setEntryPolicy] = useState<GiveawayCaptureEntryPolicy>("unique");
@@ -43,9 +44,6 @@ export function ParticipantChatCapturePanel({
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
 
-  useEffect(() => {
-    if (!connectionId && captures.connections[0]) setConnectionId(captures.connections[0].id);
-  }, [captures.connections, connectionId]);
   const currentRule = captures.rules.find((rule) => rule.connectionId === connectionId);
   const currentConnection = captures.connections.find(
     (connection) => connection.id === connectionId,
@@ -54,14 +52,20 @@ export function ParticipantChatCapturePanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {!captures.connections.length ? (
+      {!captures.connections.length || !currentConnection ? (
         <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
           Conecte e inicie um provider de chat nas configurações para capturar participantes.
         </div>
       ) : (
         <div className="space-y-2">
-          <Select value={connectionId} onValueChange={setConnectionId}>
-            <SelectTrigger className="h-8 w-full">
+          <div className="rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+            Capturando de{" "}
+            <span className="font-medium text-foreground">
+              {currentConnection.channelDisplayName}
+            </span>
+          </div>
+          <Select value={connectionId ?? ""} onValueChange={() => undefined}>
+            <SelectTrigger className="hidden h-8 w-full">
               <SelectValue placeholder="Canal" />
             </SelectTrigger>
             <SelectContent>
@@ -160,7 +164,7 @@ export function ParticipantChatCapturePanel({
                 return;
               }
               void captures.save({
-                connectionId,
+                connectionId: connectionId ?? "",
                 endsAt: toIso(endsAt),
                 entryPolicy,
                 excludeBots,
