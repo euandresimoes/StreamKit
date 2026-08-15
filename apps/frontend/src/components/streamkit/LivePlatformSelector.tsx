@@ -18,11 +18,14 @@ export function LivePlatformSelector({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="flex min-w-0 items-center">
-      <label className="flex min-w-0 items-center gap-2 text-xs font-medium">
+    <div className="flex h-full min-w-0 items-center">
+      <label className="flex h-full min-w-0 items-center gap-2 text-xs font-medium">
         <span className="sr-only">Plataforma da transmissão</span>
         <Select value={selectedId ?? ""} onValueChange={onSelect}>
-          <SelectTrigger aria-label="Plataforma da transmissão" className="max-w-72">
+          <SelectTrigger
+            aria-label="Plataforma da transmissão"
+            className="h-full max-w-72 rounded-none border-0 bg-transparent px-2 shadow-none"
+          >
             <SelectValue placeholder="Selecionar live" />
           </SelectTrigger>
           <SelectContent>

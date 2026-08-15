@@ -51,13 +51,13 @@ function AppShellContent() {
               fullscreen && "streamkit-titlebar__content--fullscreen",
             )}
           >
-            <nav className="streamkit-titlebar__interactive flex gap-1">
+            <nav className="streamkit-titlebar__interactive flex h-full gap-1">
               {tabs.map((tabItem) => (
                 <button
                   key={tabItem.id}
                   onClick={() => setTab(tabItem.id)}
                   className={cn(
-                    "press flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-[12px] font-semibold tracking-wide transition-all duration-300",
+                    "press flex h-full items-center gap-2 rounded-none px-3.5 py-0 text-[12px] font-semibold tracking-wide transition-all duration-300",
                     tab === tabItem.id
                       ? "bg-surface-2 text-foreground shadow-[0_1px_0_0_oklch(1_0_0/8%)_inset]"
                       : "text-muted-foreground hover:text-foreground",
@@ -69,7 +69,7 @@ function AppShellContent() {
               ))}
             </nav>
 
-            <div className="streamkit-titlebar__interactive ml-auto flex items-center gap-1.5">
+            <div className="streamkit-titlebar__interactive ml-auto flex h-full items-center gap-1.5">
               <LivePlatformSelector
                 streams={live.streams}
                 selectedId={live.selectedId}
@@ -78,6 +78,7 @@ function AppShellContent() {
               <Button
                 variant="ghost"
                 size="icon-sm"
+                className="h-full w-10 rounded-none"
                 aria-label="Abrir configurações"
                 onClick={() => setSettings(true)}
               >
