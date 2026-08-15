@@ -53,8 +53,16 @@ export function useTournaments(autoSelect = true) {
         setBusy(false);
       }
     },
-    addParticipant: (name: string) =>
-      detail ? mutate(() => tournamentApi.addParticipant(detail.tournament.id, name)) : undefined,
+    addParticipant: (
+      name: string,
+      provider: "kick" | "twitch" | "youtube" | null,
+      channelId: string | null,
+    ) =>
+      detail
+        ? mutate(() =>
+            tournamentApi.addParticipant(detail.tournament.id, name, provider, channelId),
+          )
+        : undefined,
     removeParticipant: (participantId: string) =>
       detail
         ? mutate(() => tournamentApi.removeParticipant(detail.tournament.id, participantId))
@@ -73,9 +81,24 @@ export function useTournaments(autoSelect = true) {
         : undefined,
     removeTeam: (teamId: string) =>
       detail ? mutate(() => tournamentApi.removeTeam(detail.tournament.id, teamId)) : undefined,
-    addTeamMember: (teamId: string, name: string, slot: number) =>
+    addTeamMember: (
+      teamId: string,
+      name: string,
+      slot: number,
+      provider: "kick" | "twitch" | "youtube" | null,
+      channelId: string | null,
+    ) =>
       detail
-        ? mutate(() => tournamentApi.addTeamMember(detail.tournament.id, teamId, name, slot))
+        ? mutate(() =>
+            tournamentApi.addTeamMember(
+              detail.tournament.id,
+              teamId,
+              name,
+              slot,
+              provider,
+              channelId,
+            ),
+          )
         : undefined,
     assignParticipant: (teamId: string, participantId: string, slot: number) =>
       detail

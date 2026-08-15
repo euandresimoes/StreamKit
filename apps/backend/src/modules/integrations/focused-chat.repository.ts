@@ -22,8 +22,9 @@ const FOCUSED_THREAD_MAX_MESSAGES = 100
 export type FocusedChatKey = {
   channelId: string
   displayName: string
+  identityKey?: string
   provider: IntegrationProvider
-  providerUserId: string
+  providerUserId: string | null
 }
 
 @Injectable()
@@ -106,7 +107,9 @@ export class FocusedChatRepository {
         and(
           eq(chatMessageBuffer.provider, key.provider),
           eq(chatMessageBuffer.channelId, key.channelId),
-          eq(chatMessageBuffer.providerUserId, key.providerUserId),
+          key.providerUserId
+            ? eq(chatMessageBuffer.providerUserId, key.providerUserId)
+            : sql`lower(${chatMessageBuffer.handle}) = lower(${key.identityKey ?? key.displayName})`,
         ),
       ),
     )
@@ -138,7 +141,9 @@ export class FocusedChatRepository {
             and(
               eq(chatMessageBuffer.provider, key.provider),
               eq(chatMessageBuffer.channelId, key.channelId),
-              eq(chatMessageBuffer.providerUserId, key.providerUserId),
+              key.providerUserId
+                ? eq(chatMessageBuffer.providerUserId, key.providerUserId)
+                : sql`lower(${chatMessageBuffer.handle}) = lower(${key.identityKey ?? key.displayName})`,
               isNotNull(chatMessageBuffer.avatarUrl),
             ),
           )
@@ -163,14 +168,23 @@ export class FocusedChatRepository {
     return FocusedChatThreadSchema.parse({
       connections,
       identities: keys.map((key) => {
-        const row = latest.get(`${key.provider}:${key.channelId}:${key.providerUserId}`)
+        const row =
+          latest.get(`${key.provider}:${key.channelId}:${key.providerUserId}`) ??
+          rows.find(
+            (candidate) =>
+              candidate.provider === key.provider &&
+              candidate.channelId === key.channelId &&
+              candidate.handle.toLocaleLowerCase() ===
+                (key.identityKey ?? key.displayName).toLocaleLowerCase(),
+          )
         return {
           avatarUrl: avatars.get(`${key.provider}:${key.channelId}:${key.providerUserId}`) ?? null,
           channelId: key.channelId,
           displayName: row?.displayName ?? key.displayName,
           handle: row?.handle ?? key.displayName,
           provider: key.provider,
-          providerUserId: key.providerUserId,
+          providerUserId:
+            row?.providerUserId ?? key.providerUserId ?? key.identityKey ?? key.displayName,
         }
       }),
       messages: rows.reverse().map((row) => ({

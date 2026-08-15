@@ -8,7 +8,7 @@ import {
   GiveawayCaptureRuleSchema,
   type SaveGiveawayCaptureRuleRequest,
 } from '@streamkit/contracts'
-import { and, eq, isNotNull, lte, sql } from 'drizzle-orm'
+import { and, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {
@@ -26,6 +26,7 @@ export class GiveawayCaptureRepository {
 
   public async capture(rule: GiveawayCaptureRule, event: ChatMessageReceived): Promise<boolean> {
     return this.database.transaction(() => {
+      const identity = normalizeCaptureText(event.author.handle)
       const giveaway = this.database.orm
         .select({ maxParticipants: giveaways.maxParticipants, status: giveaways.status })
         .from(giveaways)
@@ -38,11 +39,27 @@ export class GiveawayCaptureRepository {
         .where(
           and(
             eq(giveawayParticipants.giveawayId, rule.giveawayId),
-            eq(giveawayParticipants.provider, event.provider),
-            eq(giveawayParticipants.providerUserId, event.author.providerUserId),
+            or(
+              and(
+                eq(giveawayParticipants.provider, event.provider),
+                eq(giveawayParticipants.providerUserId, event.author.providerUserId),
+              ),
+              and(
+                eq(giveawayParticipants.provider, event.provider),
+                eq(giveawayParticipants.channelId, event.channelId),
+                eq(giveawayParticipants.normalizedName, identity),
+                isNull(giveawayParticipants.providerUserId),
+              ),
+            ),
           ),
         )
         .get()
+      if (existing && existing.providerUserId !== event.author.providerUserId)
+        this.database.orm
+          .update(giveawayParticipants)
+          .set({ channelId: event.channelId, providerUserId: event.author.providerUserId })
+          .where(eq(giveawayParticipants.id, existing.id))
+          .run()
       const duplicate = Boolean(existing?.active) && rule.entryPolicy === 'unique'
       const now = new Date().toISOString()
       if (duplicate) {
@@ -83,8 +100,8 @@ export class GiveawayCaptureRepository {
           .set({
             active: true,
             channelId: event.channelId,
-            displayName: event.author.displayName,
-            normalizedName: normalizeCaptureText(event.author.handle),
+            displayName: event.author.handle,
+            normalizedName: identity,
             ticketCount:
               existing.active && rule.entryPolicy === 'tickets' ? existing.ticketCount + 1 : 1,
           })
@@ -97,11 +114,11 @@ export class GiveawayCaptureRepository {
             active: true,
             channelId: event.channelId,
             createdAt: now,
-            displayName: event.author.displayName,
+            displayName: event.author.handle,
             externalRef: `${event.provider}:${event.author.providerUserId}`,
             giveawayId: rule.giveawayId,
             id: randomUUID(),
-            normalizedName: normalizeCaptureText(event.author.handle),
+            normalizedName: identity,
             provider: event.provider,
             providerUserId: event.author.providerUserId,
             source: 'chat',

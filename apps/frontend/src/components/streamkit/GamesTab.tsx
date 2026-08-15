@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTournaments } from "@/modules/tournament/use-tournaments";
+import { useLiveSelection } from "@/modules/live-control/use-live-control";
 import { cn } from "@/lib/utils";
 import { CreateItemDialog } from "./CreateItemDialog";
 import { EntityHub } from "./EntityHub";
@@ -49,6 +50,7 @@ function getParticipantInitials(displayName: string) {
 
 export function GamesTab() {
   const tournaments = useTournaments(false);
+  const live = useLiveSelection();
   const [name, setName] = useState("");
   const [participantName, setParticipantName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -394,7 +396,11 @@ export function GamesTab() {
                           disabled={!participantName.trim() || tournaments.busy}
                           onClick={() => {
                             if (!participantName.trim()) return;
-                            void tournaments.addParticipant(participantName.trim());
+                            void tournaments.addParticipant(
+                              participantName.trim(),
+                              live.selected?.provider ?? null,
+                              live.selected?.channelId ?? null,
+                            );
                             setParticipantName("");
                           }}
                         >
@@ -524,7 +530,11 @@ export function GamesTab() {
                       if (name.trim()) {
                         void (detail.tournament.mode === "team"
                           ? tournaments.addTeam(name.trim())
-                          : tournaments.addParticipant(name.trim()));
+                          : tournaments.addParticipant(
+                              name.trim(),
+                              live.selected?.provider ?? null,
+                              live.selected?.channelId ?? null,
+                            ));
                         setName("");
                       }
                     }}

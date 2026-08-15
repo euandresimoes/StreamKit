@@ -112,6 +112,35 @@ describe('focused chat buffer', () => {
     await environment.cleanup()
   })
 
+  it('resolves a pending manual participant by exact platform handle', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    const database = await SqliteDatabase.open(environment.databasePath)
+    const chat = new FocusedChatRepository(database)
+    const event = {
+      ...message('pending-handle-message', 'pending-channel', 'official-user-id', 'cheguei'),
+      author: {
+        ...message('pending-handle-message', 'pending-channel', 'official-user-id', 'cheguei')
+          .author,
+        displayName: 'Manual user',
+        handle: 'manual_user',
+      },
+    }
+    await chat.append(event)
+    const thread = await chat.thread('Manual user', [
+      {
+        channelId: 'pending-channel',
+        displayName: 'manual_user',
+        identityKey: 'manual_user',
+        provider: 'twitch',
+        providerUserId: null,
+      },
+    ])
+    expect(thread.messages.map((item) => item.message)).toEqual(['cheguei'])
+    expect(thread.identities[0]).toMatchObject({ providerUserId: 'official-user-id' })
+    database.close()
+    await environment.cleanup()
+  })
+
   it('derives the focused identity from the persisted giveaway winner', async () => {
     const environment = await createIsolatedTestEnvironment()
     const database = await SqliteDatabase.open(environment.databasePath)

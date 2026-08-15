@@ -79,11 +79,21 @@ export function useGiveaways(autoSelect = true) {
         setBusy(false);
       }
     },
-    importParticipants: (input: string) =>
+    importParticipants: (
+      input: string,
+      provider: "kick" | "twitch" | "youtube" | null,
+      channelId: string | null,
+    ) =>
       detail
         ? mutate(async () => {
             await continueCompletedRound(detail.giveaway.id);
-            return giveawayApi.import(detail.giveaway.id, input, detail.giveaway.duplicatePolicy);
+            return giveawayApi.import(
+              detail.giveaway.id,
+              input,
+              detail.giveaway.duplicatePolicy,
+              provider,
+              channelId,
+            );
           })
         : undefined,
     removeParticipant: (participantId: string) =>

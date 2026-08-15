@@ -432,6 +432,8 @@ export class TournamentRepository {
     teamId: string,
     displayName: string,
     slotPosition: number,
+    provider: 'kick' | 'twitch' | 'youtube' | null = null,
+    channelId: string | null = null,
   ) {
     const tournament = await this.mutableDraft(id)
     if (!tournament || tournament.mode !== 'team') return null
@@ -451,12 +453,11 @@ export class TournamentRepository {
       .select()
       .from(tournamentParticipants)
       .where(eq(tournamentParticipants.tournamentId, id))
-    if (
-      participants.some(
-        (participant) =>
-          normalizedPersonName(participant.displayName) === normalizedPersonName(displayName),
-      )
-    )
+    const identityKey =
+      provider && channelId
+        ? `${provider}:${channelId}:${normalizedPersonName(displayName)}`
+        : normalizedPersonName(displayName)
+    if (participants.some((participant) => participant.identityKey === identityKey))
       return 'duplicate' as const
     const now = new Date().toISOString(),
       participantId = randomUUID(),
@@ -467,10 +468,12 @@ export class TournamentRepository {
           .insert(tournamentParticipants)
           .values({
             createdAt: now,
+            channelId,
             displayName,
             externalRef: null,
             id: participantId,
-            identityKey: normalizedPersonName(displayName),
+            identityKey,
+            provider,
             source: 'manual',
             tournamentId: id,
           })
@@ -486,7 +489,7 @@ export class TournamentRepository {
         tournamentParticipants,
         and(
           eq(tournamentParticipants.tournamentId, id),
-          eq(tournamentParticipants.identityKey, normalizedPersonName(displayName)),
+          eq(tournamentParticipants.identityKey, identityKey),
         ),
       )
       return duplicate ? ('duplicate' as const) : ('conflict' as const)
@@ -664,15 +667,24 @@ export class TournamentRepository {
     })
     return this.detail(id)
   }
-  public async addParticipant(id: string, displayName: string) {
+  public async addParticipant(
+    id: string,
+    displayName: string,
+    provider: 'kick' | 'twitch' | 'youtube' | null = null,
+    channelId: string | null = null,
+  ) {
     const tournament = await this.mutableDraft(id)
     if (!tournament) return null
     if (tournament.mode === 'team') {
+      const identityKey =
+        provider && channelId
+          ? `${provider}:${channelId}:${normalizedPersonName(displayName)}`
+          : normalizedPersonName(displayName)
       const duplicate = await this.database.orm.$count(
         tournamentParticipants,
         and(
           eq(tournamentParticipants.tournamentId, id),
-          eq(tournamentParticipants.identityKey, normalizedPersonName(displayName)),
+          eq(tournamentParticipants.identityKey, identityKey),
         ),
       )
       if (duplicate) return 'duplicate' as const
@@ -680,10 +692,12 @@ export class TournamentRepository {
         participantId = randomUUID()
       await this.database.orm.insert(tournamentParticipants).values({
         createdAt: now,
+        channelId,
         displayName,
         externalRef: null,
         id: participantId,
-        identityKey: normalizedPersonName(displayName),
+        identityKey,
+        provider,
         source: 'manual',
         tournamentId: id,
       })
@@ -700,11 +714,16 @@ export class TournamentRepository {
       this.database.orm
         .insert(tournamentParticipants)
         .values({
+          channelId,
           createdAt: now,
           displayName,
           externalRef: null,
           id: participantId,
-          identityKey: null,
+          identityKey:
+            provider && channelId
+              ? `${provider}:${channelId}:${normalizedPersonName(displayName)}`
+              : normalizedPersonName(displayName),
+          provider,
           source: 'manual',
           tournamentId: id,
         })

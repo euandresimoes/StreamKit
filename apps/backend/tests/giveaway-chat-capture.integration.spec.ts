@@ -47,7 +47,7 @@ describe('giveaway chat capture persistence', () => {
     const message: ChatMessageReceived = {
       author: {
         avatarUrl: null,
-        displayName: 'Nome original',
+        displayName: 'same_user',
         handle: 'same_user',
         provider: 'twitch',
         providerUserId: 'stable-user-id',
@@ -69,7 +69,7 @@ describe('giveaway chat capture persistence', () => {
     })
     expect((await giveaways.detail(giveaway.id))?.participants).toEqual([
       expect.objectContaining({
-        displayName: 'Nome original',
+        displayName: 'same_user',
         providerUserId: 'stable-user-id',
         source: 'chat',
         ticketCount: 1,

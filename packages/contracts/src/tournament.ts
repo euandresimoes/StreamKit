@@ -6,6 +6,7 @@ import {
   GiveawayCaptureStatusSchema,
   SaveGiveawayCaptureRuleRequestSchema,
 } from './giveaway'
+import { IntegrationProviderSchema } from './integration'
 
 export const TournamentStatusSchema = z.enum([
   'draft',
@@ -53,7 +54,9 @@ export const CreateTournamentRequestSchema = z
       })
   })
 export const AddTournamentParticipantRequestSchema = z.object({
+  channelId: z.string().trim().min(1).max(200).nullable().default(null),
   displayName: TournamentParticipantNameSchema,
+  provider: IntegrationProviderSchema.nullable().default(null),
 })
 export const UpdateTournamentRequestSchema = z.object({
   bracketSize: TournamentSizeSchema.optional(),
@@ -90,7 +93,9 @@ export const CreateTournamentTeamRequestSchema = z.object({
 })
 export const RenameTournamentTeamRequestSchema = CreateTournamentTeamRequestSchema
 export const AddTournamentTeamMemberRequestSchema = z.object({
+  channelId: z.string().trim().min(1).max(200).nullable().default(null),
   displayName: TournamentParticipantNameSchema,
+  provider: IntegrationProviderSchema.nullable().default(null),
   slotPosition: z.number().int().min(1).max(16),
 })
 export const AssignTournamentParticipantRequestSchema = z.object({

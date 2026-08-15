@@ -11,6 +11,7 @@ import {
   type GiveawayRound,
   GiveawayRoundSchema,
   GiveawaySchema,
+  type IntegrationProvider,
   type ParsedParticipant,
   type UpdateGiveawayRequest,
 } from '@streamkit/contracts'
@@ -62,6 +63,8 @@ export class GiveawayRepository {
   public async replaceParticipants(
     id: string,
     entries: ParsedParticipant[],
+    provider: IntegrationProvider | null,
+    channelId: string | null,
   ): Promise<GiveawayDetail | null> {
     const [giveaway] = await this.database.orm.select().from(giveaways).where(eq(giveaways.id, id))
     if (!giveaway || !['draft', 'ready'].includes(giveaway.status)) return null
@@ -80,7 +83,13 @@ export class GiveawayRepository {
           .update(giveawayParticipants)
           .set(
             entry
-              ? { active: true, displayName: entry.displayName, ticketCount: entry.ticketCount }
+              ? {
+                  active: true,
+                  channelId,
+                  displayName: entry.displayName,
+                  provider,
+                  ticketCount: entry.ticketCount,
+                }
               : { active: false },
           )
           .where(eq(giveawayParticipants.id, participant.id))
@@ -94,11 +103,12 @@ export class GiveawayRepository {
             [...pending.values()].map((entry) => ({
               ...entry,
               active: true,
+              channelId,
               createdAt,
               externalRef: null,
               giveawayId: id,
               id: randomUUID(),
-              provider: null,
+              provider,
               providerUserId: null,
               source: 'manual',
             })),

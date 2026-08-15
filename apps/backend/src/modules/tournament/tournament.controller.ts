@@ -68,9 +68,12 @@ export class TournamentController {
     return this.capture.delete(EntityIdSchema.parse(ruleId))
   }
   @Post(':id/participants') public add(@Param('id') id: unknown, @Body() body: unknown) {
+    const input = AddTournamentParticipantRequestSchema.parse(body)
     return this.service.add(
       EntityIdSchema.parse(id),
-      AddTournamentParticipantRequestSchema.parse(body).displayName,
+      input.displayName,
+      input.provider,
+      input.channelId,
     )
   }
   @Post(':id/teams') public addTeam(@Param('id') id: unknown, @Body() body: unknown) {
@@ -108,6 +111,8 @@ export class TournamentController {
       EntityIdSchema.parse(teamId),
       input.displayName,
       input.slotPosition,
+      input.provider,
+      input.channelId,
     )
   }
   @Post(':id/teams/:teamId/members/assign') public assignParticipant(

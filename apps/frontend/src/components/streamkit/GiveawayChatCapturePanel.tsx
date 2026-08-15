@@ -3,7 +3,6 @@ import { Radio } from "lucide-react";
 import { useState } from "react";
 
 import { BaseDateTimePicker } from "@/components/base/BaseDateTimePicker";
-import { BaseBrandIcon, brandName } from "@/components/base/BaseBrandIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -64,21 +63,6 @@ export function ParticipantChatCapturePanel({
               {currentConnection.channelDisplayName}
             </span>
           </div>
-          <Select value={connectionId ?? ""} onValueChange={() => undefined}>
-            <SelectTrigger className="hidden h-8 w-full">
-              <SelectValue placeholder="Canal" />
-            </SelectTrigger>
-            <SelectContent>
-              {captures.connections.map((connection) => (
-                <SelectItem key={connection.id} value={connection.id}>
-                  <span className="flex items-center gap-2">
-                    <BaseBrandIcon provider={connection.provider} />
-                    {connection.channelDisplayName} · {brandName(connection.provider)}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <div className="grid grid-cols-2 gap-2">
             <Select
               value={match}

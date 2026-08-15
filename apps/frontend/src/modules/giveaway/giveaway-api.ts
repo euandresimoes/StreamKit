@@ -43,10 +43,16 @@ export const giveawayApi = {
       body: input,
       schema: GiveawaySchema,
     }),
-  import: (id: string, input: string, policy: DuplicatePolicy) =>
+  import: (
+    id: string,
+    input: string,
+    policy: DuplicatePolicy,
+    provider: "kick" | "twitch" | "youtube" | null,
+    channelId: string | null,
+  ) =>
     apiClient.request(`/api/v1/giveaways/${id}/participants/import`, {
       method: "POST",
-      body: { input, policy },
+      body: { channelId, input, policy, provider },
     }),
   removeParticipant: (id: string, participantId: string) =>
     apiClient.request(`/api/v1/giveaways/${id}/participants/${participantId}`, {

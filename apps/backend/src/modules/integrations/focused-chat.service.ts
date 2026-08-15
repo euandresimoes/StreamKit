@@ -35,7 +35,10 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
     if (!detail) throw new ApiApplicationError('GIVEAWAY_NOT_FOUND', 'Giveaway not found', 404)
     const winnerId = detail.activeRound?.winnerParticipantId
     const winner = detail.participants.find((participant) => participant.id === winnerId)
-    return this.chat.thread(winner?.displayName ?? detail.giveaway.name, this.keyFor(winner))
+    return this.chat.thread(
+      winner?.providerUserId ?? winner?.displayName ?? detail.giveaway.name,
+      this.keyFor(winner),
+    )
   }
 
   public async forTournament(id: string) {
@@ -97,11 +100,12 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
         }
       | undefined,
   ): FocusedChatKey[] {
-    return participant?.channelId && participant.provider && participant.providerUserId
+    return participant?.channelId && participant.provider
       ? [
           {
             channelId: participant.channelId,
             displayName: participant.displayName,
+            identityKey: participant.displayName,
             provider: participant.provider,
             providerUserId: participant.providerUserId,
           },

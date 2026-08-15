@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { IntegrationProviderSchema } from './integration'
+
 export const ParticipantSourceSchema = z.enum(['chat', 'manual', 'livepix'])
 export const GiveawayStatusSchema = z.enum([
   'draft',
@@ -64,7 +66,10 @@ export const GiveawayParticipantSchema = z.object({
   source: ParticipantSourceSchema.default('manual'),
   ticketCount: z.number().int().positive(),
 })
-export const ImportParticipantsRequestSchema = ParseParticipantsRequestSchema
+export const ImportParticipantsRequestSchema = ParseParticipantsRequestSchema.extend({
+  channelId: z.string().trim().min(1).max(200).nullable().default(null),
+  provider: IntegrationProviderSchema.nullable().default(null),
+})
 export const NextGiveawayRoundRequestSchema = z.object({ removeWinner: z.boolean() })
 export const GiveawayRoundEntrySchema = z.object({
   displayName: ParticipantNameSchema,

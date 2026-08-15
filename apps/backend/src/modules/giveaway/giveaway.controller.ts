@@ -39,7 +39,13 @@ export class GiveawayController {
   }
   @Post(':id/participants/import') public import(@Param('id') id: unknown, @Body() body: unknown) {
     const input = ImportParticipantsRequestSchema.parse(body)
-    return this.service.import(EntityIdSchema.parse(id), input.input, input.policy)
+    return this.service.import(
+      EntityIdSchema.parse(id),
+      input.input,
+      input.policy,
+      input.provider,
+      input.channelId,
+    )
   }
   @Get(':id/capture-rules') public captureRules(@Param('id') id: unknown) {
     return this.captures.list(EntityIdSchema.parse(id))

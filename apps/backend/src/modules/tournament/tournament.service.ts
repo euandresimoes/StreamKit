@@ -39,8 +39,13 @@ export class TournamentService {
     if (!(await this.repository.delete(id)))
       throw new ApiApplicationError('TOURNAMENT_NOT_FOUND', 'Tournament not found', 404)
   }
-  public add(id: string, name: string) {
-    return this.resolve(this.repository.addParticipant(id, name))
+  public add(
+    id: string,
+    name: string,
+    provider: 'kick' | 'twitch' | 'youtube' | null = null,
+    channelId: string | null = null,
+  ) {
+    return this.resolve(this.repository.addParticipant(id, name, provider, channelId))
   }
   public addTeam(id: string, name: string, color: string, capacity?: number) {
     return this.resolve(
@@ -59,9 +64,16 @@ export class TournamentService {
   public removeTeam(id: string, teamId: string) {
     return this.resolve(this.repository.removeTeam(id, teamId), teamId, 'TOURNAMENT_TEAM_NOT_FOUND')
   }
-  public addTeamMember(id: string, teamId: string, displayName: string, slotPosition: number) {
+  public addTeamMember(
+    id: string,
+    teamId: string,
+    displayName: string,
+    slotPosition: number,
+    provider: 'kick' | 'twitch' | 'youtube' | null = null,
+    channelId: string | null = null,
+  ) {
     return this.resolve(
-      this.repository.addTeamMember(id, teamId, displayName, slotPosition),
+      this.repository.addTeamMember(id, teamId, displayName, slotPosition, provider, channelId),
       teamId,
       'TOURNAMENT_TEAM_NOT_FOUND',
     )

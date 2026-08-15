@@ -48,10 +48,15 @@ export const tournamentApi = {
       schema: TournamentSchema,
     }),
   delete: (id: string) => apiClient.request(`/api/v1/tournaments/${id}`, { method: "DELETE" }),
-  addParticipant: (id: string, displayName: string) =>
+  addParticipant: (
+    id: string,
+    displayName: string,
+    provider: "kick" | "twitch" | "youtube" | null,
+    channelId: string | null,
+  ) =>
     apiClient.request(`/api/v1/tournaments/${id}/participants`, {
       method: "POST",
-      body: { displayName },
+      body: { channelId, displayName, provider },
     }),
   removeParticipant: (id: string, participantId: string) =>
     apiClient.request(`/api/v1/tournaments/${id}/participants/${participantId}`, {
@@ -69,10 +74,17 @@ export const tournamentApi = {
     }),
   removeTeam: (id: string, teamId: string) =>
     apiClient.request(`/api/v1/tournaments/${id}/teams/${teamId}`, { method: "DELETE" }),
-  addTeamMember: (id: string, teamId: string, displayName: string, slotPosition: number) =>
+  addTeamMember: (
+    id: string,
+    teamId: string,
+    displayName: string,
+    slotPosition: number,
+    provider: "kick" | "twitch" | "youtube" | null,
+    channelId: string | null,
+  ) =>
     apiClient.request(`/api/v1/tournaments/${id}/teams/${teamId}/members`, {
       method: "POST",
-      body: { displayName, slotPosition },
+      body: { channelId, displayName, provider, slotPosition },
     }),
   assignParticipant: (id: string, teamId: string, participantId: string, slotPosition: number) =>
     apiClient.request(`/api/v1/tournaments/${id}/teams/${teamId}/members/assign`, {

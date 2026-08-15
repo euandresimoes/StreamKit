@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { BaseSegmentedControl } from "@/components/base/BaseSegmentedControl";
 import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
 import { useGiveaways } from "@/modules/giveaway/use-giveaways";
+import { useLiveSelection } from "@/modules/live-control/use-live-control";
 import { shouldShowGiveawayFocusedChat } from "@/modules/giveaway/giveaway-presentation";
 import { CreateItemDialog } from "./CreateItemDialog";
 import { EntityHub } from "./EntityHub";
@@ -30,6 +31,7 @@ import { MAX_VISIBLE_PARTICIPANTS } from "@/modules/performance/bounded-render-w
 
 export function GiveawaysTab() {
   const giveaways = useGiveaways(false);
+  const live = useLiveSelection();
   const [input, setInput] = useState("");
   const [winner, setWinner] = useState<string | null>(null);
   const [targetWinner, setTargetWinner] = useState<string | null>(null);
@@ -187,7 +189,11 @@ export function GiveawaysTab() {
                 onClick={async () => {
                   if (!input.trim()) return;
                   clearCompletedPresentation();
-                  const saved = await giveaways.importParticipants(input);
+                  const saved = await giveaways.importParticipants(
+                    input,
+                    live.selected?.provider ?? null,
+                    live.selected?.channelId ?? null,
+                  );
                   if (saved) setInput("");
                 }}
               >

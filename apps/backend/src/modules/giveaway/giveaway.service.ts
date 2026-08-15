@@ -6,6 +6,7 @@ import type {
   GiveawayDetail,
   GiveawayHistory,
   GiveawayRound,
+  IntegrationProvider,
   ParticipantPreview,
   UpdateGiveawayRequest,
 } from '@streamkit/contracts'
@@ -31,7 +32,13 @@ export class GiveawayService {
       .detail(id)
       .then((value) => this.required(value, 'GIVEAWAY_NOT_FOUND', 'Giveaway not found'))
   }
-  public async import(id: string, input: string, policy: DuplicatePolicy): Promise<GiveawayDetail> {
+  public async import(
+    id: string,
+    input: string,
+    policy: DuplicatePolicy,
+    provider: IntegrationProvider | null,
+    channelId: string | null,
+  ): Promise<GiveawayDetail> {
     const current = await this.detail(id)
     if (current.giveaway.duplicatePolicy !== policy)
       throw new ApiApplicationError(
@@ -54,7 +61,7 @@ export class GiveawayService {
         409,
       )
     return this.repository
-      .replaceParticipants(id, preview.entries)
+      .replaceParticipants(id, preview.entries, provider, channelId)
       .then((value) =>
         this.required(
           value,

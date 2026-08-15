@@ -8,7 +8,7 @@ import {
   TournamentCaptureRuleListSchema,
   TournamentCaptureRuleSchema,
 } from '@streamkit/contracts'
-import { and, eq, isNotNull, lte, sql } from 'drizzle-orm'
+import { and, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {
@@ -26,6 +26,7 @@ export class TournamentCaptureRepository {
 
   public async capture(rule: TournamentCaptureRule, event: ChatMessageReceived): Promise<boolean> {
     return this.database.transaction(() => {
+      const identity = `${event.provider}:${event.channelId}:${event.author.handle.normalize('NFKC').trim().toLocaleLowerCase('pt-BR')}`
       const tournament = this.database.orm
         .select()
         .from(tournaments)
@@ -42,11 +43,33 @@ export class TournamentCaptureRepository {
         .where(
           and(
             eq(tournamentParticipants.tournamentId, rule.tournamentId),
-            eq(tournamentParticipants.provider, event.provider),
-            eq(tournamentParticipants.providerUserId, event.author.providerUserId),
+            or(
+              and(
+                eq(tournamentParticipants.provider, event.provider),
+                eq(tournamentParticipants.providerUserId, event.author.providerUserId),
+              ),
+              and(
+                eq(tournamentParticipants.identityKey, identity),
+                isNull(tournamentParticipants.providerUserId),
+              ),
+            ),
           ),
         )
         .get()
+      if (existing) {
+        this.database.orm
+          .update(tournamentParticipants)
+          .set({
+            avatarUrl: event.author.avatarUrl,
+            channelId: event.channelId,
+            externalRef: `${event.provider}:${event.author.providerUserId}`,
+            identityKey: `${event.provider}:${event.author.providerUserId}`,
+            provider: event.provider,
+            providerUserId: event.author.providerUserId,
+          })
+          .where(eq(tournamentParticipants.id, existing.id))
+          .run()
+      }
       if (existing) {
         this.database.orm
           .update(tournamentCaptureRules)
@@ -65,7 +88,7 @@ export class TournamentCaptureRepository {
           avatarUrl: event.author.avatarUrl,
           channelId: event.channelId,
           createdAt: now,
-          displayName: event.author.displayName,
+          displayName: event.author.handle,
           externalRef: `${event.provider}:${event.author.providerUserId}`,
           id: participantId,
           identityKey: `${event.provider}:${event.author.providerUserId}`,

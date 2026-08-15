@@ -679,6 +679,11 @@ constitui início de implementação.
 
 ## Batch 25 — Live Control: preview oficial, chat e metadados
 
+**Decisão complementar registrada no ADR 0027:** participantes manuais, capturados e futuros
+eventos LivePix usam a plataforma/live global selecionada e uma identidade exata do provider.
+Twitch/Kick usam handle; YouTube usa `channelId`. O `providerUserId` oficial é associado quando a
+mensagem chega e passa a ser usado pelo chat focado.
+
 **Escopo aprovado:** criar uma área de controle da transmissão que complemente OBS/Streamlabs. O StreamKit não fará captura, composição ou encoding da live nesta batch; essas responsabilidades continuam no OBS/Streamlabs. O preview deve utilizar exclusivamente os players oficiais de Twitch, YouTube e Kick, sem capturar a janela do OBS e sem implementar OBS WebSocket nesta batch.
 
 **Referências:** seções 2.2, 4, 9.2, 9.5, 12, 13, 17, 19, 20, 21 e 28 da especificação.

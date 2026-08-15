@@ -54,7 +54,7 @@ describe('tournament chat capture persistence', () => {
     const message: ChatMessageReceived = {
       author: {
         avatarUrl: null,
-        displayName: 'Jogador',
+        displayName: 'jogador',
         handle: 'jogador',
         provider: 'twitch',
         providerUserId: 'stable-player',
@@ -78,7 +78,7 @@ describe('tournament chat capture persistence', () => {
     let detail = await tournaments.detail(tournament.id)
     expect(detail?.participants).toEqual([
       expect.objectContaining({
-        displayName: 'Jogador',
+        displayName: 'jogador',
         provider: 'twitch',
         providerUserId: 'stable-player',
         source: 'chat',

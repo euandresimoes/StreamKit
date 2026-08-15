@@ -341,8 +341,8 @@ export function normalizeYouTubeChatMessage(
   return {
     author: {
       avatarUrl: item.authorDetails.profileImageUrl,
-      displayName: item.authorDetails.displayName,
-      handle: item.authorDetails.displayName,
+      displayName: item.authorDetails.channelId,
+      handle: item.authorDetails.channelId,
       provider: 'youtube',
       providerUserId: item.authorDetails.channelId,
     },
