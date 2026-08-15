@@ -6,6 +6,7 @@ describe("BaseBrandIcon", () => {
   it("centralizes the official provider assets", () => {
     expect(BRAND_ICON_SOURCES).toEqual({
       kick: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/kick.svg",
+      livepix: "/assets/livepix.svg",
       twitch: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/twitch.svg",
       youtube: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/youtube.svg",
     });

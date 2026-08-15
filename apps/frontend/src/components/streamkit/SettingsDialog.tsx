@@ -235,6 +235,9 @@ export function SettingsDialog({
 
                 <div className="mt-4 rounded-2xl border border-border bg-surface-2/40 p-4">
                   <div className="flex items-center gap-3">
+                    <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+                      <BaseBrandIcon provider="livepix" className="size-5" />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-semibold">LivePix Payments</p>
                       <p className="text-[11.5px] text-muted-foreground">

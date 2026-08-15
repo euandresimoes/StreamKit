@@ -1,8 +1,9 @@
 import type { GiveawayCaptureEntryPolicy, GiveawayCaptureMatch } from "@streamkit/contracts";
 import { Radio } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { BaseDateTimePicker } from "@/components/base/BaseDateTimePicker";
+import { BaseBrandIcon } from "@/components/base/BaseBrandIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -142,7 +143,12 @@ export function ParticipantChatCapturePanel({
           </div>
           <div className="space-y-2 rounded-md border border-border bg-muted/20 p-3">
             <CaptureSwitch
-              label="Capturar pagamentos recebidos do LivePix"
+              label={
+                <span className="flex items-center gap-2">
+                  <BaseBrandIcon provider="livepix" className="size-4" />
+                  Capturar pagamentos recebidos do LivePix
+                </span>
+              }
               checked={livepixAutoEntry}
               onChange={setLivepixAutoEntry}
             />
@@ -231,7 +237,7 @@ function CaptureSwitch({
   checked,
   onChange,
 }: {
-  label: string;
+  label: ReactNode;
   checked: boolean;
   onChange: (value: boolean) => void;
 }) {

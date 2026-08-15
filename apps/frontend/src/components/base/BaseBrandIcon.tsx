@@ -2,16 +2,20 @@ import type { IntegrationProvider } from "@streamkit/contracts";
 
 import { cn } from "@/lib/utils";
 
-export const BRAND_ICON_SOURCES: Readonly<Record<IntegrationProvider, string>> = Object.freeze({
+export type BrandIconProvider = IntegrationProvider | "livepix";
+
+export const BRAND_ICON_SOURCES: Readonly<Record<BrandIconProvider, string>> = Object.freeze({
   twitch: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/twitch.svg",
   youtube: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/youtube.svg",
   kick: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/kick.svg",
+  livepix: "/assets/livepix.svg",
 });
 
-const BRAND_NAMES: Readonly<Record<IntegrationProvider, string>> = Object.freeze({
+const BRAND_NAMES: Readonly<Record<BrandIconProvider, string>> = Object.freeze({
   twitch: "Twitch",
   youtube: "YouTube",
   kick: "Kick",
+  livepix: "LivePix",
 });
 
 export function BaseBrandIcon({
@@ -19,7 +23,7 @@ export function BaseBrandIcon({
   className,
   labelled = false,
 }: {
-  provider: IntegrationProvider;
+  provider: BrandIconProvider;
   className?: string;
   labelled?: boolean;
 }) {
@@ -35,6 +39,6 @@ export function BaseBrandIcon({
   );
 }
 
-export function brandName(provider: IntegrationProvider): string {
+export function brandName(provider: BrandIconProvider): string {
   return BRAND_NAMES[provider];
 }
