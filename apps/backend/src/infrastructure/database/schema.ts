@@ -134,6 +134,43 @@ export const externalEventQueue = sqliteTable(
   (table) => [unique().on(table.provider, table.eventId)],
 )
 
+export const paymentProviderConnections = sqliteTable('payment_provider_connections', {
+  accountId: text('account_id'),
+  accountUsername: text('account_username'),
+  createdAt: text('created_at').notNull(),
+  generation: integer('generation').notNull().default(0),
+  lastErrorCode: text('last_error_code'),
+  provider: text('provider').primaryKey(),
+  remoteWebhookId: text('remote_webhook_id'),
+  state: text('state').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  webhookUrl: text('webhook_url'),
+})
+
+export const paymentContributions = sqliteTable(
+  'payment_contributions',
+  {
+    amountInCents: integer('amount_in_cents').notNull(),
+    campaignId: text('campaign_id'),
+    contributionType: text('contribution_type').notNull(),
+    currency: text('currency').notNull(),
+    eventId: text('event_id').notNull(),
+    id: text('id').primaryKey(),
+    message: text('message'),
+    occurredAt: text('occurred_at').notNull(),
+    participantHandle: text('participant_handle'),
+    participantPlatform: text('participant_platform'),
+    pendingReason: text('pending_reason'),
+    processedAt: text('processed_at'),
+    provider: text('provider').notNull(),
+    providerReference: text('provider_reference'),
+    providerResourceId: text('provider_resource_id').notNull(),
+    receivedAt: text('received_at').notNull(),
+    status: text('status').notNull(),
+  },
+  (table) => [unique().on(table.provider, table.providerResourceId)],
+)
+
 export const tournaments = sqliteTable('tournaments', {
   bracketSize: integer('bracket_size').notNull(),
   createdAt: text('created_at').notNull(),
@@ -179,6 +216,9 @@ export const tournamentCaptureRules = sqliteTable(
     match: text('match_type').notNull(),
     matchValue: text('match_value'),
     membersOnly: integer('members_only', { mode: 'boolean' }).notNull(),
+    livepixAutoEntry: integer('livepix_auto_entry', { mode: 'boolean' }).notNull().default(false),
+    livepixCurrency: text('livepix_currency'),
+    livepixMinimumAmountInCents: integer('livepix_minimum_amount_in_cents'),
     rejectedCount: integer('rejected_count').notNull().default(0),
     startsAt: text('starts_at'),
     status: text('status').notNull(),
@@ -317,6 +357,9 @@ export const giveawayCaptureRules = sqliteTable(
     match: text('match_type').notNull(),
     matchValue: text('match_value'),
     membersOnly: integer('members_only', { mode: 'boolean' }).notNull(),
+    livepixAutoEntry: integer('livepix_auto_entry', { mode: 'boolean' }).notNull().default(false),
+    livepixCurrency: text('livepix_currency'),
+    livepixMinimumAmountInCents: integer('livepix_minimum_amount_in_cents'),
     rejectedCount: integer('rejected_count').notNull().default(0),
     startsAt: text('starts_at'),
     status: text('status').notNull(),

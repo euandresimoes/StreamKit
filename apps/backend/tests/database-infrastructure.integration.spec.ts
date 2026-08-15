@@ -24,6 +24,8 @@ const expectedTables = [
   'integration_connections',
   'integration_events',
   'integration_offsets',
+  'payment_contributions',
+  'payment_provider_connections',
   'schema_migrations',
   'todo_cards',
   'todo_columns',

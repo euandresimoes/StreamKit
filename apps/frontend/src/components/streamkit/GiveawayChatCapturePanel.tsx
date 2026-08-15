@@ -40,6 +40,9 @@ export function ParticipantChatCapturePanel({
   const [excludeBroadcaster, setExcludeBroadcaster] = useState(true);
   const [excludeModerators, setExcludeModerators] = useState(false);
   const [membersOnly, setMembersOnly] = useState(false);
+  const [livepixAutoEntry, setLivepixAutoEntry] = useState(false);
+  const [livepixMinimum, setLivepixMinimum] = useState("1");
+  const [livepixCurrency, setLivepixCurrency] = useState("BRL");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
 
@@ -137,6 +140,38 @@ export function ParticipantChatCapturePanel({
               onChange={setMembersOnly}
             />
           </div>
+          <div className="space-y-2 rounded-md border border-border bg-muted/20 p-3">
+            <CaptureSwitch
+              label="Capturar pagamentos recebidos do LivePix"
+              checked={livepixAutoEntry}
+              onChange={setLivepixAutoEntry}
+            />
+            {livepixAutoEntry && (
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  className="h-8"
+                  min="0.01"
+                  step="0.01"
+                  type="number"
+                  value={livepixMinimum}
+                  onChange={(event) => setLivepixMinimum(event.target.value)}
+                  placeholder="Valor mínimo"
+                  aria-label="Valor mínimo do LivePix"
+                />
+                <Input
+                  className="h-8 uppercase"
+                  maxLength={12}
+                  value={livepixCurrency}
+                  onChange={(event) => setLivepixCurrency(event.target.value.toUpperCase())}
+                  placeholder="BRL"
+                  aria-label="Moeda do LivePix"
+                />
+              </div>
+            )}
+            <p className="text-[10px] text-muted-foreground">
+              Pagamentos abaixo do mínimo ou sem handle ficam pendentes para resolução manual.
+            </p>
+          </div>
           <Button
             className="w-full"
             size="sm"
@@ -158,6 +193,13 @@ export function ParticipantChatCapturePanel({
                 matchValue: match === "any" ? null : matchValue.trim(),
                 membersOnly,
                 startsAt: toIso(startsAt),
+                livepix: livepixAutoEntry
+                  ? {
+                      autoEntry: true,
+                      currency: livepixCurrency.trim(),
+                      minimumAmountInCents: Math.round(Number(livepixMinimum) * 100),
+                    }
+                  : null,
               });
             }}
           >

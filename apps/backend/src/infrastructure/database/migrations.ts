@@ -366,4 +366,58 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
         ON external_event_queue(status, next_attempt_at, received_at);
     `,
   },
+  {
+    destructive: false,
+    name: 'livepix_payment_provider',
+    version: 18,
+    sql: `
+      CREATE TABLE payment_provider_connections (
+        provider TEXT PRIMARY KEY NOT NULL,
+        account_username TEXT,
+        state TEXT NOT NULL,
+        generation INTEGER NOT NULL DEFAULT 0,
+        remote_webhook_id TEXT,
+        webhook_url TEXT,
+        last_error_code TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE TABLE payment_contributions (
+        id TEXT PRIMARY KEY NOT NULL,
+        provider TEXT NOT NULL,
+        provider_resource_id TEXT NOT NULL,
+        provider_reference TEXT,
+        event_id TEXT NOT NULL,
+        contribution_type TEXT NOT NULL,
+        amount_in_cents INTEGER NOT NULL,
+        currency TEXT NOT NULL,
+        participant_handle TEXT,
+        participant_platform TEXT,
+        message TEXT,
+        occurred_at TEXT NOT NULL,
+        received_at TEXT NOT NULL,
+        status TEXT NOT NULL,
+        pending_reason TEXT,
+        campaign_id TEXT,
+        processed_at TEXT,
+        UNIQUE(provider, provider_resource_id)
+      );
+      ALTER TABLE giveaway_capture_rules ADD COLUMN livepix_auto_entry INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE giveaway_capture_rules ADD COLUMN livepix_currency TEXT;
+      ALTER TABLE giveaway_capture_rules ADD COLUMN livepix_minimum_amount_in_cents INTEGER;
+      ALTER TABLE tournament_capture_rules ADD COLUMN livepix_auto_entry INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE tournament_capture_rules ADD COLUMN livepix_currency TEXT;
+      ALTER TABLE tournament_capture_rules ADD COLUMN livepix_minimum_amount_in_cents INTEGER;
+      CREATE INDEX payment_contributions_status_index
+        ON payment_contributions(status, occurred_at);
+    `,
+  },
+  {
+    destructive: false,
+    name: 'livepix_payment_account_identity',
+    version: 19,
+    sql: `
+      ALTER TABLE payment_provider_connections ADD COLUMN account_id TEXT;
+    `,
+  },
 ]

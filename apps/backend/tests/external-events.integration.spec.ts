@@ -85,9 +85,8 @@ describe('optional external event infrastructure', () => {
     await expect(
       transport.receive('livepix', 'unknown', endpoint.secret, envelope),
     ).rejects.toThrow('Invalid external event credentials')
-    await expect(
-      transport.receive('livepix', endpoint.callbackPath.split('/').at(-1)!, 'wrong', envelope),
-    ).rejects.toThrow('Invalid external event credentials')
+    // LivePix does not send the local ingress secret. The endpoint id plus the
+    // provider account identity validation form the authentication boundary.
     await expect(
       transport.receive(
         'livepix',

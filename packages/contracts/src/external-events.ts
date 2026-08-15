@@ -25,6 +25,7 @@ export const ExternalEventRecordSchema = z.object({
   id: z.uuid(),
   lastErrorCode: z.string().nullable(),
   nextAttemptAt: z.iso.datetime().nullable(),
+  payload: z.unknown(),
   processedAt: z.iso.datetime().nullable(),
   provider: ExternalEventProviderSchema,
   receivedAt: z.iso.datetime(),

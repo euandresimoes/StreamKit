@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { IntegrationProviderSchema } from './integration'
+import { PaymentCampaignConfigSchema } from './payment'
 
 export const ParticipantSourceSchema = z.enum(['chat', 'manual', 'livepix'])
 export const GiveawayStatusSchema = z.enum([
@@ -110,6 +111,7 @@ export const SaveGiveawayCaptureRuleRequestSchema = z
     match: GiveawayCaptureMatchSchema,
     matchValue: z.string().trim().max(200).nullable().default(null),
     membersOnly: z.boolean().default(false),
+    livepix: PaymentCampaignConfigSchema.nullable().optional(),
     startsAt: z.iso.datetime().nullable().default(null),
   })
   .superRefine((value, context) => {
@@ -134,6 +136,7 @@ export const GiveawayCaptureRuleSchema = SaveGiveawayCaptureRuleRequestSchema.sa
   id: z.uuid(),
   rejectedCount: z.number().int().nonnegative(),
   status: GiveawayCaptureStatusSchema,
+  livepix: PaymentCampaignConfigSchema.nullable().optional(),
   updatedAt: z.iso.datetime(),
 })
 export const GiveawayCaptureRuleListSchema = z.object({ items: z.array(GiveawayCaptureRuleSchema) })

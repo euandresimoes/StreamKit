@@ -65,6 +65,13 @@ import { ExternalEventQueueRepository } from '../modules/integrations/external-e
 import { ExternalEventService } from '../modules/integrations/external-events/external-event.service'
 import { CloudflareQuickTunnelAdapter } from '../modules/integrations/external-events/external-tunnel.adapter'
 import { ExternalTransportService } from '../modules/integrations/external-events/external-transport.service'
+import { PaymentController } from '../modules/payments/payment.controller'
+import { PaymentProviderRegistry } from '../modules/payments/payment-provider.registry'
+import { LivePixApiClient } from '../modules/payments/providers/livepix/livepix-api.client'
+import { LivePixAuthService } from '../modules/payments/providers/livepix/livepix-auth.service'
+import { LivePixPaymentProvider } from '../modules/payments/providers/livepix/livepix-payment.provider'
+import { LivePixPaymentRepository } from '../modules/payments/providers/livepix/livepix-payment.repository'
+import { PaymentCampaignService } from '../modules/payments/payment-campaign.service'
 
 @Module({})
 export class AppModule {
@@ -83,6 +90,7 @@ export class AppModule {
         HealthController,
         IntegrationController,
         ExternalEventController,
+        PaymentController,
         KickController,
         TwitchAuthController,
         YouTubeController,
@@ -112,6 +120,12 @@ export class AppModule {
         ExternalEventQueueRepository,
         ExternalEventService,
         ExternalTransportService,
+        LivePixApiClient,
+        LivePixAuthService,
+        LivePixPaymentProvider,
+        PaymentProviderRegistry,
+        LivePixPaymentRepository,
+        PaymentCampaignService,
         {
           provide: CloudflareQuickTunnelAdapter,
           useFactory: () => new CloudflareQuickTunnelAdapter(cloudflaredBinaryPath),

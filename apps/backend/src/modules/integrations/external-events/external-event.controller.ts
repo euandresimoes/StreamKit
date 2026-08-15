@@ -1,5 +1,9 @@
 import { Body, Controller, Get, Headers, Inject, Param, Post } from '@nestjs/common'
-import { ExternalEventProviderSchema } from '@streamkit/contracts'
+import {
+  ExternalEventIngressSchema,
+  ExternalEventProviderSchema,
+  LivePixWebhookEnvelopeSchema,
+} from '@streamkit/contracts'
 
 import { LocalPublic } from '../../../application/local-public.decorator'
 import { ExternalTransportService } from './external-transport.service'
@@ -22,11 +26,19 @@ export class ExternalEventController {
     @Headers('x-streamkit-ingress-key') secret: string | undefined,
     @Body() body: unknown,
   ) {
-    return this.transport.receive(
-      ExternalEventProviderSchema.parse(provider),
-      endpointId,
-      secret ?? '',
-      body,
-    )
+    const parsedProvider = ExternalEventProviderSchema.parse(provider)
+    const ingress =
+      parsedProvider === 'livepix'
+        ? (() => {
+            const webhook = LivePixWebhookEnvelopeSchema.parse(body)
+            return ExternalEventIngressSchema.parse({
+              eventId: webhook.resource.id,
+              eventType: 'payment',
+              payload: webhook,
+              timestamp: new Date().toISOString(),
+            })
+          })()
+        : body
+    return this.transport.receive(parsedProvider, endpointId, secret ?? '', ingress)
   }
 }

@@ -173,24 +173,33 @@ export class GiveawayCaptureRepository {
           eq(giveawayCaptureRules.status, 'active'),
         ),
       )
-    return rows.map(({ rule }) => GiveawayCaptureRuleSchema.parse(rule))
+    return rows.map(({ rule }) => this.parseRule(rule))
   }
 
   public async list(giveawayId: string) {
     return GiveawayCaptureRuleListSchema.parse({
-      items: await this.database.orm
-        .select()
-        .from(giveawayCaptureRules)
-        .where(eq(giveawayCaptureRules.giveawayId, giveawayId)),
+      items: (
+        await this.database.orm
+          .select()
+          .from(giveawayCaptureRules)
+          .where(eq(giveawayCaptureRules.giveawayId, giveawayId))
+      ).map((row) => this.parseRule(row)),
     })
   }
 
   public async save(giveawayId: string, input: SaveGiveawayCaptureRuleRequest) {
     const now = new Date().toISOString()
+    const { livepix, ...rest } = input
+    const livepixColumns = {
+      livepixAutoEntry: livepix?.autoEntry ?? false,
+      livepixCurrency: livepix?.currency ?? null,
+      livepixMinimumAmountInCents: livepix?.minimumAmountInCents ?? null,
+    }
     await this.database.orm
       .insert(giveawayCaptureRules)
       .values({
-        ...input,
+        ...rest,
+        ...livepixColumns,
         capturedCount: 0,
         createdAt: now,
         duplicateCount: 0,
@@ -202,7 +211,7 @@ export class GiveawayCaptureRepository {
       })
       .onConflictDoUpdate({
         target: [giveawayCaptureRules.giveawayId, giveawayCaptureRules.connectionId],
-        set: { ...input, status: 'active', updatedAt: now },
+        set: { ...rest, ...livepixColumns, status: 'active', updatedAt: now },
       })
     const [row] = await this.database.orm
       .select()
@@ -213,7 +222,7 @@ export class GiveawayCaptureRepository {
           eq(giveawayCaptureRules.connectionId, input.connectionId),
         ),
       )
-    return GiveawayCaptureRuleSchema.parse(row)
+    return this.parseRule(row!)
   }
 
   public async updateStatus(id: string, status: GiveawayCaptureRule['status']) {
@@ -221,5 +230,19 @@ export class GiveawayCaptureRepository {
       .update(giveawayCaptureRules)
       .set({ status, updatedAt: new Date().toISOString() })
       .where(eq(giveawayCaptureRules.id, id))
+  }
+
+  private parseRule(row: typeof giveawayCaptureRules.$inferSelect) {
+    return GiveawayCaptureRuleSchema.parse({
+      ...row,
+      livepix:
+        row.livepixMinimumAmountInCents && row.livepixCurrency
+          ? {
+              autoEntry: row.livepixAutoEntry,
+              currency: row.livepixCurrency,
+              minimumAmountInCents: row.livepixMinimumAmountInCents,
+            }
+          : null,
+    })
   }
 }

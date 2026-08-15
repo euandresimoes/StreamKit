@@ -163,24 +163,33 @@ export class TournamentCaptureRepository {
           eq(tournamentCaptureRules.status, 'active'),
         ),
       )
-    return rows.map(({ rule }) => TournamentCaptureRuleSchema.parse(rule))
+    return rows.map(({ rule }) => this.parseRule(rule))
   }
 
   public async list(tournamentId: string) {
     return TournamentCaptureRuleListSchema.parse({
-      items: await this.database.orm
-        .select()
-        .from(tournamentCaptureRules)
-        .where(eq(tournamentCaptureRules.tournamentId, tournamentId)),
+      items: (
+        await this.database.orm
+          .select()
+          .from(tournamentCaptureRules)
+          .where(eq(tournamentCaptureRules.tournamentId, tournamentId))
+      ).map((row) => this.parseRule(row)),
     })
   }
 
   public async save(tournamentId: string, input: SaveTournamentCaptureRuleRequest) {
     const now = new Date().toISOString()
+    const { livepix, ...rest } = input
+    const livepixColumns = {
+      livepixAutoEntry: livepix?.autoEntry ?? false,
+      livepixCurrency: livepix?.currency ?? null,
+      livepixMinimumAmountInCents: livepix?.minimumAmountInCents ?? null,
+    }
     await this.database.orm
       .insert(tournamentCaptureRules)
       .values({
-        ...input,
+        ...rest,
+        ...livepixColumns,
         capturedCount: 0,
         createdAt: now,
         duplicateCount: 0,
@@ -192,7 +201,7 @@ export class TournamentCaptureRepository {
       })
       .onConflictDoUpdate({
         target: [tournamentCaptureRules.tournamentId, tournamentCaptureRules.connectionId],
-        set: { ...input, status: 'active', updatedAt: now },
+        set: { ...rest, ...livepixColumns, status: 'active', updatedAt: now },
       })
     const [row] = await this.database.orm
       .select()
@@ -203,7 +212,7 @@ export class TournamentCaptureRepository {
           eq(tournamentCaptureRules.connectionId, input.connectionId),
         ),
       )
-    return TournamentCaptureRuleSchema.parse(row)
+    return this.parseRule(row!)
   }
 
   public async updateStatus(id: string, status: TournamentCaptureRule['status']): Promise<void> {
@@ -219,5 +228,19 @@ export class TournamentCaptureRepository {
       .set({ rejectedCount: sql`${tournamentCaptureRules.rejectedCount} + 1`, updatedAt })
       .where(eq(tournamentCaptureRules.id, id))
       .run()
+  }
+
+  private parseRule(row: typeof tournamentCaptureRules.$inferSelect) {
+    return TournamentCaptureRuleSchema.parse({
+      ...row,
+      livepix:
+        row.livepixMinimumAmountInCents && row.livepixCurrency
+          ? {
+              autoEntry: row.livepixAutoEntry,
+              currency: row.livepixCurrency,
+              minimumAmountInCents: row.livepixMinimumAmountInCents,
+            }
+          : null,
+    })
   }
 }

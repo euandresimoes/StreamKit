@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Download, MonitorCog, Palette, Plug, RefreshCw, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { BaseBrandIcon, brandName } from "@/components/base/BaseBrandIcon";
 import { useIntegrations } from "@/modules/integration/use-integrations";
 import { useSettings } from "@/modules/settings/use-settings";
+import { settingsApi } from "@/modules/settings/settings-api";
 
 type Section = "appearance" | "system" | "integrations" | "updates";
 
@@ -56,9 +57,35 @@ export function SettingsDialog({
   const [checking, setChecking] = useState(false);
   const [checked, setChecked] = useState(false);
   const [beta, setBeta] = useState(false);
+  const [livepixClientId, setLivepixClientId] = useState("");
+  const [livepixClientSecret, setLivepixClientSecret] = useState("");
+  const [livepixStatus, setLivepixStatus] = useState<Awaited<
+    ReturnType<typeof settingsApi.livepixStatus>
+  > | null>(null);
+  const [livepixBusy, setLivepixBusy] = useState(false);
   const persisted = useSettings(open);
   const integrations = useIntegrations(open && section === "integrations");
   const theme = persisted.settings?.theme ?? "dark";
+  useEffect(() => {
+    if (open && section === "integrations")
+      void settingsApi
+        .livepixStatus()
+        .then(setLivepixStatus)
+        .catch(() => undefined);
+  }, [open, section]);
+
+  const saveLivepix = async () => {
+    setLivepixBusy(true);
+    try {
+      await settingsApi.saveCredential(
+        JSON.stringify({ clientId: livepixClientId.trim(), clientSecret: livepixClientSecret }),
+      );
+      setLivepixStatus(await settingsApi.connectLivepix());
+      setLivepixClientSecret("");
+    } finally {
+      setLivepixBusy(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -204,6 +231,58 @@ export function SettingsDialog({
                       {` · ${integrations.externalTransport.endpointCount} endpoint(s)`}
                     </p>
                   )}
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-border bg-surface-2/40 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold">LivePix Payments</p>
+                      <p className="text-[11.5px] text-muted-foreground">
+                        Recebe somente pagamentos confirmados e mantém pendências para revisão
+                        manual.
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      {livepixStatus?.state ?? "desconectado"}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    <input
+                      className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+                      value={livepixClientId}
+                      onChange={(event) => setLivepixClientId(event.target.value)}
+                      placeholder="Client ID"
+                    />
+                    <input
+                      className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+                      type="password"
+                      value={livepixClientSecret}
+                      onChange={(event) => setLivepixClientSecret(event.target.value)}
+                      placeholder="Client Secret"
+                    />
+                    <div className="flex justify-end gap-2">
+                      {livepixStatus?.configured && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          loading={livepixBusy}
+                          onClick={() =>
+                            void settingsApi.disconnectLivepix().then(setLivepixStatus)
+                          }
+                        >
+                          Desconectar
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        loading={livepixBusy}
+                        disabled={!livepixClientId.trim() || !livepixClientSecret}
+                        onClick={() => void saveLivepix()}
+                      >
+                        Conectar LivePix
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-surface-2/60 p-4">

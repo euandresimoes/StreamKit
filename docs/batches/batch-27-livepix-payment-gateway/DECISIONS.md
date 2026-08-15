@@ -1,16 +1,14 @@
 # Decisões pendentes — Batch 27
 
-Estas decisões precisam ser fechadas antes das tasks que alteram o comportamento de campanha:
+Decisões fechadas para a implementação:
 
-- quais tipos entram por padrão: pagamento, mensagem, assinatura e cancelamento;
-- se o valor mínimo, moeda e pagamentos sinalizados/retidos bloqueiam a contribuição;
-- se a contribuição entra automaticamente ou passa por aprovação manual;
-- se uma mesma referência pode gerar mais de uma entrada em campanhas diferentes;
-- política de retenção e exibição da mensagem do doador;
-- comportamento quando o nome escolhido pelo doador está vazio, é alterado ou não corresponde a
-  nenhum handle da plataforma global;
-- janela de reconciliação e limpeza de webhooks órfãos;
-- escopos OAuth definitivos após criação do app LivePix.
+- somente pagamentos recebidos entram como contribuição;
+- cada torneio/sorteio define um valor mínimo estritamente maior que zero;
+- a entrada automática é configurável por campanha;
+- pagamento sem correspondência de identidade fica pendente para resolução manual;
+- pagamentos abaixo do mínimo, duplicados ou sem identidade não geram entrada automática;
+- pagamentos em moeda diferente da moeda configurada pela campanha ficam pendentes/rejeitados com
+  motivo visível, sem conversão implícita.
 
-Até essas decisões serem respondidas, o provider pode ser implementado com ingestão, normalização,
-diagnóstico e testes, mas não deve ativar automaticamente participantes em campanhas reais.
+Continuam dependentes da configuração do app LivePix e do contrato oficial: escopos OAuth definitivos,
+janela de reconciliação de webhooks e retenção de mensagens financeiras.

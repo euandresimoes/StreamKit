@@ -134,6 +134,7 @@ export class ExternalEventQueueRepository {
       id: row.id,
       lastErrorCode: row.lastErrorCode,
       nextAttemptAt: row.nextAttemptAt,
+      payload: JSON.parse(row.payloadJson) as unknown,
       processedAt: row.processedAt,
       provider: row.provider,
       receivedAt: row.receivedAt,

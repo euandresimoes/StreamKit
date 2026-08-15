@@ -2,6 +2,7 @@ import {
   AppSettingsSchema,
   CredentialStatusSchema,
   DiagnosticInfoSchema,
+  PaymentConnectionStatusSchema,
   type UpdateAppSettingsRequest,
 } from "@streamkit/contracts";
 
@@ -27,4 +28,16 @@ export const settingsApi = {
     }),
   removeCredential: () =>
     apiClient.request("/api/v1/settings/credentials/livepix", { method: "DELETE" }),
+  livepixStatus: () =>
+    apiClient.request("/api/v1/payments/livepix/status", { schema: PaymentConnectionStatusSchema }),
+  connectLivepix: () =>
+    apiClient.request("/api/v1/payments/livepix/connect", {
+      method: "POST",
+      schema: PaymentConnectionStatusSchema,
+    }),
+  disconnectLivepix: () =>
+    apiClient.request("/api/v1/payments/livepix/connect", {
+      method: "DELETE",
+      schema: PaymentConnectionStatusSchema,
+    }),
 };
