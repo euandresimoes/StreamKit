@@ -11,6 +11,8 @@ import { useIntegrations } from "@/modules/integration/use-integrations";
 import { useSettings } from "@/modules/settings/use-settings";
 import { settingsApi } from "@/modules/settings/settings-api";
 import i18n from "@/i18n";
+import { ProviderSetupWizard } from "./provider-guides/ProviderSetupWizard";
+import type { ProviderGuideId } from "./provider-guides/types";
 
 type Section = "appearance" | "system" | "integrations" | "updates";
 
@@ -69,12 +71,11 @@ export function SettingsDialog({
   const [checking, setChecking] = useState(false);
   const [checked, setChecked] = useState(false);
   const [beta, setBeta] = useState(false);
-  const [livepixClientId, setLivepixClientId] = useState("");
-  const [livepixClientSecret, setLivepixClientSecret] = useState("");
   const [livepixStatus, setLivepixStatus] = useState<Awaited<
     ReturnType<typeof settingsApi.livepixStatus>
   > | null>(null);
   const [livepixBusy, setLivepixBusy] = useState(false);
+  const [setupProvider, setSetupProvider] = useState<ProviderGuideId | null>(null);
   const { t } = useTranslation(undefined, { i18n });
   const persisted = useSettings(open);
   const integrations = useIntegrations(open && section === "integrations");
@@ -87,14 +88,12 @@ export function SettingsDialog({
         .catch(() => undefined);
   }, [open, section]);
 
-  const saveLivepix = async () => {
+  const saveLivepix = async (credentials: { clientId: string; clientSecret: string }) => {
     setLivepixBusy(true);
     try {
-      await settingsApi.saveCredential(
-        JSON.stringify({ clientId: livepixClientId.trim(), clientSecret: livepixClientSecret }),
-      );
+      await settingsApi.saveCredential(JSON.stringify(credentials));
       setLivepixStatus(await settingsApi.connectLivepix());
-      setLivepixClientSecret("");
+      setSetupProvider(null);
     } finally {
       setLivepixBusy(false);
     }
@@ -273,42 +272,24 @@ export function SettingsDialog({
                       {livepixStatus?.state ?? "desconectado"}
                     </span>
                   </div>
-                  <div className="mt-3 grid gap-2">
-                    <input
-                      className="h-8 rounded-md border border-border bg-background px-2 text-xs"
-                      value={livepixClientId}
-                      onChange={(event) => setLivepixClientId(event.target.value)}
-                      placeholder="Client ID"
-                    />
-                    <input
-                      className="h-8 rounded-md border border-border bg-background px-2 text-xs"
-                      type="password"
-                      value={livepixClientSecret}
-                      onChange={(event) => setLivepixClientSecret(event.target.value)}
-                      placeholder="Client Secret"
-                    />
-                    <div className="flex justify-end gap-2">
-                      {livepixStatus?.configured && (
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          loading={livepixBusy}
-                          onClick={() =>
-                            void settingsApi.disconnectLivepix().then(setLivepixStatus)
-                          }
-                        >
-                          {t("settings.disconnect")}
-                        </Button>
-                      )}
+                  <div className="flex justify-end gap-2">
+                    {livepixStatus?.configured && (
                       <Button
+                        variant="danger"
                         size="sm"
                         loading={livepixBusy}
-                        disabled={!livepixClientId.trim() || !livepixClientSecret}
-                        onClick={() => void saveLivepix()}
+                        onClick={() => void settingsApi.disconnectLivepix().then(setLivepixStatus)}
                       >
-                        {t("settings.connectLivepix")}
+                        {t("settings.disconnect")}
                       </Button>
-                    </div>
+                    )}
+                    <Button
+                      size="sm"
+                      loading={livepixBusy}
+                      onClick={() => setSetupProvider("livepix")}
+                    >
+                      {t("settings.connectLivepix")}
+                    </Button>
                   </div>
                 </div>
 
@@ -345,7 +326,7 @@ export function SettingsDialog({
                       size="sm"
                       loading={integrations.busy}
                       disabled={!integrations.twitchAuth?.available}
-                      onClick={() => void integrations.connectTwitch()}
+                      onClick={() => setSetupProvider("twitch")}
                     >
                       {t("settings.connect")}
                     </Button>
@@ -383,7 +364,7 @@ export function SettingsDialog({
                         size="sm"
                         loading={integrations.busy}
                         disabled={!integrations.youtubeAuth?.available}
-                        onClick={() => void integrations.connectYouTube()}
+                        onClick={() => setSetupProvider("youtube")}
                       >
                         {t("settings.connect")}
                       </Button>
@@ -538,6 +519,33 @@ export function SettingsDialog({
             )}
           </main>
         </div>
+        {setupProvider && (
+          <ProviderSetupWizard
+            open
+            provider={setupProvider}
+            busy={setupProvider === "livepix" ? livepixBusy : integrations.busy}
+            onOpenChange={(open) => {
+              if (!open) setSetupProvider(null);
+            }}
+            onConnect={(credentials) => {
+              if (setupProvider === "livepix" && credentials) {
+                void saveLivepix(credentials);
+                return;
+              }
+              if (setupProvider === "youtube" && credentials) {
+                const saveSecret = credentials.clientSecret
+                  ? settingsApi.saveYouTubeClientSecret(credentials.clientSecret)
+                  : Promise.resolve();
+                void saveSecret
+                  .then(() => integrations.connectYouTube())
+                  .finally(() => setSetupProvider(null));
+                return;
+              }
+              if (setupProvider === "twitch") void integrations.connectTwitch();
+              if (setupProvider === "youtube") void integrations.connectYouTube();
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

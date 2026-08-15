@@ -20,4 +20,10 @@ export class SettingsController {
   @Delete('credentials/livepix') public removeCredential() {
     return this.service.removeCredential()
   }
+  @Get('credentials/youtube-client-secret') public youtubeClientSecretStatus() {
+    return this.service.youtubeClientSecretStatus()
+  }
+  @Put('credentials/youtube-client-secret') public saveYouTubeClientSecret(@Body() body: unknown) {
+    return this.service.saveYouTubeClientSecret(SaveCredentialRequestSchema.parse(body).credential)
+  }
 }

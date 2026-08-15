@@ -70,7 +70,7 @@ export class LivePixAuthService {
       client_secret: stored.clientSecret,
       grant_type: stored.refreshToken ? 'refresh_token' : 'client_credentials',
       ...(stored.refreshToken ? { refresh_token: stored.refreshToken } : {}),
-      scope: 'account:read webhooks',
+      scope: 'account:read wallet:read webhooks',
     })
     const response = await fetch('https://oauth.livepix.gg/oauth2/token', {
       body,

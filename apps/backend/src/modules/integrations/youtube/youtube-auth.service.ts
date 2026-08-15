@@ -21,6 +21,7 @@ import {
 import { IntegrationRepository } from '../integration.repository'
 
 const CREDENTIAL_NAME = 'youtube.oauth'
+const CLIENT_SECRET_CREDENTIAL_NAME = 'youtube.client-secret'
 const YOUTUBE_SCOPE = 'https://www.googleapis.com/auth/youtube.force-ssl'
 const TokenResponseSchema = z.object({
   access_token: z.string().min(1),
@@ -191,7 +192,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
     else {
       try {
         const response = await fetch('https://oauth2.googleapis.com/token', {
-          body: this.tokenRequest({
+          body: await this.tokenRequest({
             client_id: this.requireClientId(),
             code,
             code_verifier: flow.codeVerifier,
@@ -235,7 +236,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
 
   private async refresh(stored: z.infer<typeof StoredTokenSchema>) {
     const response = await fetch('https://oauth2.googleapis.com/token', {
-      body: this.tokenRequest({
+      body: await this.tokenRequest({
         client_id: this.requireClientId(),
         grant_type: 'refresh_token',
         refresh_token: stored.refreshToken,
@@ -269,13 +270,23 @@ export class YouTubeAuthService implements OnModuleDestroy {
     return this.config.youtubeClientId
   }
 
-  private tokenRequest(parameters: Record<string, string>): URLSearchParams {
+  private async tokenRequest(parameters: Record<string, string>): Promise<URLSearchParams> {
+    const clientSecret = await this.clientSecret()
     return new URLSearchParams({
       ...parameters,
-      ...(this.config.youtubeClientSecret
-        ? { client_secret: this.config.youtubeClientSecret }
-        : {}),
+      ...(clientSecret ? { client_secret: clientSecret } : {}),
     })
+  }
+
+  private async clientSecret(): Promise<string | null> {
+    try {
+      return (
+        (await this.credentials.read(CLIENT_SECRET_CREDENTIAL_NAME))?.trim() ||
+        this.config.youtubeClientSecret
+      )
+    } catch {
+      return this.config.youtubeClientSecret
+    }
   }
 
   private async oauthError(response: Response): Promise<string> {

@@ -28,6 +28,16 @@ export const settingsApi = {
     }),
   removeCredential: () =>
     apiClient.request("/api/v1/settings/credentials/livepix", { method: "DELETE" }),
+  youtubeClientSecretStatus: () =>
+    apiClient.request("/api/v1/settings/credentials/youtube-client-secret", {
+      schema: CredentialStatusSchema,
+    }),
+  saveYouTubeClientSecret: (credential: string) =>
+    apiClient.request("/api/v1/settings/credentials/youtube-client-secret", {
+      body: { credential },
+      method: "PUT",
+      schema: CredentialStatusSchema,
+    }),
   livepixStatus: () =>
     apiClient.request("/api/v1/payments/livepix/status", { schema: PaymentConnectionStatusSchema }),
   connectLivepix: () =>
