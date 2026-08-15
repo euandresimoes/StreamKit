@@ -2,6 +2,7 @@ import {
   TodoBoardSchema,
   TodoCardSchema,
   TodoColumnSchema,
+  TodoTemplateSchema,
   WorkspaceSchema,
 } from '@streamkit/contracts'
 import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
@@ -147,6 +148,64 @@ describe('TODO Kanban persistence', () => {
       selectedId: string | null
     }
     expect(afterDeletion.selectedId).toBe(fallbackWorkspace.id)
+    await backend.close()
+    backend = undefined
+    await environment.cleanup()
+  })
+
+  it('creates, lists, applies and deletes TODO templates', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    backend = await startLocalBackend({
+      authenticationToken: token,
+      databasePath: environment.databasePath,
+    })
+    const source = WorkspaceSchema.parse(
+      await (await request('/api/v1/todo/workspaces', 'POST', { name: 'Source' })).json(),
+    )
+    const target = WorkspaceSchema.parse(
+      await (await request('/api/v1/todo/workspaces', 'POST', { name: 'Target' })).json(),
+    )
+    const column = TodoColumnSchema.parse(
+      await (
+        await request(`/api/v1/todo/workspaces/${source.id}/columns`, 'POST', {
+          name: 'Live tasks',
+        })
+      ).json(),
+    )
+    await request(`/api/v1/todo/columns/${column.id}/cards`, 'POST', {
+      description: 'Prepare the stream',
+      priority: 'high',
+      title: 'Go live',
+    })
+
+    const template = TodoTemplateSchema.parse(
+      await (
+        await request(`/api/v1/todo/workspaces/${source.id}/templates`, 'POST', {
+          description: 'Reusable live checklist',
+          name: 'Live setup',
+        })
+      ).json(),
+    )
+    expect(template.structure.columns[0]?.cards[0]?.title).toBe('Go live')
+
+    const listed = TodoTemplateSchema.array().parse(
+      await (await request(`/api/v1/todo/workspaces/${target.id}/templates`)).json(),
+    )
+    expect(listed.map((item) => item.id)).toContain(template.id)
+
+    const applied = TodoBoardSchema.parse(
+      await (
+        await request(`/api/v1/todo/workspaces/${target.id}/templates/${template.id}/apply`, 'POST')
+      ).json(),
+    )
+    expect(applied.columns).toHaveLength(1)
+    expect(applied.cards).toHaveLength(1)
+    expect(applied.cards[0]?.title).toBe('Go live')
+
+    expect((await request(`/api/v1/todo/templates/${template.id}`, 'DELETE')).status).toBe(204)
+    expect(
+      (await request(`/api/v1/todo/workspaces/${source.id}/templates`)).json(),
+    ).resolves.toEqual([])
     await backend.close()
     backend = undefined
     await environment.cleanup()

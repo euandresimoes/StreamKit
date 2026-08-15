@@ -707,7 +707,7 @@ export function TodoTab() {
         onOpenChange={(open) => !open && setPendingDelete(null)}
         busy={todo.busy}
         title={`Delete ${pendingDelete?.kind ?? "item"}?`}
-        description={`"${pendingDelete?.name ?? ""}" sera removido permanentemente.`}
+        description={`"${pendingDelete?.name ?? ""}" will be permanently removed.`}
         onConfirm={async () => {
           if (!pendingDelete) return;
           if (pendingDelete.kind === "workspace") await todo.deleteWorkspace(pendingDelete.id);

@@ -100,6 +100,9 @@ export class SqliteDatabase {
         )
       }
       const apply = this.client.transaction(() => {
+        const statements = splitMigrationStatements(migration.sql)
+        if (statements.some((statement) => isMigrationReader(statement)))
+          throw new Error('Migration statements must not return rows')
         this.client.exec(migration.sql)
         this.client
           .prepare('INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)')
@@ -108,4 +111,44 @@ export class SqliteDatabase {
       apply()
     }
   }
+}
+
+function isMigrationReader(statement: string): boolean {
+  const keyword = statement.split(/\s+/, 1)[0]?.toUpperCase()
+  return keyword === 'SELECT' || keyword === 'WITH' || keyword === 'PRAGMA' || keyword === 'EXPLAIN'
+}
+
+function splitMigrationStatements(sql: string): string[] {
+  const statements: string[] = []
+  let start = 0
+  let quote: "'" | '"' | '[' | null = null
+
+  for (let index = 0; index < sql.length; index += 1) {
+    const character = sql[index]
+    if (quote) {
+      if ((quote === "'" || quote === '"') && character === quote) {
+        if (sql[index + 1] === quote) {
+          index += 1
+        } else {
+          quote = null
+        }
+      } else if (quote === '[' && character === ']') {
+        quote = null
+      }
+      continue
+    }
+    if (character === "'" || character === '"' || character === '[') {
+      quote = character
+      continue
+    }
+    if (character === ';') {
+      const statement = sql.slice(start, index).trim()
+      if (statement) statements.push(statement)
+      start = index + 1
+    }
+  }
+
+  const trailing = sql.slice(start).trim()
+  if (trailing) statements.push(trailing)
+  return statements
 }
