@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { Inject, Injectable } from '@nestjs/common'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, or, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {
@@ -10,6 +10,7 @@ import {
   giveaways,
   integrationConnections,
   tournamentCaptureRules,
+  tournamentEntries,
   tournamentParticipants,
   tournaments,
 } from '../../infrastructure/database/schema'
@@ -37,7 +38,17 @@ export class PaymentCampaignService {
       .from(integrationConnections)
       .where(eq(integrationConnections.id, input.connectionId))
       .get()
-    if (!connection || connection.status !== 'connected')
+    const hasGlobalSelection =
+      (this.database.orm
+        .select({ count: sql<number>`count(*)` })
+        .from(integrationConnections)
+        .where(eq(integrationConnections.isGlobalSelected, true))
+        .get()?.count ?? 0) > 0
+    if (
+      !connection ||
+      connection.status !== 'connected' ||
+      (hasGlobalSelection && !connection.isGlobalSelected)
+    )
       throw new ApiApplicationError(
         'INTEGRATION_CONNECTION_NOT_FOUND',
         'Platform connection is not active',
@@ -90,7 +101,12 @@ export class PaymentCampaignService {
           .run()
       } else {
         const rule = this.database.orm
-          .select({ rule: tournamentCaptureRules, status: tournaments.status })
+          .select({
+            bracketSize: tournaments.bracketSize,
+            mode: tournaments.mode,
+            rule: tournamentCaptureRules,
+            status: tournaments.status,
+          })
           .from(tournamentCaptureRules)
           .innerJoin(tournaments, eq(tournaments.id, tournamentCaptureRules.tournamentId))
           .where(
@@ -124,6 +140,12 @@ export class PaymentCampaignService {
           })
           .onConflictDoNothing()
           .run()
+        if (rule.mode === 'individual')
+          this.ensureIndividualEntry(
+            input.campaignId,
+            `livepix:${contribution.providerResourceId}`,
+            rule.bracketSize,
+          )
       }
     })
     await this.payments.markManuallyResolved(contributionId, input.campaignId)
@@ -152,6 +174,10 @@ export class PaymentCampaignService {
             eq(giveawayCaptureRules.status, 'active'),
             eq(giveaways.status, 'ready'),
             eq(integrationConnections.status, 'connected'),
+            or(
+              eq(integrationConnections.isGlobalSelected, true),
+              sql`NOT EXISTS (SELECT 1 FROM integration_connections WHERE is_global_selected = 1)`,
+            ),
           ),
         )
         .all()
@@ -204,6 +230,8 @@ export class PaymentCampaignService {
       }
       const tournamentRules = this.database.orm
         .select({
+          bracketSize: tournaments.bracketSize,
+          mode: tournaments.mode,
           rule: tournamentCaptureRules,
           provider: integrationConnections.provider,
           channelId: integrationConnections.channelId,
@@ -219,10 +247,14 @@ export class PaymentCampaignService {
             eq(tournamentCaptureRules.status, 'active'),
             eq(tournaments.status, 'ready'),
             eq(integrationConnections.status, 'connected'),
+            or(
+              eq(integrationConnections.isGlobalSelected, true),
+              sql`NOT EXISTS (SELECT 1 FROM integration_connections WHERE is_global_selected = 1)`,
+            ),
           ),
         )
         .all()
-      for (const { rule, provider, channelId } of tournamentRules) {
+      for (const { bracketSize, mode, rule, provider, channelId } of tournamentRules) {
         if (
           !provider ||
           !channelId ||
@@ -258,6 +290,12 @@ export class PaymentCampaignService {
             tournamentId: rule.tournamentId,
           })
           .run()
+        if (mode === 'individual')
+          this.ensureIndividualEntry(
+            rule.tournamentId,
+            `livepix:${contribution.providerResourceId}`,
+            bracketSize,
+          )
         applied += 1
         this.database.orm
           .update(tournamentCaptureRules)
@@ -287,5 +325,47 @@ export class PaymentCampaignService {
 
   private normalize(value: string): string {
     return value.trim().toLocaleLowerCase()
+  }
+
+  private ensureIndividualEntry(
+    tournamentId: string,
+    externalRef: string,
+    bracketSize: number,
+  ): void {
+    const participant = this.database.orm
+      .select({ id: tournamentParticipants.id })
+      .from(tournamentParticipants)
+      .where(
+        and(
+          eq(tournamentParticipants.tournamentId, tournamentId),
+          eq(tournamentParticipants.externalRef, externalRef),
+        ),
+      )
+      .get()
+    if (!participant) return
+    const existingEntry = this.database.orm
+      .select({ id: tournamentEntries.id })
+      .from(tournamentEntries)
+      .where(eq(tournamentEntries.participantId, participant.id))
+      .get()
+    if (existingEntry) return
+    const entryCount =
+      this.database.orm
+        .select({ count: sql<number>`count(*)` })
+        .from(tournamentEntries)
+        .where(eq(tournamentEntries.tournamentId, tournamentId))
+        .get()?.count ?? 0
+    if (entryCount >= bracketSize) return
+    this.database.orm
+      .insert(tournamentEntries)
+      .values({
+        createdAt: new Date().toISOString(),
+        id: randomUUID(),
+        participantId: participant.id,
+        seed: entryCount + 1,
+        teamId: null,
+        tournamentId,
+      })
+      .run()
   }
 }

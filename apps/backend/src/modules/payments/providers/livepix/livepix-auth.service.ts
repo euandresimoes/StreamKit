@@ -93,7 +93,13 @@ export class LivePixAuthService {
   private async read(): Promise<z.infer<typeof StoredCredentialSchema> | null> {
     const value = await this.credentials.read(CREDENTIAL)
     if (!value) return null
-    const parsed = StoredCredentialSchema.safeParse(JSON.parse(value) as unknown)
+    let decoded: unknown
+    try {
+      decoded = JSON.parse(value) as unknown
+    } catch {
+      return null
+    }
+    const parsed = StoredCredentialSchema.safeParse(decoded)
     return parsed.success ? parsed.data : null
   }
 }

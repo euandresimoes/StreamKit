@@ -26,7 +26,7 @@ export class TournamentCaptureRepository {
 
   public async capture(rule: TournamentCaptureRule, event: ChatMessageReceived): Promise<boolean> {
     return this.database.transaction(() => {
-      const identity = `${event.provider}:${event.channelId}:${event.author.handle.normalize('NFKC').trim().toLocaleLowerCase('pt-BR')}`
+      const identity = event.author.handle.normalize('NFKC').trim().toLocaleLowerCase('pt-BR')
       const tournament = this.database.orm
         .select()
         .from(tournaments)
@@ -160,6 +160,13 @@ export class TournamentCaptureRepository {
         and(
           eq(integrationConnections.provider, event.provider),
           eq(integrationConnections.channelId, event.channelId),
+          event.liveSessionKey
+            ? eq(integrationConnections.liveSessionKey, event.liveSessionKey)
+            : undefined,
+          or(
+            eq(integrationConnections.isGlobalSelected, true),
+            sql`NOT EXISTS (SELECT 1 FROM integration_connections WHERE is_global_selected = 1)`,
+          ),
           eq(tournamentCaptureRules.status, 'active'),
         ),
       )

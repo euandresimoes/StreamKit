@@ -8,6 +8,10 @@ import {
 import { apiClient } from "@/infrastructure/api-client";
 
 export const liveControlApi = {
+  selectGlobal: (connectionId: string) =>
+    apiClient.request(`/api/v1/integrations/live-control/selection/${connectionId}`, {
+      method: "PUT",
+    }),
   list: () =>
     apiClient.request("/api/v1/integrations/live-control", { schema: LiveStreamSchema.array() }),
   chat: (id: string) =>

@@ -103,7 +103,7 @@ describe('SQLite infrastructure', () => {
             destructive: false,
             name: 'broken',
             sql: 'CREATE TABLE partial_write (id TEXT); SELECT * FROM missing_table;',
-            version: 99,
+            version: 99_000_001,
           },
         ],
       }),

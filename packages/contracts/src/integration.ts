@@ -57,6 +57,7 @@ export const IntegrationConnectionSchema = z.object({
   channelId: z.string().trim().min(1).max(200),
   createdAt: z.iso.datetime(),
   id: z.uuid(),
+  isGlobalSelected: z.boolean().default(false),
   lastErrorCode: z.string().trim().min(1).max(100).nullable(),
   liveSessionKey: z.string().trim().min(1).max(300).nullable().default(null),
   nextRetryAt: z.iso.datetime().nullable(),

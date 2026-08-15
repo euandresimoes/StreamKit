@@ -40,6 +40,7 @@ export function LiveSelectionProvider({ children }: { children: React.ReactNode 
 
   const select = useCallback((id: string) => {
     setSelectedId(id);
+    void liveControlApi.selectGlobal(id).catch(() => undefined);
     try {
       window.localStorage.setItem(SELECTED_LIVE_STORAGE_KEY, id);
     } catch {

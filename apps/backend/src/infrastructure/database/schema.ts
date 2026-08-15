@@ -79,6 +79,7 @@ export const integrationConnections = sqliteTable(
     channelId: text('channel_id').notNull(),
     createdAt: text('created_at').notNull(),
     id: text('id').primaryKey(),
+    isGlobalSelected: integer('is_global_selected', { mode: 'boolean' }).notNull().default(false),
     lastErrorCode: text('last_error_code'),
     liveSessionKey: text('live_session_key'),
     nextRetryAt: text('next_retry_at'),

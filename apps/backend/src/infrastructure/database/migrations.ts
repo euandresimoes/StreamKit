@@ -434,4 +434,12 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
         ON chat_message_buffer(provider, channel_id, live_session_key, received_at);
     `,
   },
+  {
+    destructive: false,
+    name: 'global_live_selection',
+    version: 21,
+    sql: `
+      ALTER TABLE integration_connections ADD COLUMN is_global_selected INTEGER NOT NULL DEFAULT 0;
+    `,
+  },
 ]

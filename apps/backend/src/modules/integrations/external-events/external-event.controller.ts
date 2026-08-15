@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Inject, Param, Post } from '@nestjs/common'
+import { Body, Controller, Get, Headers, Inject, Param, Post, Query } from '@nestjs/common'
 import {
   ExternalEventIngressSchema,
   ExternalEventProviderSchema,
@@ -24,6 +24,7 @@ export class ExternalEventController {
     @Param('provider') provider: unknown,
     @Param('endpointId') endpointId: string,
     @Headers('x-streamkit-ingress-key') secret: string | undefined,
+    @Query('token') token: string | undefined,
     @Body() body: unknown,
   ) {
     const parsedProvider = ExternalEventProviderSchema.parse(provider)
@@ -39,6 +40,6 @@ export class ExternalEventController {
             })
           })()
         : body
-    return this.transport.receive(parsedProvider, endpointId, secret ?? '', ingress)
+    return this.transport.receive(parsedProvider, endpointId, secret ?? token ?? '', ingress)
   }
 }

@@ -27,6 +27,17 @@ export class IntegrationService {
     return this.repository.listConnections()
   }
 
+  public async selectGlobalLive(id: string): Promise<void> {
+    const connection = await this.repository.getConnection(id)
+    if (!connection)
+      throw new ApiApplicationError(
+        'INTEGRATION_CONNECTION_NOT_FOUND',
+        'Integration connection not found',
+        404,
+      )
+    await this.repository.selectGlobalLive(id)
+  }
+
   public saveConnection(input: SaveIntegrationConnectionRequest) {
     return this.repository.saveConnection(input)
   }

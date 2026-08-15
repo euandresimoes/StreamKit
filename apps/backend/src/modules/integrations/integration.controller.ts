@@ -125,6 +125,10 @@ export class IntegrationController {
     return this.service.listConnections()
   }
 
+  @Put('live-control/selection/:id') public selectGlobalLive(@Param('id') id: string) {
+    return this.service.selectGlobalLive(EntityIdSchema.parse(id))
+  }
+
   @Put('connections') public saveConnection(@Body() body: unknown) {
     return this.service.saveConnection(SaveIntegrationConnectionRequestSchema.parse(body))
   }

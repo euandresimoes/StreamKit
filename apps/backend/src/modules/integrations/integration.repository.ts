@@ -83,6 +83,7 @@ export class IntegrationRepository {
         channelId: input.channelId,
         createdAt: now,
         id: randomUUID(),
+        isGlobalSelected: false,
         liveSessionKey: null,
         lastErrorCode: null,
         nextRetryAt: null,
@@ -185,6 +186,17 @@ export class IntegrationRepository {
         .where(eq(integrationConnections.id, id))
         .run()
       return true
+    })
+  }
+
+  public async selectGlobalLive(id: string): Promise<void> {
+    this.database.transaction(() => {
+      this.database.orm.update(integrationConnections).set({ isGlobalSelected: false }).run()
+      this.database.orm
+        .update(integrationConnections)
+        .set({ isGlobalSelected: true, updatedAt: new Date().toISOString() })
+        .where(eq(integrationConnections.id, id))
+        .run()
     })
   }
 

@@ -76,7 +76,7 @@ export class ExternalTransportService implements OnModuleDestroy {
     return {
       callbackPath: `/api/v1/external-events/${provider}/${endpoint.id}`,
       callbackUrl: this.state.publicUrl
-        ? `${this.state.publicUrl}/api/v1/external-events/${provider}/${endpoint.id}`
+        ? `${this.state.publicUrl}/api/v1/external-events/${provider}/${endpoint.id}${provider === 'livepix' ? `?token=${encodeURIComponent(endpoint.secret)}` : ''}`
         : null,
       secret: endpoint.secret,
     }
@@ -98,11 +98,7 @@ export class ExternalTransportService implements OnModuleDestroy {
   ): Promise<{ accepted: boolean; duplicate: boolean }> {
     const provider = ExternalEventProviderSchema.parse(providerInput)
     const endpoint = this.endpoints.get(endpointId)
-    if (
-      !endpoint ||
-      endpoint.provider !== provider ||
-      (provider !== 'livepix' && !this.matches(secret, endpoint.secret))
-    )
+    if (!endpoint || endpoint.provider !== provider || !this.matches(secret, endpoint.secret))
       throw new ApiApplicationError('UNAUTHORIZED', 'Invalid external event credentials', 401)
     if (!this.allow(endpointId))
       throw new ApiApplicationError('RATE_LIMITED', 'External event rate limit exceeded', 429)

@@ -24,7 +24,10 @@ export function useParticipantCaptureRules(
   const [connections, setConnections] = useState<IntegrationConnection[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loading = useRef(false);
   const load = useCallback(async () => {
+    if (loading.current) return;
+    loading.current = true;
     try {
       const [nextRules, nextConnections] = await Promise.all([
         target === "giveaway"
@@ -42,13 +45,15 @@ export function useParticipantCaptureRules(
       );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível carregar a captura.");
+    } finally {
+      loading.current = false;
     }
   }, [target, targetId]);
   useEffect(() => {
     void load();
     const timer = setInterval(() => {
       void Promise.all([load(), onRefreshRef.current()]);
-    }, 2_000);
+    }, 5_000);
     return () => clearInterval(timer);
   }, [load]);
   const mutate = async (operation: () => Promise<unknown>) => {

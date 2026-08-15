@@ -170,6 +170,13 @@ export class GiveawayCaptureRepository {
         and(
           eq(integrationConnections.provider, event.provider),
           eq(integrationConnections.channelId, event.channelId),
+          event.liveSessionKey
+            ? eq(integrationConnections.liveSessionKey, event.liveSessionKey)
+            : undefined,
+          or(
+            eq(integrationConnections.isGlobalSelected, true),
+            sql`NOT EXISTS (SELECT 1 FROM integration_connections WHERE is_global_selected = 1)`,
+          ),
           eq(giveawayCaptureRules.status, 'active'),
         ),
       )
