@@ -8,7 +8,7 @@ export const BRAND_ICON_SOURCES: Readonly<Record<BrandIconProvider, string>> = O
   twitch: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/twitch.svg",
   youtube: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/youtube.svg",
   kick: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/kick.svg",
-  livepix: "/assets/livepix.svg",
+  livepix: "/assets/livepix.png",
 });
 
 const BRAND_NAMES: Readonly<Record<BrandIconProvider, string>> = Object.freeze({
