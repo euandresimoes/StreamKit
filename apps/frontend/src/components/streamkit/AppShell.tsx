@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
-import { ListTodo, Swords, Gift, Settings, Radio } from "lucide-react";
+import { Gift, LayoutGrid, ListTodo, Radio, Settings, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { TodoTab } from "./TodoTab";
 import { GamesTab } from "./GamesTab";
 import { GiveawaysTab } from "./GiveawaysTab";
@@ -14,11 +21,21 @@ import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 
 type Tab = "todo" | "games" | "giveaways" | "live";
 
-const tabs: { id: Tab; label: string; icon: typeof ListTodo }[] = [
-  { id: "todo", label: "TODO", icon: ListTodo },
-  { id: "games", label: "GAMES", icon: Swords },
-  { id: "giveaways", label: "GIVEAWAYS", icon: Gift },
-  { id: "live", label: "LIVE", icon: Radio },
+const tabs: { id: Tab; label: string; description: string; icon: typeof ListTodo }[] = [
+  {
+    id: "todo",
+    label: "TODO",
+    description: "Organize suas tarefas e prioridades.",
+    icon: ListTodo,
+  },
+  { id: "games", label: "GAMES", description: "Gerencie jogos e participantes.", icon: Swords },
+  {
+    id: "giveaways",
+    label: "GIVEAWAYS",
+    description: "Crie e controle seus sorteios.",
+    icon: Gift,
+  },
+  { id: "live", label: "LIVE", description: "Controle sua transmissão e seu chat.", icon: Radio },
 ];
 
 export function AppShell() {
@@ -34,6 +51,7 @@ function AppShellContent() {
   const live = useLiveSelection();
   const [tab, setTab] = useState<Tab>("todo");
   const [settings, setSettings] = useState(false);
+  const [launcherOpen, setLauncherOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
 
   useEffect(() => {
@@ -64,23 +82,15 @@ function AppShellContent() {
               fullscreen && "streamkit-titlebar__content--fullscreen",
             )}
           >
-            <nav className="streamkit-titlebar__interactive flex h-full gap-1">
-              {tabs.map((tabItem) => (
-                <button
-                  key={tabItem.id}
-                  onClick={() => setTab(tabItem.id)}
-                  className={cn(
-                    "press flex h-full items-center gap-2 rounded-none px-3.5 py-0 text-[12px] font-semibold tracking-wide transition-all duration-300",
-                    tab === tabItem.id
-                      ? "bg-surface-2 text-foreground shadow-[0_1px_0_0_oklch(1_0_0/8%)_inset]"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <tabItem.icon className="size-3.5" />
-                  {tabItem.label}
-                </button>
-              ))}
-            </nav>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="h-full w-10 rounded-none"
+              aria-label="Abrir módulos"
+              onClick={() => setLauncherOpen(true)}
+            >
+              <LayoutGrid />
+            </Button>
 
             <div className="streamkit-titlebar__interactive ml-auto flex h-full items-center gap-1.5">
               <LivePlatformSelector
@@ -128,6 +138,46 @@ function AppShellContent() {
       </div>
 
       <SettingsDialog open={settings} onOpenChange={setSettings} />
+      <Dialog open={launcherOpen} onOpenChange={setLauncherOpen}>
+        <DialogContent className="max-w-2xl border-border-strong bg-background/95 p-6 shadow-[var(--shadow-float)] backdrop-blur-3xl sm:rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <LayoutGrid className="size-4 text-primary" />
+              Módulos do StreamKit
+            </DialogTitle>
+            <DialogDescription>Escolha uma área para continuar trabalhando.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            {tabs.map((tabItem) => (
+              <button
+                key={tabItem.id}
+                type="button"
+                onClick={() => {
+                  setTab(tabItem.id);
+                  setLauncherOpen(false);
+                }}
+                className={cn(
+                  "group flex min-h-32 flex-col items-start justify-between rounded-2xl border p-4 text-left transition-all duration-200",
+                  "border-border bg-surface-2/40 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  tab === tabItem.id && "border-primary/60 bg-primary/10",
+                )}
+              >
+                <span className="flex size-9 items-center justify-center rounded-xl bg-background/80 text-muted-foreground transition-colors group-hover:text-primary">
+                  <tabItem.icon className="size-5" />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-foreground">
+                    {tabItem.label}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {tabItem.description}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
