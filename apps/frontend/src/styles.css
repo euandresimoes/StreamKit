@@ -148,8 +148,8 @@
   }
 
   body {
-    background-color: var(--color-background);
-    background-image: var(--gradient-app);
+    background-color: transparent;
+    background-image: none;
     background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -188,6 +188,26 @@
   ::-webkit-scrollbar-corner {
     background: transparent;
   }
+}
+
+.streamkit-shell {
+  isolation: isolate;
+}
+
+.streamkit-app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 12% 14%,
+      color-mix(in oklab, var(--primary) 8%, transparent),
+      transparent 34%
+    ),
+    radial-gradient(circle at 88% 82%, oklch(0.52 0.035 250 / 7%), transparent 38%),
+    linear-gradient(135deg, oklch(0.08 0.008 70 / 76%), oklch(0.12 0.01 70 / 68%));
+  background-attachment: fixed;
 }
 
 @utility glass {

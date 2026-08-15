@@ -108,12 +108,22 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
   const savedSettingsBounds = await settingsState.load()
 
   mainWindow = new BrowserWindow({
-    backgroundColor: '#1f1e1d',
+    backgroundColor: '#00000000',
     height: 820,
     minHeight: 640,
     minWidth: 960,
     show: false,
     title: STREAMKIT_APP_NAME,
+    ...(process.platform === 'darwin'
+      ? {
+          vibrancy: 'under-window' as const,
+          visualEffectState: 'followWindow' as const,
+        }
+      : process.platform === 'win32'
+        ? {
+            backgroundMaterial: 'mica' as const,
+          }
+        : {}),
     titleBarOverlay:
       process.platform === 'darwin'
         ? true
