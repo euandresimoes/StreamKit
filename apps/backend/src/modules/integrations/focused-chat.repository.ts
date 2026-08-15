@@ -25,6 +25,7 @@ export type FocusedChatKey = {
   identityKey?: string
   provider: IntegrationProvider
   providerUserId: string | null
+  liveSessionKey?: string | null
 }
 
 @Injectable()
@@ -44,6 +45,9 @@ export class FocusedChatRepository {
               eq(chatMessageBuffer.provider, event.provider),
               eq(chatMessageBuffer.channelId, event.channelId),
               eq(chatMessageBuffer.providerUserId, event.author.providerUserId),
+              event.liveSessionKey
+                ? eq(chatMessageBuffer.liveSessionKey, event.liveSessionKey)
+                : undefined,
               isNotNull(chatMessageBuffer.avatarUrl),
             ),
           )
@@ -61,6 +65,7 @@ export class FocusedChatRepository {
         externalEventId: event.externalEventId,
         handle: event.author.handle,
         id: randomUUID(),
+        liveSessionKey: event.liveSessionKey,
         message: event.message,
         occurredAt: event.occurredAt,
         provider: event.provider,
@@ -102,23 +107,6 @@ export class FocusedChatRepository {
         messages: [],
         subject,
       })
-    const identityFilter = or(
-      ...keys.map((key) =>
-        and(
-          eq(chatMessageBuffer.provider, key.provider),
-          eq(chatMessageBuffer.channelId, key.channelId),
-          key.providerUserId
-            ? eq(chatMessageBuffer.providerUserId, key.providerUserId)
-            : sql`lower(${chatMessageBuffer.handle}) = lower(${key.identityKey ?? key.displayName})`,
-        ),
-      ),
-    )
-    const rows = await this.database.orm
-      .select()
-      .from(chatMessageBuffer)
-      .where(identityFilter)
-      .orderBy(desc(chatMessageBuffer.occurredAt))
-      .limit(FOCUSED_THREAD_MAX_MESSAGES)
     const connectionRows = await this.database.orm
       .select()
       .from(integrationConnections)
@@ -132,8 +120,40 @@ export class FocusedChatRepository {
           ),
         ),
       )
+    const identityFilter = or(
+      ...keys.map((key) =>
+        (() => {
+          const sessionKey =
+            key.liveSessionKey ??
+            connectionRows.find(
+              (connection) =>
+                connection.provider === key.provider && connection.channelId === key.channelId,
+            )?.liveSessionKey
+          return and(
+            eq(chatMessageBuffer.provider, key.provider),
+            eq(chatMessageBuffer.channelId, key.channelId),
+            sessionKey ? eq(chatMessageBuffer.liveSessionKey, sessionKey) : undefined,
+            key.providerUserId
+              ? eq(chatMessageBuffer.providerUserId, key.providerUserId)
+              : sql`lower(${chatMessageBuffer.handle}) = lower(${key.identityKey ?? key.displayName})`,
+          )
+        })(),
+      ),
+    )
+    const rows = await this.database.orm
+      .select()
+      .from(chatMessageBuffer)
+      .where(identityFilter)
+      .orderBy(desc(chatMessageBuffer.occurredAt))
+      .limit(FOCUSED_THREAD_MAX_MESSAGES)
     const avatarRows = await Promise.all(
       keys.map(async (key) => {
+        const sessionKey =
+          key.liveSessionKey ??
+          connectionRows.find(
+            (connection) =>
+              connection.provider === key.provider && connection.channelId === key.channelId,
+          )?.liveSessionKey
         const [row] = await this.database.orm
           .select({ avatarUrl: chatMessageBuffer.avatarUrl })
           .from(chatMessageBuffer)
@@ -141,6 +161,7 @@ export class FocusedChatRepository {
             and(
               eq(chatMessageBuffer.provider, key.provider),
               eq(chatMessageBuffer.channelId, key.channelId),
+              sessionKey ? eq(chatMessageBuffer.liveSessionKey, sessionKey) : undefined,
               key.providerUserId
                 ? eq(chatMessageBuffer.providerUserId, key.providerUserId)
                 : sql`lower(${chatMessageBuffer.handle}) = lower(${key.identityKey ?? key.displayName})`,
@@ -202,6 +223,7 @@ export class FocusedChatRepository {
         handle: row.handle,
         id: row.id,
         message: row.message,
+        liveSessionKey: row.liveSessionKey,
         occurredAt: row.occurredAt,
         provider: row.provider,
         providerUserId: row.providerUserId,
@@ -225,6 +247,7 @@ export class FocusedChatRepository {
     nextRetryAt: string | null
     retryAttempt: number
     status: IntegrationConnectionStatus
+    liveSessionKey: string | null
     updatedAt: string
   }) {
     const rows = await this.database.orm
@@ -234,6 +257,9 @@ export class FocusedChatRepository {
         and(
           eq(chatMessageBuffer.provider, connection.provider),
           eq(chatMessageBuffer.channelId, connection.channelId),
+          connection.liveSessionKey
+            ? eq(chatMessageBuffer.liveSessionKey, connection.liveSessionKey)
+            : undefined,
         ),
       )
       .orderBy(desc(chatMessageBuffer.occurredAt))
@@ -265,6 +291,7 @@ export class FocusedChatRepository {
         handle: row.handle,
         id: row.id,
         message: row.message,
+        liveSessionKey: row.liveSessionKey,
         occurredAt: row.occurredAt,
         provider: row.provider,
         providerUserId: row.providerUserId,

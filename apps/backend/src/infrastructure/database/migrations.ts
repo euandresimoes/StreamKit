@@ -420,4 +420,18 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
       ALTER TABLE payment_provider_connections ADD COLUMN account_id TEXT;
     `,
   },
+  {
+    destructive: false,
+    name: 'live_session_isolation',
+    version: 20,
+    sql: `
+      ALTER TABLE integration_connections ADD COLUMN live_session_key TEXT;
+      ALTER TABLE integration_events ADD COLUMN live_session_key TEXT;
+      ALTER TABLE chat_message_buffer ADD COLUMN live_session_key TEXT;
+      CREATE INDEX integration_events_session_index
+        ON integration_events(provider, channel_id, live_session_key, received_at);
+      CREATE INDEX chat_message_buffer_session_index
+        ON chat_message_buffer(provider, channel_id, live_session_key, received_at);
+    `,
+  },
 ]

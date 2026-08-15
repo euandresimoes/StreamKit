@@ -14,6 +14,7 @@ export const LiveStreamSchema = z.object({
     state: LivePreviewStateSchema,
     videoId: z.string().min(1).nullable(),
   }),
+  sessionKey: z.string().trim().min(1).max(300).nullable().default(null),
   provider: IntegrationProviderSchema,
   state: LiveStreamStateSchema,
 })

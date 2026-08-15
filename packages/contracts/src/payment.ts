@@ -20,6 +20,12 @@ export const ContributionPendingReasonSchema = z.enum([
   'manual_review',
   'provider_details_unavailable',
 ])
+export const PaymentContributionStatusSchema = z.enum([
+  'manual_review',
+  'pending',
+  'processed',
+  'rejected',
+])
 export const ContributionReceivedSchema = z.object({
   amountInCents: z.number().int().positive(),
   contributionType: ContributionTypeSchema,
@@ -35,6 +41,14 @@ export const ContributionReceivedSchema = z.object({
 })
 export const PaymentPendingContributionSchema = ContributionReceivedSchema.extend({
   pendingReason: ContributionPendingReasonSchema,
+})
+export const PaymentContributionSchema = PaymentPendingContributionSchema.extend({
+  pendingReason: ContributionPendingReasonSchema.nullable(),
+  campaignId: z.string().uuid().nullable(),
+  id: z.string().uuid(),
+  processedAt: z.iso.datetime().nullable(),
+  receivedAt: z.iso.datetime(),
+  status: PaymentContributionStatusSchema,
 })
 export const LivePixWebhookEnvelopeSchema = z.object({
   clientId: z.string().trim().min(1).max(300),
@@ -66,6 +80,13 @@ export const PaymentCampaignConfigSchema = z
     minimumAmountInCents: z.number().int().positive(),
   })
   .strict()
+export const ResolvePaymentContributionRequestSchema = z.object({
+  campaignId: z.uuid(),
+  campaignType: z.enum(['giveaway', 'tournament']),
+  connectionId: z.uuid(),
+  handle: z.string().trim().min(1).max(200),
+  participantPlatform: PaymentParticipantPlatformSchema,
+})
 export const PaymentConnectionStatusSchema = z.object({
   accountUsername: z.string().nullable(),
   configured: z.boolean(),
@@ -77,7 +98,11 @@ export const PaymentConnectionStatusSchema = z.object({
 })
 export type ContributionReceived = z.infer<typeof ContributionReceivedSchema>
 export type PaymentPendingContribution = z.infer<typeof PaymentPendingContributionSchema>
+export type PaymentContribution = z.infer<typeof PaymentContributionSchema>
 export type LivePixWebhookEnvelope = z.infer<typeof LivePixWebhookEnvelopeSchema>
 export type LivePixPaymentDetails = z.infer<typeof LivePixPaymentDetailsSchema>
 export type PaymentCampaignConfig = z.infer<typeof PaymentCampaignConfigSchema>
 export type PaymentConnectionStatus = z.infer<typeof PaymentConnectionStatusSchema>
+export type ResolvePaymentContributionRequest = z.infer<
+  typeof ResolvePaymentContributionRequestSchema
+>

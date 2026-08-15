@@ -83,7 +83,10 @@ export class IntegrationConnectionManager implements OnApplicationBootstrap, OnM
         cursor: await this.repository.getOffset(id),
         onCursor: (cursor) => this.repository.saveOffset(id, cursor),
         onEvent: async (event) => {
-          await this.service.ingest(event)
+          await this.service.ingest(
+            { ...event, liveSessionKey: connection.liveSessionKey },
+            { retryOnHandlerFailure: true },
+          )
         },
         signal: active.abortController.signal,
       })

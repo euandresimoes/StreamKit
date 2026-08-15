@@ -156,25 +156,42 @@ export class GiveawayRepository {
     return result.changes > 0
   }
   public async draw(id: string): Promise<GiveawayRound | null> {
-    const detail = await this.detail(id)
-    if (!detail || detail.giveaway.status !== 'ready' || detail.participants.length === 0)
-      return null
-    const entries = detail.participants.map((participant) => ({
-      displayName: participant.displayName,
-      participantId: participant.id,
-      ticketCount: participant.ticketCount,
-    }))
-    const selection = selectWinner(entries)
-    const roundId = randomUUID()
-    const startedAt = new Date().toISOString()
-    this.database.transaction(() => {
+    return this.database.transaction(() => {
+      const [giveaway] = this.database.orm
+        .select()
+        .from(giveaways)
+        .where(eq(giveaways.id, id))
+        .all()
+      if (!giveaway || giveaway.status !== 'ready') return null
+      const participants = this.database.orm
+        .select()
+        .from(giveawayParticipants)
+        .where(and(eq(giveawayParticipants.giveawayId, id), eq(giveawayParticipants.active, true)))
+        .orderBy(asc(giveawayParticipants.createdAt))
+        .all()
+      if (!participants.length) return null
+      const entries = participants.map((participant) => ({
+        displayName: participant.displayName,
+        participantId: participant.id,
+        ticketCount: participant.ticketCount,
+      }))
+      const selection = selectWinner(entries)
+      const roundId = randomUUID()
+      const startedAt = new Date().toISOString()
+      const changed = this.database.orm
+        .update(giveaways)
+        .set({ status: 'drawing', updatedAt: startedAt })
+        .where(and(eq(giveaways.id, id), eq(giveaways.status, 'ready')))
+        .returning({ id: giveaways.id })
+        .all()
+      if (!changed.length) return null
       this.database.orm
         .insert(giveawayRounds)
         .values({
           completedAt: null,
           giveawayId: id,
           id: roundId,
-          mode: detail.giveaway.mode,
+          mode: giveaway.mode,
           randomProof: selection.randomProof,
           snapshotHash: selection.snapshotHash,
           startedAt,
@@ -196,45 +213,44 @@ export class GiveawayRepository {
         )
         .run()
       this.database.orm
-        .update(giveaways)
-        .set({ status: 'drawing', updatedAt: startedAt })
-        .where(eq(giveaways.id, id))
-        .run()
-      this.database.orm
         .update(giveawayCaptureRules)
         .set({ status: 'paused', updatedAt: startedAt })
         .where(
           and(eq(giveawayCaptureRules.giveawayId, id), eq(giveawayCaptureRules.status, 'active')),
         )
         .run()
-    })
-    return GiveawayRoundSchema.parse({
-      ...selection,
-      completedAt: null,
-      entries,
-      giveawayId: id,
-      id: roundId,
-      mode: detail.giveaway.mode,
-      startedAt,
-      status: 'drawing',
+      return GiveawayRoundSchema.parse({
+        ...selection,
+        completedAt: null,
+        entries,
+        giveawayId: id,
+        id: roundId,
+        mode: giveaway.mode,
+        startedAt,
+        status: 'drawing',
+      })
     })
   }
   public async complete(id: string, roundId: string): Promise<GiveawayRound | null> {
     const active = await this.activeRound(id)
     if (!active || active.id !== roundId) return null
     const completedAt = new Date().toISOString()
-    this.database.transaction(() => {
-      this.database.orm
+    const completed = this.database.transaction(() => {
+      const changed = this.database.orm
         .update(giveawayRounds)
         .set({ completedAt, status: 'completed' })
-        .where(eq(giveawayRounds.id, roundId))
-        .run()
+        .where(and(eq(giveawayRounds.id, roundId), eq(giveawayRounds.status, 'drawing')))
+        .returning({ id: giveawayRounds.id })
+        .all()
+      if (!changed.length) return false
       this.database.orm
         .update(giveaways)
         .set({ status: 'completed', updatedAt: completedAt })
         .where(eq(giveaways.id, id))
         .run()
+      return true
     })
+    if (!completed) return null
     return GiveawayRoundSchema.parse({ ...active, completedAt, status: 'completed' })
   }
   public async history(id: string): Promise<GiveawayHistory> {

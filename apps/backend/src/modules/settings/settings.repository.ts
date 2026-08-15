@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import { appSettings } from '../../infrastructure/database/schema'
 import type { SqliteDatabase } from '../../infrastructure/database/sqlite-database'
+import { ApiApplicationError } from '../../application/api-error'
 
 const SETTINGS_KEY = 'global.preferences'
 const defaults: UpdateAppSettingsRequest = {
@@ -24,8 +25,21 @@ export class SettingsRepository {
       .select()
       .from(appSettings)
       .where(eq(appSettings.key, SETTINGS_KEY))
+    let value: UpdateAppSettingsRequest = defaults
+    if (row) {
+      let decoded: unknown
+      try {
+        decoded = JSON.parse(row.valueJson) as unknown
+      } catch {
+        throw new ApiApplicationError('DATABASE_INCOMPATIBLE', 'Stored settings are invalid', 500)
+      }
+      const parsed = AppSettingsSchema.omit({ updatedAt: true }).safeParse(decoded)
+      if (!parsed.success)
+        throw new ApiApplicationError('DATABASE_INCOMPATIBLE', 'Stored settings are invalid', 500)
+      value = parsed.data
+    }
     return AppSettingsSchema.parse({
-      ...(row ? (JSON.parse(row.valueJson) as unknown as UpdateAppSettingsRequest) : defaults),
+      ...value,
       updatedAt: row?.updatedAt ?? new Date(0).toISOString(),
     })
   }

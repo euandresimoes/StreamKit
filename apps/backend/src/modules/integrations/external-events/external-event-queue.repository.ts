@@ -12,9 +12,13 @@ import { and, asc, eq, inArray, isNull, lte, or, sql } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../../infrastructure/database/database.tokens'
 import { externalEventQueue } from '../../../infrastructure/database/schema'
 import type { SqliteDatabase } from '../../../infrastructure/database/sqlite-database'
+import { ApiApplicationError } from '../../../application/api-error'
 
 const EXTERNAL_EVENT_RETENTION_MS = 7 * 24 * 60 * 60 * 1_000
 const MAX_ATTEMPTS = 8
+const STALE_PROCESSING_MS = 5 * 60 * 1_000
+export const EXTERNAL_EVENT_MAX_RECORDS = 10_000
+export const EXTERNAL_EVENT_MAX_PAYLOAD_BYTES = 256_000
 
 export type ExternalEventQueueInput = ExternalEventIngress & {
   provider: string
@@ -26,6 +30,19 @@ export class ExternalEventQueueRepository {
 
   public async enqueue(input: ExternalEventQueueInput): Promise<ExternalEventRecord | null> {
     const provider = ExternalEventProviderSchema.parse(input.provider)
+    const payloadJson = JSON.stringify(input.payload)
+    if (Buffer.byteLength(payloadJson, 'utf8') > EXTERNAL_EVENT_MAX_PAYLOAD_BYTES)
+      throw new ApiApplicationError('VALIDATION_FAILED', 'External event payload is too large', 413)
+    const count = await this.database.orm.$count(externalEventQueue)
+    if (count >= EXTERNAL_EVENT_MAX_RECORDS) {
+      await this.prune()
+      if ((await this.database.orm.$count(externalEventQueue)) >= EXTERNAL_EVENT_MAX_RECORDS)
+        throw new ApiApplicationError(
+          'RATE_LIMITED',
+          'External event queue capacity has been reached',
+          429,
+        )
+    }
     const receivedAt = new Date().toISOString()
     const inserted = await this.database.orm
       .insert(externalEventQueue)
@@ -36,7 +53,7 @@ export class ExternalEventQueueRepository {
         id: randomUUID(),
         lastErrorCode: null,
         nextAttemptAt: null,
-        payloadJson: JSON.stringify(input.payload),
+        payloadJson,
         processedAt: null,
         provider,
         receivedAt,
@@ -59,6 +76,18 @@ export class ExternalEventQueueRepository {
   ): Promise<ExternalEventRecord[]> {
     if (!providers.length) return []
     const now = new Date().toISOString()
+    const staleBefore = new Date(Date.now() - STALE_PROCESSING_MS).toISOString()
+    await this.database.orm
+      .update(externalEventQueue)
+      .set({ nextAttemptAt: now, status: 'retrying' })
+      .where(
+        and(
+          eq(externalEventQueue.status, 'processing'),
+          lte(externalEventQueue.receivedAt, staleBefore),
+          inArray(externalEventQueue.provider, providers as string[]),
+          sql`${externalEventQueue.attemptCount} < ${MAX_ATTEMPTS}`,
+        ),
+      )
     const candidates = await this.database.orm
       .select({ id: externalEventQueue.id })
       .from(externalEventQueue)

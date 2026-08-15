@@ -51,8 +51,10 @@ describe('SQLite infrastructure', () => {
       expect.arrayContaining([
         'chat_message_buffer_identity_index',
         'chat_message_buffer_retention_index',
+        'chat_message_buffer_session_index',
         'giveaway_capture_rules_active_index',
         'integration_events_identity_index',
+        'integration_events_session_index',
         'external_event_queue_ready_index',
         'tournament_capture_rules_active_index',
       ]),
@@ -100,7 +102,7 @@ describe('SQLite infrastructure', () => {
           {
             destructive: false,
             name: 'broken',
-            sql: 'ALTER TABLE missing_table ADD COLUMN value TEXT;',
+            sql: 'CREATE TABLE partial_write (id TEXT); SELECT * FROM missing_table;',
             version: 99,
           },
         ],

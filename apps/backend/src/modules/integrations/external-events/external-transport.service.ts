@@ -19,7 +19,7 @@ type Endpoint = {
   secret: string
 }
 
-const MAX_BODY_BYTES = 1_000_000
+const MAX_BODY_BYTES = 256_000
 const RATE_WINDOW_MS = 60_000
 const RATE_LIMIT = 120
 

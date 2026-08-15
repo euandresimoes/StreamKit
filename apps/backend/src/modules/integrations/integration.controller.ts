@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Put } from '@nestjs/common'
 import {
   ChatModerationRequestSchema,
+  EntityIdSchema,
   SaveIntegrationConnectionRequestSchema,
   SendChatMessageRequestSchema,
   StartChatSimulationRequestSchema,
@@ -35,14 +36,17 @@ export class IntegrationController {
   }
 
   @Get('live-control/:id/chat') public liveControlChat(@Param('id') id: string) {
-    return this.liveControl.channelChat(id)
+    return this.liveControl.channelChat(EntityIdSchema.parse(id))
   }
 
   @Post('live-control/:id/chat/actions') public moderateLiveChat(
     @Param('id') id: string,
     @Body() body: unknown,
   ) {
-    return this.liveControl.moderateChat(id, ChatModerationRequestSchema.parse(body))
+    return this.liveControl.moderateChat(
+      EntityIdSchema.parse(id),
+      ChatModerationRequestSchema.parse(body),
+    )
   }
 
   @Get('debug/simulation') public simulationStatus() {
@@ -63,11 +67,11 @@ export class IntegrationController {
   }
 
   @Get('focused-chat/giveaways/:id') public giveawayChat(@Param('id') id: string) {
-    return this.focusedChat.forGiveaway(id)
+    return this.focusedChat.forGiveaway(EntityIdSchema.parse(id))
   }
 
   @Get('focused-chat/tournaments/:id') public tournamentChat(@Param('id') id: string) {
-    return this.focusedChat.forTournament(id)
+    return this.focusedChat.forTournament(EntityIdSchema.parse(id))
   }
 
   @Get('focused-chat/tournaments/:id/matches/:matchId/:side') public tournamentMatchChat(
@@ -81,7 +85,11 @@ export class IntegrationController {
         'Tournament match side must be left or right',
         400,
       )
-    return this.focusedChat.forTournamentMatch(id, matchId, side)
+    return this.focusedChat.forTournamentMatch(
+      EntityIdSchema.parse(id),
+      EntityIdSchema.parse(matchId),
+      side,
+    )
   }
 
   private requireDebug(): void {
@@ -90,23 +98,27 @@ export class IntegrationController {
   }
 
   @Put('connections/:id/start') public start(@Param('id') id: string) {
-    return this.manager.start(id)
+    return this.manager.start(EntityIdSchema.parse(id))
   }
 
   @Post('connections/:id/messages') public sendMessage(
     @Param('id') id: string,
     @Body() body: unknown,
   ) {
-    return this.manager.sendMessage(id, SendChatMessageRequestSchema.parse(body).message)
+    return this.manager.sendMessage(
+      EntityIdSchema.parse(id),
+      SendChatMessageRequestSchema.parse(body).message,
+    )
   }
 
   @Put('connections/:id/stop') public stop(@Param('id') id: string) {
-    return this.manager.stop(id)
+    return this.manager.stop(EntityIdSchema.parse(id))
   }
 
   @Delete('connections/:id') public async deleteConnection(@Param('id') id: string) {
-    await this.manager.stop(id, false)
-    return this.service.deleteConnection(id)
+    const connectionId = EntityIdSchema.parse(id)
+    await this.manager.stop(connectionId, false)
+    return this.service.deleteConnection(connectionId)
   }
 
   @Get('connections') public listConnections() {
@@ -122,6 +134,10 @@ export class IntegrationController {
     @Body() body: unknown,
   ) {
     const input = UpdateIntegrationConnectionStateRequestSchema.parse(body)
-    return this.service.updateState(id, input.status, input.lastErrorCode ?? null)
+    return this.service.updateState(
+      EntityIdSchema.parse(id),
+      input.status,
+      input.lastErrorCode ?? null,
+    )
   }
 }

@@ -15,6 +15,7 @@ import { YouTubeBroadcastService } from './youtube/youtube-broadcast.service'
 type ProviderLive = {
   channel?: string
   state: 'online' | 'offline' | 'unavailable' | 'error'
+  sessionKey?: string | null
   videoId?: string | null
 }
 
@@ -31,7 +32,14 @@ export class LiveControlService {
   public async list() {
     await this.syncYouTubeBroadcasts()
     const connections = await this.integrations.listConnections()
-    const streams = await Promise.all(connections.map((connection) => this.snapshot(connection)))
+    const streams = await Promise.all(
+      connections.map(async (connection) => {
+        const stream = await this.snapshot(connection)
+        if (stream.state === 'online')
+          await this.integrations.syncLiveSession(connection.id, stream.sessionKey)
+        return stream
+      }),
+    )
     return streams.filter((stream) => stream.state === 'online')
   }
 
@@ -149,6 +157,7 @@ export class LiveControlService {
         videoId: live.videoId ?? null,
       },
       provider: connection.provider,
+      sessionKey: live.sessionKey ?? null,
       state: live.state,
     })
   }
@@ -162,6 +171,7 @@ export class LiveControlService {
         return stream
           ? {
               channel: stream.user_name,
+              sessionKey: `twitch:${connection.channelId}:${stream.started_at}`,
               state: 'online',
             }
           : { state: 'offline' }
@@ -173,6 +183,7 @@ export class LiveControlService {
         if (!broadcast) return { state: 'offline' }
         return {
           channel: broadcast.title,
+          sessionKey: `youtube:${broadcast.videoId}`,
           state: 'online',
           videoId: broadcast.videoId,
         }

@@ -146,6 +146,7 @@ export class LivePixPaymentProvider
       (clientId && clientId !== envelope.clientId)
     )
       throw new ApiApplicationError('UNAUTHORIZED', 'LivePix webhook account mismatch', 401)
+    if (await this.repository.hasContribution(envelope.resource.id)) return
     const details = LivePixPaymentDetailsSchema.parse(
       (await this.api.payment(envelope.resource.id)).data,
     )
@@ -167,7 +168,8 @@ export class LivePixPaymentProvider
       pendingReason: contribution.participantHandle ? 'manual_review' : 'identity_unmatched',
     })
     if (!inserted) return
-    await this.campaigns.apply(contribution)
+    const applied = await this.campaigns.apply(contribution)
+    if (applied > 0) await this.repository.markProcessed(contribution.providerResourceId)
   }
 
   private async monitor(): Promise<void> {

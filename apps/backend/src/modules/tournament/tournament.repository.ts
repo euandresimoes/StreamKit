@@ -1092,8 +1092,8 @@ export class TournamentRepository {
     )
       return null
     const now = new Date().toISOString()
-    this.database.transaction(() => {
-      this.database.orm
+    const started = this.database.transaction(() => {
+      const changed = this.database.orm
         .update(tournamentMatches)
         .set({
           leftResult: 'pending',
@@ -1102,15 +1102,19 @@ export class TournamentRepository {
           status: 'in_progress',
           updatedAt: now,
         })
-        .where(eq(tournamentMatches.id, matchId))
-        .run()
+        .where(and(eq(tournamentMatches.id, matchId), eq(tournamentMatches.status, 'ready')))
+        .returning({ id: tournamentMatches.id })
+        .all()
+      if (!changed.length) return false
       this.database.orm
         .update(tournaments)
         .set({ currentMatchId: matchId, updatedAt: now })
         .where(eq(tournaments.id, id))
         .run()
       this.audit(id, 'match.started', { matchId })
+      return true
     })
+    if (!started) return null
     return this.detail(id)
   }
   public async completeMatch(id: string, matchId: string, result: CompleteTournamentMatchRequest) {
@@ -1134,19 +1138,25 @@ export class TournamentRepository {
       return null
     const now = new Date().toISOString()
     if (result.leftResult === 'draw') {
-      this.database.transaction(() => {
-        this.database.orm
+      const recorded = this.database.transaction(() => {
+        const changed = this.database.orm
           .update(tournamentMatches)
           .set({ ...result, updatedAt: now })
-          .where(eq(tournamentMatches.id, matchId))
-          .run()
+          .where(
+            and(eq(tournamentMatches.id, matchId), eq(tournamentMatches.status, 'in_progress')),
+          )
+          .returning({ id: tournamentMatches.id })
+          .all()
+        if (!changed.length) return false
         this.audit(id, 'match.draw_recorded', { matchId })
+        return true
       })
+      if (!recorded) return null
       return this.detail(id)
     }
     const winnerEntryId = result.leftResult === 'won' ? match.leftEntryId : match.rightEntryId
-    this.database.transaction(() => {
-      this.database.orm
+    const completed = this.database.transaction(() => {
+      const changed = this.database.orm
         .update(tournamentMatches)
         .set({
           ...result,
@@ -1155,8 +1165,10 @@ export class TournamentRepository {
           updatedAt: now,
           winnerEntryId,
         })
-        .where(eq(tournamentMatches.id, matchId))
-        .run()
+        .where(and(eq(tournamentMatches.id, matchId), eq(tournamentMatches.status, 'in_progress')))
+        .returning({ id: tournamentMatches.id })
+        .all()
+      if (!changed.length) return false
       if (match.nextMatchId && match.nextSlot) {
         const [next] = this.database.orm
           .select()
@@ -1187,7 +1199,9 @@ export class TournamentRepository {
           .run()
       this.audit(id, 'match.completed', { matchId, ...result, winnerEntryId })
       this.audit(id, 'match.winner_set', { matchId, winnerEntryId })
+      return true
     })
+    if (!completed) return null
     return this.detail(id)
   }
   public async archive(id: string) {

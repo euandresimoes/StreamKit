@@ -8,6 +8,7 @@ import {
 import { IntegrationEventBus } from './integration-event.bus'
 import { IntegrationRepository } from './integration.repository'
 import { IntegrationRetryPolicy } from './integration-retry-policy'
+import { ApiApplicationError } from '../../application/api-error'
 
 @Injectable()
 export class IntegrationService {
@@ -30,16 +31,28 @@ export class IntegrationService {
     return this.repository.saveConnection(input)
   }
 
-  public async ingest(input: unknown): Promise<{ duplicate: boolean; handlerFailures: number }> {
+  public async ingest(
+    input: unknown,
+    options: { retryOnHandlerFailure?: boolean } = {},
+  ): Promise<{ duplicate: boolean; handlerFailures: number }> {
     const event = ChatMessageReceivedSchema.parse(input)
     const inserted = await this.repository.saveEvent(event)
-    if (!inserted) return { duplicate: true, handlerFailures: 0 }
-    const failures = await this.eventBus.publish(event)
+    const stored = inserted
+      ? null
+      : await this.repository.getEvent(event.provider, event.externalEventId)
+    if (!inserted && stored?.status === 'processed') return { duplicate: true, handlerFailures: 0 }
+    const failures = await this.eventBus.publish(stored?.event ?? event)
     await this.repository.markEventProcessed(
       event.provider,
       event.externalEventId,
       failures.length ? 'handler_failed' : 'processed',
     )
+    if (failures.length && options.retryOnHandlerFailure)
+      throw new ApiApplicationError(
+        'INTEGRATION_EVENT_HANDLER_FAILED',
+        'Integration event processing failed and will be retried',
+        503,
+      )
     return { duplicate: false, handlerFailures: failures.length }
   }
 
