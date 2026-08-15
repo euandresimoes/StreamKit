@@ -758,6 +758,80 @@ mensagem chega e passa a ser usado pelo chat focado.
 - [x] Adicionar teste de regressão com 1.000 participantes e ADR de janelas limitadas.
 - [ ] Executar profiling controlado com 1.000 e 10.000 eventos/participantes no Windows e registrar os resultados.
 
+## Batch 26 — Infraestrutura opcional de eventos externos locais
+
+**Objetivo:** implementar uma infraestrutura reutilizável para receber eventos externos no StreamKit
+Desktop somente quando um provider exigir webhook ou callback público. O processamento, a fila, os
+tokens e as regras de negócio permanecem locais. Esta batch não implementa LivePix, Kick ou qualquer
+provider específico; ela entrega o transporte e o contrato que essas integrações poderão reutilizar.
+
+**Princípio de produto:** o usuário não deve conhecer túnel, DNS, porta, proxy ou configuração de rede.
+O transporte externo deve ser iniciado, autenticado, monitorado e encerrado automaticamente pelo
+StreamKit, sem expor o restante da API local.
+
+**Restrições:** não criar um backend de negócio do StreamKit, não persistir tokens no frontend ou na
+fila de eventos, não deixar uma rota pública permanente e não usar polling como substituto universal de
+eventos push. Providers que já oferecem WebSocket/streaming continuam usando seus adapters atuais.
+
+### 26.1 Contrato e ciclo de vida do transporte
+
+- [ ] Criar contrato compartilhado `InboundEventTransport` com start, stop, status, health e callbacks.
+- [ ] Definir estados `disabled`, `starting`, `ready`, `degraded`, `stopped` e `error`.
+- [ ] Permitir ativação por capability do provider, mantendo o transporte desligado quando não for necessário.
+- [ ] Isolar o adapter de túnel da regra de negócio e dos providers.
+- [ ] Garantir encerramento ao fechar o desktop, trocar de workspace ou revogar a integração.
+- [ ] Implementar reconexão com backoff, jitter e limite de tentativas.
+
+### 26.2 Fila local durável e processamento
+
+- [ ] Criar tabela SQLite local para eventos recebidos, status, tentativas, timestamps e erro redigido.
+- [ ] Usar chave idempotente por provider, instalação e `eventId`.
+- [ ] Responder ao webhook rapidamente e processar o evento fora do ciclo HTTP.
+- [ ] Implementar estados `received`, `processing`, `processed`, `retrying` e `dead_letter`.
+- [ ] Limitar tamanho, idade e payload da fila para impedir crescimento ilimitado.
+- [ ] Recuperar eventos pendentes após reinício sem duplicar efeitos de negócio.
+- [ ] Manter payloads sensíveis criptografados ou minimizados conforme a necessidade do provider.
+
+### 26.3 Ingress local e túnel automático
+
+- [ ] Expor somente rotas de ingress registradas por provider, nunca a API geral do backend.
+- [ ] Vincular o listener local a loopback e aplicar limite de método, tamanho, timeout e conteúdo.
+- [ ] Criar adapter de túnel automático com URL dinâmica, health check e rotação segura de credenciais.
+- [ ] Registrar e remover callbacks do provider durante o ciclo de vida quando a API permitir.
+- [ ] Impedir que o túnel permaneça ativo sem uma integração que realmente o utilize.
+- [ ] Exibir diagnóstico acionável sem exigir conhecimento técnico do usuário.
+- [ ] Definir fallback explícito quando o provider exigir webhook e o transporte não puder ser iniciado.
+
+### 26.4 Segurança e privacidade
+
+- [ ] Validar assinatura, segredo, timestamp e replay de cada provider antes de enfileirar o evento.
+- [ ] Validar todos os payloads com contratos Zod e rejeitar campos desconhecidos quando apropriado.
+- [ ] Nunca aceitar comandos de UI ou ações administrativas diretamente de um webhook.
+- [ ] Manter tokens no cofre seguro do sistema operacional e fora da fila, logs e URLs.
+- [ ] Usar request/correlation ID e redigir nomes, mensagens, tokens e payloads sensíveis nos logs.
+- [ ] Aplicar proteção contra flood, replay, payload malformado e tentativa de atingir outras rotas locais.
+- [ ] Registrar ADR sobre ameaça, limites do túnel, retenção da fila e modelo de confiança.
+
+### 26.5 Integração com providers
+
+- [ ] Criar contrato de eventos normalizados para doações, mensagens, inscrições e eventos de live.
+- [ ] Permitir que cada provider declare se usa WebSocket, streaming, webhook ou outro transporte.
+- [ ] Garantir que providers sem necessidade de webhook não inicializem a infraestrutura opcional.
+- [ ] Preparar o contrato necessário para o futuro adapter de LivePix sem implementá-lo nesta batch.
+- [ ] Preparar o contrato necessário para eventos da Kick sem duplicar a lógica de transporte.
+
+### 26.6 Testes e critérios de aceitação
+
+- [ ] Testar start, stop, reconexão, timeout, troca de URL e encerramento limpo do transporte.
+- [ ] Testar duplicação, replay, ordenação, retry, dead letter e recuperação após reinício.
+- [ ] Testar isolamento entre providers, workspaces, instalações e rotas locais.
+- [ ] Testar assinatura inválida, payload malformado, flood e tentativa de acessar rota não registrada.
+- [ ] Testar que Twitch/YouTube/Kick não iniciam o transporte quando usam streaming/WebSocket.
+- [ ] Testar que o desktop continua funcional quando o túnel está indisponível.
+- [ ] Cobrir contrato, backend local, frontend de status e E2E do ciclo de vida.
+- [ ] Executar gate completo de format, lint, typecheck, testes, integração, build e E2E aplicável.
+- [ ] Revisar segurança, privacidade, retenção local e documentação antes de concluir a batch.
+
 ## Matriz de cobertura da especificação
 
 | Seção | Assunto                      | Batches principais                    |
