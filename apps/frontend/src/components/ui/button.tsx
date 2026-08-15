@@ -6,21 +6,21 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "press inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-[13px] font-medium cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "press inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-none text-[13px] font-medium cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
           "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[0_1px_0_0_oklch(1_0_0/25%)_inset,0_8px_20px_-10px_oklch(0_0_0/70%)] hover:brightness-108",
         secondary:
-          "bg-secondary text-secondary-foreground border border-border-strong shadow-[0_1px_0_0_oklch(1_0_0/6%)_inset] hover:bg-accent",
+          "bg-white/[0.045] text-secondary-foreground shadow-[0_1px_0_0_oklch(1_0_0/4%)_inset] hover:bg-white/[0.09]",
         ghost: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
         outline:
-          "border border-border-strong bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground",
+          "bg-white/[0.035] text-foreground hover:bg-white/[0.08] hover:text-accent-foreground",
         danger:
-          "bg-destructive text-destructive-foreground shadow-[0_1px_0_0_oklch(1_0_0/18%)_inset] hover:brightness-110",
+          "bg-destructive text-destructive-foreground shadow-[0_0_18px_-8px_var(--destructive)] hover:brightness-110",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-[0_1px_0_0_oklch(1_0_0/18%)_inset] hover:brightness-110",
+          "bg-destructive text-destructive-foreground shadow-[0_0_18px_-8px_var(--destructive)] hover:brightness-110",
         warning:
           "bg-warning text-warning-foreground shadow-[0_1px_0_0_oklch(1_0_0/22%)_inset] hover:brightness-108",
         success:
@@ -29,10 +29,10 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-9 px-4",
-        sm: "h-8 rounded-lg px-3 text-xs",
-        lg: "h-11 rounded-2xl px-6 text-sm",
+        sm: "h-8 rounded-none px-3 text-xs",
+        lg: "h-11 rounded-none px-6 text-sm",
         icon: "h-9 w-9",
-        "icon-sm": "h-7 w-7 rounded-lg",
+        "icon-sm": "h-7 w-7 rounded-none",
       },
     },
     defaultVariants: {

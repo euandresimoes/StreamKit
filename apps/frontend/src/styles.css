@@ -72,8 +72,8 @@
   --popover: oklch(25.197% 0.00003 271.152);
   --popover-foreground: oklch(0.945 0.004 85);
 
-  --primary: oklch(75.377% 0.14459 63.782);
-  --primary-foreground: oklch(0.2 0.02 60);
+  --primary: oklch(62% 0.24 25);
+  --primary-foreground: oklch(0.98 0.01 25);
 
   --secondary: oklch(0% 0 0 / 0);
   --secondary-foreground: oklch(0.93 0.004 85);
@@ -84,7 +84,7 @@
   --accent: oklch(38.666% 0.00004 271.152);
   --accent-foreground: oklch(0.95 0.004 85);
 
-  --destructive: oklch(60.959% 0.17549 21.956);
+  --destructive: oklch(62% 0.24 25);
   --destructive-foreground: oklch(0.97 0.01 30);
 
   --warning: oklch(0.8 0.13 84);
@@ -96,7 +96,7 @@
   --border: oklch(1 0 0 / 8%);
   --border-strong: oklch(1 0 0 / 14%);
   --input: oklch(1 0 0 / 10%);
-  --ring: oklch(84.212% 0.0001 271.152 / 0.55);
+  --ring: oklch(62% 0.24 25 / 0.7);
 
   --sidebar: oklch(0.19 0.005 70);
   --sidebar-foreground: oklch(0.9 0.004 85);
@@ -111,11 +111,7 @@
   --shadow-float: 0 1px 0 0 oklch(1 0 0 / 6%) inset, 0 18px 45px -18px oklch(0 0 0 / 70%);
   --shadow-panel: 0 1px 0 0 oklch(1 0 0 / 5%) inset, 0 32px 80px -32px oklch(0 0 0 / 80%);
   --gradient-app: none;
-  --gradient-primary: linear-gradient(
-    145deg,
-    oklch(100% 0.00011 271.152) 0%,
-    oklch(100% 0.00011 271.152) 100%
-  );
+  --gradient-primary: linear-gradient(145deg, oklch(68% 0.24 25), oklch(56% 0.23 25));
   --ease-mac: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -195,16 +191,16 @@
 }
 
 @utility glass {
-  background: color-mix(in oklab, var(--surface) 72%, transparent);
-  backdrop-filter: blur(28px) saturate(140%);
-  border: 1px solid var(--border-strong);
+  background: color-mix(in oklab, var(--surface) 64%, transparent);
+  backdrop-filter: blur(24px) saturate(130%);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   box-shadow: var(--shadow-float);
 }
 
 @utility glass-panel {
-  background: color-mix(in oklab, var(--surface) 60%, transparent);
-  backdrop-filter: blur(40px) saturate(150%);
-  border: 1px solid var(--border-strong);
+  background: color-mix(in oklab, var(--surface) 58%, transparent);
+  backdrop-filter: blur(32px) saturate(135%);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   box-shadow: var(--shadow-panel);
 }
 
