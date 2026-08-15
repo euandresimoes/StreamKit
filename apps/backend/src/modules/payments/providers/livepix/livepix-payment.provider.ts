@@ -89,18 +89,18 @@ export class LivePixPaymentProvider
       lastErrorCode: null,
       remoteWebhookId: current?.remoteWebhookId ?? null,
       state: 'connecting',
-      webhookUrl: null,
+      webhookUrl: current?.webhookUrl ?? null,
     })
     try {
       const account = await this.api.account()
       const endpoint = await this.transport.register('livepix')
       if (!endpoint.callbackUrl) throw new Error('LIVEPIX_CALLBACK_URL_UNAVAILABLE')
       const previous = await this.repository.connection()
-      const remote = await this.api.webhooks()
-      const existing = remote.data.find((webhook) => webhook.url === endpoint.callbackUrl)
-      const remoteWebhookId =
-        existing?.id ?? (await this.api.createWebhook(endpoint.callbackUrl)).data.id
-      if (previous?.remoteWebhookId && previous.remoteWebhookId !== remoteWebhookId)
+      const sameWebhook = previous?.remoteWebhookId && previous.webhookUrl === endpoint.callbackUrl
+      const remoteWebhookId = sameWebhook
+        ? previous.remoteWebhookId
+        : (await this.api.createWebhook(endpoint.callbackUrl)).data.id
+      if (previous?.remoteWebhookId && previous.remoteWebhookId !== remoteWebhookId && !sameWebhook)
         await this.api.deleteWebhook(previous.remoteWebhookId).catch(() => undefined)
       await this.repository.saveConnection({
         accountId: account.data.id ?? null,
