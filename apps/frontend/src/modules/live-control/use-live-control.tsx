@@ -1,5 +1,13 @@
 import type { LiveStream } from "@streamkit/contracts";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { liveControlApi } from "./live-control-api";
 
@@ -26,6 +34,7 @@ export function LiveSelectionProvider({ children }: { children: React.ReactNode 
     }
   });
   const [error, setError] = useState<string | null>(null);
+  const selectionRequest = useRef(0);
 
   const load = useCallback(async () => {
     try {
@@ -38,14 +47,38 @@ export function LiveSelectionProvider({ children }: { children: React.ReactNode 
     }
   }, []);
 
-  const select = useCallback((id: string) => {
-    setSelectedId(id);
-    void liveControlApi.selectGlobal(id).catch(() => undefined);
-    try {
-      window.localStorage.setItem(SELECTED_LIVE_STORAGE_KEY, id);
-    } catch {
-      // The app can continue with an in-memory selection when storage is unavailable.
-    }
+  const select = useCallback(
+    (id: string) => {
+      const request = ++selectionRequest.current;
+      const previous = selectedId;
+      setSelectedId(id);
+      try {
+        window.localStorage.setItem(SELECTED_LIVE_STORAGE_KEY, id);
+      } catch {
+        // The app can continue with an in-memory selection when storage is unavailable.
+      }
+      void liveControlApi.selectGlobal(id).catch((cause) => {
+        if (selectionRequest.current !== request) return;
+        setSelectedId(previous);
+        setError(cause instanceof Error ? cause.message : "Não foi possível selecionar a live.");
+        try {
+          if (previous) window.localStorage.setItem(SELECTED_LIVE_STORAGE_KEY, previous);
+          else window.localStorage.removeItem(SELECTED_LIVE_STORAGE_KEY);
+        } catch {
+          // Keep the in-memory selection when storage is unavailable.
+        }
+      });
+    },
+    [selectedId],
+  );
+
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== SELECTED_LIVE_STORAGE_KEY) return;
+      setSelectedId(event.newValue);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   useEffect(() => {
@@ -57,6 +90,11 @@ export function LiveSelectionProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     if (!streams.length) {
       if (selectedId) setSelectedId(null);
+      try {
+        window.localStorage.removeItem(SELECTED_LIVE_STORAGE_KEY);
+      } catch {
+        // The app can continue with an in-memory selection when storage is unavailable.
+      }
       return;
     }
     if (selectedId && streams.some((stream) => stream.connectionId === selectedId)) return;

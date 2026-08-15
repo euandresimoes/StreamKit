@@ -1,6 +1,6 @@
 import type { FocusedChatThread } from "@streamkit/contracts";
 import { MessageCircle, Send, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BaseBrandIcon } from "@/components/base/BaseBrandIcon";
 import { Button } from "@/components/ui/button";
@@ -33,17 +33,37 @@ function MatchSideChat({
 }) {
   const [thread, setThread] = useState<FocusedChatThread | null>(null);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const requestVersion = useRef(0);
   useEffect(() => {
     let active = true;
+    const version = ++requestVersion.current;
     const load = async () => {
-      const value = await integrationApi.tournamentMatchChat(tournamentId, matchId, side);
-      if (active) setThread(value);
+      try {
+        const value = await integrationApi.tournamentMatchChat(tournamentId, matchId, side);
+        if (active && requestVersion.current === version) {
+          setThread(value);
+          setError(null);
+        }
+      } catch (cause) {
+        if (active && requestVersion.current === version)
+          setError(cause instanceof Error ? cause.message : "Não foi possível carregar o chat.");
+      }
     };
     void load();
-    const timer = window.setInterval(() => void load(), 1_500);
+    let timer: number | undefined;
+    const schedule = () => {
+      if (active)
+        timer = window.setTimeout(async () => {
+          await load();
+          schedule();
+        }, 1_500);
+    };
+    schedule();
     return () => {
       active = false;
-      window.clearInterval(timer);
+      if (timer) window.clearTimeout(timer);
     };
   }, [matchId, side, tournamentId]);
   const writer = thread?.connections.find(
@@ -89,14 +109,27 @@ function MatchSideChat({
           size="icon"
           className="size-8 shrink-0"
           disabled={!writer || !message.trim()}
-          onClick={() => {
+          loading={sending}
+          onClick={async () => {
             if (!writer) return;
-            void integrationApi.sendMessage(writer.id, message.trim()).then(() => setMessage(""));
+            setSending(true);
+            setError(null);
+            try {
+              await integrationApi.sendMessage(writer.id, message.trim());
+              setMessage("");
+            } catch (cause) {
+              setError(
+                cause instanceof Error ? cause.message : "Não foi possível enviar a mensagem.",
+              );
+            } finally {
+              setSending(false);
+            }
           }}
         >
           <Send className="size-3.5" />
         </Button>
       </div>
+      {error && <p className="mt-2 text-[11px] text-destructive">{error}</p>}
     </section>
   );
 }

@@ -3,6 +3,7 @@ import {
   type ChatModerationRequest,
   ChatModerationRequestSchema,
   LiveStreamSchema,
+  type YouTubeLiveBroadcast,
 } from '@streamkit/contracts'
 
 import { ApiApplicationError } from '../../application/api-error'
@@ -30,11 +31,15 @@ export class LiveControlService {
   ) {}
 
   public async list() {
-    await this.syncYouTubeBroadcasts()
+    const youtubeBroadcasts = await this.syncYouTubeBroadcasts()
+    if (youtubeBroadcasts)
+      await this.integrations.retireStaleYouTubeConnections(
+        youtubeBroadcasts.map((broadcast) => broadcast.liveChatId),
+      )
     const connections = await this.integrations.listConnections()
     const streams = await Promise.all(
       connections.map(async (connection) => {
-        const stream = await this.snapshot(connection)
+        const stream = await this.snapshot(connection, youtubeBroadcasts)
         if (stream.state === 'online')
           await this.integrations.syncLiveSession(connection.id, stream.sessionKey)
         return stream
@@ -43,7 +48,7 @@ export class LiveControlService {
     return streams.filter((stream) => stream.state === 'online')
   }
 
-  private async syncYouTubeBroadcasts(): Promise<void> {
+  private async syncYouTubeBroadcasts(): Promise<YouTubeLiveBroadcast[] | null> {
     try {
       const broadcasts = await this.youtube.list()
       await Promise.all(
@@ -66,8 +71,10 @@ export class LiveControlService {
           }),
         ),
       )
+      return broadcasts
     } catch {
       // YouTube may be disconnected or have no active broadcast.
+      return null
     }
   }
 
@@ -143,8 +150,9 @@ export class LiveControlService {
 
   private async snapshot(
     connection: NonNullable<Awaited<ReturnType<IntegrationRepository['getConnection']>>>,
+    youtubeBroadcasts: YouTubeLiveBroadcast[] | null,
   ) {
-    const live = await this.providerLive(connection)
+    const live = await this.providerLive(connection, youtubeBroadcasts)
     return LiveStreamSchema.parse({
       capabilities: connection.capabilities,
       channelDisplayName: connection.channelDisplayName,
@@ -164,6 +172,7 @@ export class LiveControlService {
 
   private async providerLive(
     connection: NonNullable<Awaited<ReturnType<IntegrationRepository['getConnection']>>>,
+    youtubeBroadcasts: YouTubeLiveBroadcast[] | null,
   ): Promise<ProviderLive> {
     try {
       if (connection.provider === 'twitch') {
@@ -177,9 +186,8 @@ export class LiveControlService {
           : { state: 'offline' }
       }
       if (connection.provider === 'youtube') {
-        const broadcast = (await this.youtube.list()).find(
-          (item) => item.liveChatId === connection.channelId,
-        )
+        if (!youtubeBroadcasts) return { state: 'error' }
+        const broadcast = youtubeBroadcasts.find((item) => item.liveChatId === connection.channelId)
         if (!broadcast) return { state: 'offline' }
         return {
           channel: broadcast.title,

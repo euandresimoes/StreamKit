@@ -200,6 +200,28 @@ export class IntegrationRepository {
     })
   }
 
+  public async retireStaleYouTubeConnections(activeChannelIds: readonly string[]): Promise<void> {
+    const rows = await this.database.orm
+      .select({ channelId: integrationConnections.channelId, id: integrationConnections.id })
+      .from(integrationConnections)
+      .where(eq(integrationConnections.provider, 'youtube'))
+    const active = new Set(activeChannelIds)
+    for (const row of rows) {
+      if (active.has(row.channelId)) continue
+      await this.database.orm
+        .update(integrationConnections)
+        .set({
+          lastErrorCode: 'YOUTUBE_CHAT_ENDED',
+          liveSessionKey: null,
+          nextRetryAt: null,
+          retryAttempt: 0,
+          status: 'disconnected',
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(integrationConnections.id, row.id))
+    }
+  }
+
   public async markEventProcessed(
     provider: ChatMessageReceived['provider'],
     externalEventId: string,

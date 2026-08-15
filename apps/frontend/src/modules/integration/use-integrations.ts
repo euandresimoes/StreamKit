@@ -44,11 +44,17 @@ export function useIntegrations(active: boolean) {
       setConnections(nextConnections);
       setTwitchAuth(nextTwitchAuth);
       setYouTubeAuth(nextYouTubeAuth);
-      setYouTubeBroadcasts(
-        nextYouTubeAuth.configured ? await integrationApi.listYouTubeBroadcasts() : [],
-      );
       setKickSupport(nextKickSupport);
       setExternalTransport(nextExternalTransport);
+      if (!nextYouTubeAuth.configured) {
+        setYouTubeBroadcasts([]);
+      } else {
+        try {
+          setYouTubeBroadcasts(await integrationApi.listYouTubeBroadcasts());
+        } catch {
+          setYouTubeBroadcasts([]);
+        }
+      }
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Não foi possível carregar as integrações.",
@@ -122,7 +128,11 @@ export function useIntegrations(active: boolean) {
           if (result.status === "failed") throw new Error(result.error);
           if (result.status === "expired") throw new Error("A autorização do YouTube expirou.");
           setYouTubeAuth(result.authorization);
-          setYouTubeBroadcasts(await integrationApi.listYouTubeBroadcasts());
+          try {
+            setYouTubeBroadcasts(await integrationApi.listYouTubeBroadcasts());
+          } catch {
+            setYouTubeBroadcasts([]);
+          }
           await load();
           return;
         }

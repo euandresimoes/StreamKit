@@ -86,10 +86,16 @@ export function GiveawaysTab() {
         ? 9000
         : 6500;
     revealTimer.current = setTimeout(() => {
-      void Promise.resolve(giveaways.completeRound(round.id)).then(() => {
+      void (async () => {
+        const completed = await giveaways.completeRound(round.id);
+        if (!completed) {
+          setDrawPhase("idle");
+          setTargetWinner(null);
+          return;
+        }
         setWinner(selectedWinner);
         setDrawPhase("revealed");
-      });
+      })();
     }, revealDelay);
   };
 

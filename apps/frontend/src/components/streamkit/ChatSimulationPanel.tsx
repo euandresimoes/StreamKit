@@ -29,6 +29,7 @@ export function ChatSimulationPanel({
   const [status, setStatus] = useState<ChatSimulationStatus | null>(null);
   const [count, setCount] = useState<8 | 16 | 32 | 1000 | 10000>(32);
   const [message, setMessage] = useState(defaultMessage);
+  const [error, setError] = useState<string | null>(null);
   const processedCountRef = useRef(0);
   const onProgressRef = useRef(onProgress);
   useEffect(() => setMessage(defaultMessage), [defaultMessage]);
@@ -83,25 +84,41 @@ export function ChatSimulationPanel({
           <Button
             variant="outline"
             size="icon"
-            onClick={() => void integrationApi.stopSimulation().then(setStatus)}
+            onClick={async () => {
+              setError(null);
+              try {
+                setStatus(await integrationApi.stopSimulation());
+              } catch (cause) {
+                setError(
+                  cause instanceof Error ? cause.message : "Não foi possível parar a simulação.",
+                );
+              }
+            }}
           >
             <Square className="size-4" />
           </Button>
         ) : (
           <Button
             disabled={!enabled}
-            onClick={() =>
-              void integrationApi
-                .startSimulation({
-                  channelId,
-                  count,
-                  duplicateEvery: 0,
-                  message,
-                  mode: count >= 1000 ? "burst" : "instant",
-                  provider,
-                })
-                .then(setStatus)
-            }
+            onClick={async () => {
+              setError(null);
+              try {
+                setStatus(
+                  await integrationApi.startSimulation({
+                    channelId,
+                    count,
+                    duplicateEvery: 0,
+                    message,
+                    mode: count >= 1000 ? "burst" : "instant",
+                    provider,
+                  }),
+                );
+              } catch (cause) {
+                setError(
+                  cause instanceof Error ? cause.message : "Não foi possível iniciar a simulação.",
+                );
+              }
+            }}
           >
             Simular
           </Button>
@@ -118,6 +135,7 @@ export function ChatSimulationPanel({
           {status.duplicateCount} duplicados · fila {status.queueDepth}
         </p>
       )}
+      {error && <p className="mt-2 text-[10px] text-destructive">{error}</p>}
     </section>
   );
 }

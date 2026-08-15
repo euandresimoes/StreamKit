@@ -10,6 +10,7 @@ const stream = (overrides: Partial<LiveStream> = {}): LiveStream => ({
   connectionId: "12b28c21-cdd2-405a-824e-a54f20383195",
   preview: { channel: "streamer", state: "ready", videoId: null },
   provider: "twitch",
+  sessionKey: null,
   state: "online",
   ...overrides,
 });
