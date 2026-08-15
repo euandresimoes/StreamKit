@@ -69,6 +69,10 @@ export class LivePixPaymentProvider
 
   public connect() {
     if (this.connectPromise) return this.connectPromise
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer)
+      this.retryTimer = null
+    }
     this.connectPromise = this.connectInternal().finally(() => {
       this.connectPromise = null
     })
@@ -194,7 +198,9 @@ export class LivePixPaymentProvider
 
   private async restoreIfNeeded(): Promise<void> {
     const current = await this.repository.connection()
-    if (current?.state === 'ready' || current?.state === 'degraded') this.scheduleRetry(0)
+    // A degraded connection can represent a provider rate limit. Do not retry it on
+    // every application start; the user can retry after the provider cooldown.
+    if (current?.state === 'ready') this.scheduleRetry(0)
   }
 
   private scheduleRetry(delay = 5_000): void {

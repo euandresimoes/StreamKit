@@ -168,6 +168,7 @@ const enUS = {
       "Only receives confirmed payments and keeps pending items for manual review.",
     disconnected: "disconnected",
     connectLivepix: "Connect LivePix",
+    retryLivepix: "Retry LivePix connection",
     readyToConnect: "Ready to connect",
     configureProvider: "Configure credentials to connect",
     authorizedSelectStream: "Authorized · select an active stream",

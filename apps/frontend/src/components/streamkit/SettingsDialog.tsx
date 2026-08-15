@@ -103,6 +103,18 @@ export function SettingsDialog({
     }
   };
 
+  const disconnectLivepix = async () => {
+    setLivepixBusy(true);
+    setLivepixError(null);
+    try {
+      setLivepixStatus(await settingsApi.disconnectLivepix());
+    } catch (cause) {
+      setLivepixError(cause instanceof Error ? cause.message : "Could not disconnect LivePix.");
+    } finally {
+      setLivepixBusy(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-panel h-[min(720px,calc(100vh-2rem))] w-[min(960px,calc(100vw-2rem))] max-w-none gap-0 overflow-hidden rounded-3xl border-border-strong bg-popover/95 p-0">
@@ -273,7 +285,7 @@ export function SettingsDialog({
                       </p>
                     </div>
                     <span className="text-[11px] font-medium text-muted-foreground">
-                      {livepixStatus?.state ?? "desconectado"}
+                      {livepixStatus?.state ?? t("settings.disconnected")}
                     </span>
                   </div>
                   <div className="flex justify-end gap-2">
@@ -282,7 +294,7 @@ export function SettingsDialog({
                         variant="danger"
                         size="sm"
                         loading={livepixBusy}
-                        onClick={() => void settingsApi.disconnectLivepix().then(setLivepixStatus)}
+                        onClick={() => void disconnectLivepix()}
                       >
                         {t("settings.disconnect")}
                       </Button>
@@ -295,7 +307,9 @@ export function SettingsDialog({
                         setSetupProvider("livepix");
                       }}
                     >
-                      {t("settings.connectLivepix")}
+                      {livepixStatus?.configured
+                        ? t("settings.retryLivepix")
+                        : t("settings.connectLivepix")}
                     </Button>
                   </div>
                 </div>
