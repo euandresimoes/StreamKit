@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 import { integrationApi } from "./integration-api";
+import i18n from "@/i18n";
 
 export function useIntegrations(active: boolean) {
   const [connections, setConnections] = useState<IntegrationConnection[]>([]);
@@ -56,9 +57,7 @@ export function useIntegrations(active: boolean) {
         }
       }
     } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Não foi possível carregar as integrações.",
-      );
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.loadIntegrations"));
     }
   }, []);
   useEffect(() => {
@@ -71,7 +70,7 @@ export function useIntegrations(active: boolean) {
       await operation();
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível atualizar a integração.");
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.updateIntegration"));
     } finally {
       setBusy(false);
     }
@@ -97,15 +96,15 @@ export function useIntegrations(active: boolean) {
           await new Promise((resolve) => setTimeout(resolve, device.intervalSeconds * 1_000));
           const result = await integrationApi.pollTwitchAuth(device.flowId);
           if (result.status === "pending") continue;
-          if (result.status === "expired") throw new Error("A autorização da Twitch expirou.");
+          if (result.status === "expired") throw new Error(i18n.t("errors.twitchExpired"));
           setTwitchAuth(result.authorization);
           setTwitchDevice(null);
           await load();
           return;
         }
-        throw new Error("A autorização da Twitch expirou.");
+        throw new Error(i18n.t("errors.twitchExpired"));
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível conectar a Twitch.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.connectTwitch"));
       } finally {
         setBusy(false);
       }
@@ -126,7 +125,7 @@ export function useIntegrations(active: boolean) {
           const result = await integrationApi.pollYouTubeAuth(flow.flowId);
           if (result.status === "pending") continue;
           if (result.status === "failed") throw new Error(result.error);
-          if (result.status === "expired") throw new Error("A autorização do YouTube expirou.");
+          if (result.status === "expired") throw new Error(i18n.t("errors.youtubeExpired"));
           setYouTubeAuth(result.authorization);
           try {
             setYouTubeBroadcasts(await integrationApi.listYouTubeBroadcasts());
@@ -136,9 +135,9 @@ export function useIntegrations(active: boolean) {
           await load();
           return;
         }
-        throw new Error("A autorização do YouTube expirou.");
+        throw new Error(i18n.t("errors.youtubeExpired"));
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível conectar o YouTube.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.connectYoutube"));
       } finally {
         setBusy(false);
       }

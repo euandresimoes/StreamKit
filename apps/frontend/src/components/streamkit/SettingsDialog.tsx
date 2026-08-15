@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, Download, MonitorCog, Palette, Plug, RefreshCw, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,19 +10,30 @@ import { BaseBrandIcon, brandName } from "@/components/base/BaseBrandIcon";
 import { useIntegrations } from "@/modules/integration/use-integrations";
 import { useSettings } from "@/modules/settings/use-settings";
 import { settingsApi } from "@/modules/settings/settings-api";
+import i18n from "@/i18n";
 
 type Section = "appearance" | "system" | "integrations" | "updates";
 
-const nav: { id: Section; label: string; icon: typeof Palette; hint: string }[] = [
-  { id: "appearance", label: "Aparência", icon: Palette, hint: "Tema e densidade" },
-  { id: "system", label: "Sistema", icon: MonitorCog, hint: "Janela e inicialização" },
-  { id: "integrations", label: "Integrações", icon: Plug, hint: "Chats ao vivo" },
-  { id: "updates", label: "Atualizações", icon: RefreshCw, hint: "v0.4.0" },
+const nav: { id: Section; labelKey: string; icon: typeof Palette; hintKey: string }[] = [
+  {
+    id: "appearance",
+    labelKey: "settings.appearance",
+    icon: Palette,
+    hintKey: "settings.appearanceHint",
+  },
+  { id: "system", labelKey: "settings.system", icon: MonitorCog, hintKey: "settings.systemHint" },
+  {
+    id: "integrations",
+    labelKey: "settings.integrations",
+    icon: Plug,
+    hintKey: "settings.integrationsHint",
+  },
+  { id: "updates", labelKey: "settings.updates", icon: RefreshCw, hintKey: "settings.version" },
 ];
 
 const themes = [
-  { id: "dark" as const, label: "Escuro", swatch: "oklch(0.12 0 0)" },
-  { id: "light" as const, label: "Branco", swatch: "oklch(0.97 0.004 75)" },
+  { id: "dark" as const, labelKey: "settings.dark", swatch: "oklch(0.12 0 0)" },
+  { id: "light" as const, labelKey: "settings.light", swatch: "oklch(0.97 0.004 75)" },
 ] as const;
 
 function Row({
@@ -63,6 +75,7 @@ export function SettingsDialog({
     ReturnType<typeof settingsApi.livepixStatus>
   > | null>(null);
   const [livepixBusy, setLivepixBusy] = useState(false);
+  const { t } = useTranslation(undefined, { i18n });
   const persisted = useSettings(open);
   const integrations = useIntegrations(open && section === "integrations");
   const theme = persisted.settings?.theme ?? "dark";
@@ -90,13 +103,13 @@ export function SettingsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-panel max-w-[860px] gap-0 overflow-hidden rounded-3xl border-border-strong bg-popover/95 p-0">
-        <DialogTitle className="sr-only">Configurações</DialogTitle>
+        <DialogTitle className="sr-only">{t("settings.title")}</DialogTitle>
 
         <div className="flex min-h-[460px]">
           {/* Aside */}
           <aside className="w-[220px] shrink-0 border-r border-border bg-surface-2/40 p-3">
             <p className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Configurações
+              {t("settings.title")}
             </p>
             <nav className="flex flex-col gap-0.5">
               {nav.map((n) => (
@@ -112,8 +125,8 @@ export function SettingsDialog({
                 >
                   <n.icon className="size-4" />
                   <span className="flex-1">
-                    <span className="block text-[12.5px] font-medium">{n.label}</span>
-                    <span className="block text-[10.5px] opacity-70">{n.hint}</span>
+                    <span className="block text-[12.5px] font-medium">{t(n.labelKey)}</span>
+                    <span className="block text-[10.5px] opacity-70">{t(n.hintKey)}</span>
                   </span>
                 </button>
               ))}
@@ -124,38 +137,41 @@ export function SettingsDialog({
           <section key={section} className="animate-sk-in min-w-0 flex-1 overflow-y-auto p-6">
             {section === "appearance" && (
               <div>
-                <h3 className="text-[15px] font-semibold">Aparência</h3>
-                <p className="text-[12px] text-muted-foreground">
-                  Escolha o tema e o conforto visual para lives longas.
-                </p>
+                <h3 className="text-[15px] font-semibold">{t("settings.appearance")}</h3>
+                <p className="text-[12px] text-muted-foreground">{t("settings.themeComfort")}</p>
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  {themes.map((t) => (
+                  {themes.map((themeOption) => (
                     <button
-                      key={t.id}
-                      onClick={() => void persisted.update({ theme: t.id })}
+                      key={themeOption.id}
+                      onClick={() => void persisted.update({ theme: themeOption.id })}
                       className={cn(
                         "raise rounded-2xl border p-3 text-left",
-                        theme === t.id ? "border-primary bg-surface-2/70" : "border-border",
+                        theme === themeOption.id
+                          ? "border-primary bg-surface-2/70"
+                          : "border-border",
                       )}
                     >
                       <span
                         className="block h-12 w-full rounded-xl border border-border"
-                        style={{ backgroundColor: t.swatch }}
+                        style={{ backgroundColor: themeOption.swatch }}
                       />
                       <span className="mt-2 flex items-center gap-1 text-[12px] font-medium">
-                        {t.label}
-                        {theme === t.id && <Check className="size-3 text-primary" />}
+                        {t(themeOption.labelKey)}
+                        {theme === themeOption.id && <Check className="size-3 text-primary" />}
                       </span>
                     </button>
                   ))}
                 </div>
                 <Separator className="my-4" />
-                <Row title="Modo compacto" description="Reduz espaçamentos das colunas do kanban.">
+                <Row
+                  title={t("settings.compactMode")}
+                  description={t("settings.compactDescription")}
+                >
                   <Switch checked={density} onCheckedChange={setDensity} />
                 </Row>
                 <Row
-                  title="Reduzir animações"
-                  description="Desativa transições e a roleta animada."
+                  title={t("settings.reduceMotion")}
+                  description={t("settings.reduceMotionDescription")}
                 >
                   <Switch
                     checked={persisted.settings?.reduceMotion ?? false}
@@ -167,9 +183,9 @@ export function SettingsDialog({
 
             {section === "system" && (
               <div>
-                <h3 className="text-[15px] font-semibold">Sistema operacional</h3>
+                <h3 className="text-[15px] font-semibold">{t("settings.system")}</h3>
                 <p className="text-[12px] text-muted-foreground">
-                  Comportamento da janela e integração com o desktop.
+                  {t("settings.systemDescription")}
                 </p>
                 <div className="mt-3 divide-y divide-border">
                   <Row title="Abrir com o sistema" description="Iniciar o StreamKit no login.">

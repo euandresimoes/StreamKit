@@ -2,6 +2,7 @@ import type { CreateTournamentRequest, Tournament, TournamentDetail } from "@str
 import { useCallback, useEffect, useState } from "react";
 
 import { tournamentApi } from "./tournament-api";
+import i18n from "@/i18n";
 
 export function useTournaments(autoSelect = true) {
   const [items, setItems] = useState<Tournament[]>([]);
@@ -18,7 +19,7 @@ export function useTournaments(autoSelect = true) {
         const id = preferredId ?? (autoSelect ? list.items[0]?.id : undefined);
         setDetail(id ? await tournamentApi.detail(id) : null);
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível carregar os torneios.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.loadTournaments"));
       }
     },
     [autoSelect],
@@ -32,7 +33,7 @@ export function useTournaments(autoSelect = true) {
       await operation();
       await load(detail?.tournament.id);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "A operação não pôde ser concluída.");
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.genericOperation"));
     } finally {
       setBusy(false);
     }
@@ -184,7 +185,7 @@ export function useTournaments(autoSelect = true) {
         setDetail(null);
         await load();
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível excluir o torneio.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.deleteTournament"));
       } finally {
         setBusy(false);
       }

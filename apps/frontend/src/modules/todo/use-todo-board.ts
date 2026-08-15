@@ -2,6 +2,7 @@ import type { TodoBoard, TodoCard, TodoTemplate, Workspace } from "@streamkit/co
 import { useCallback, useEffect, useState } from "react";
 
 import { todoApi } from "./todo-api";
+import i18n from "@/i18n";
 
 export function useTodoBoard() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -29,7 +30,7 @@ export function useTodoBoard() {
         : (result.items[0]?.id ?? null);
       await loadBoard(id);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível carregar o TODO.");
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.loadTodo"));
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export function useTodoBoard() {
         if (refreshList) await reload();
         else await loadBoard(selectedId);
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "A operação não pôde ser concluída.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.genericOperation"));
       } finally {
         setBusy(false);
       }
@@ -77,7 +78,7 @@ export function useTodoBoard() {
         await todoApi.selectWorkspace(created.id);
         await reload();
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível criar o workspace.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.loadWorkspace"));
       } finally {
         setBusy(false);
       }
@@ -94,7 +95,7 @@ export function useTodoBoard() {
         await todoApi.deleteWorkspace(workspaceId);
         await reload();
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível excluir o workspace.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.deleteWorkspace"));
         if (deletingSelected) await reload();
       } finally {
         setBusy(false);

@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { giveawayApi } from "@/modules/giveaway/giveaway-api";
 import { tournamentApi } from "@/modules/tournament/tournament-api";
 import { integrationApi } from "./integration-api";
+import i18n from "@/i18n";
 
 type CaptureRule = GiveawayCaptureRule | TournamentCaptureRule;
 type CaptureTarget = "giveaway" | "tournament";
@@ -44,7 +45,7 @@ export function useParticipantCaptureRules(
         ),
       );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível carregar a captura.");
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.loadCapture"));
     } finally {
       loading.current = false;
     }
@@ -64,7 +65,7 @@ export function useParticipantCaptureRules(
       await load();
       await onRefreshRef.current();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível atualizar a captura.");
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.updateCapture"));
     } finally {
       setBusy(false);
     }

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 import { settingsApi } from "./settings-api";
+import i18n from "@/i18n";
 
 function applyTheme(theme: AppSettings["theme"]) {
   const resolved =
@@ -33,9 +34,7 @@ export function useSettings(active: boolean) {
       document.documentElement.dataset["reduceMotion"] = String(nextSettings["reduceMotion"]);
       setCredentialConfigured(credential.configured);
     } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Não foi possível carregar as configurações.",
-      );
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.loadSettings"));
     }
   }, []);
   useEffect(() => {
@@ -62,7 +61,7 @@ export function useSettings(active: boolean) {
       applyTheme(saved.theme);
       document.documentElement.dataset["reduceMotion"] = String(saved["reduceMotion"]);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível salvar a configuração.");
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.saveSettings"));
     } finally {
       setBusy(false);
     }

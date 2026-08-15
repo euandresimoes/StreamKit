@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { liveControlApi } from "./live-control-api";
+import i18n from "@/i18n";
 
 const SELECTED_LIVE_STORAGE_KEY = "streamkit:selected-live-connection";
 
@@ -41,9 +42,7 @@ export function LiveSelectionProvider({ children }: { children: React.ReactNode 
       setStreams(await liveControlApi.list());
       setError(null);
     } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "NÃ£o foi possÃ­vel carregar as lives conectadas.",
-      );
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.loadLive"));
     }
   }, []);
 
@@ -60,7 +59,7 @@ export function LiveSelectionProvider({ children }: { children: React.ReactNode 
       void liveControlApi.selectGlobal(id).catch((cause) => {
         if (selectionRequest.current !== request) return;
         setSelectedId(previous);
-        setError(cause instanceof Error ? cause.message : "Não foi possível selecionar a live.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.selectLive"));
         try {
           if (previous) window.localStorage.setItem(SELECTED_LIVE_STORAGE_KEY, previous);
           else window.localStorage.removeItem(SELECTED_LIVE_STORAGE_KEY);

@@ -20,7 +20,7 @@ describe("Live Control presentation", () => {
     const markup = renderToStaticMarkup(<LivePreview stream={null} />);
 
     expect(markup).not.toContain("<iframe");
-    expect(markup).toContain("aguardando uma transmissão conectada");
+    expect(markup).toContain("Official preview waiting for a connected stream.");
   });
 
   it("uses the official Twitch player with the required parent", () => {
@@ -58,6 +58,6 @@ describe("Live Control presentation", () => {
     );
 
     expect(markup).not.toContain("<iframe");
-    expect(markup).toContain("não oferece preview oficial");
+    expect(markup).toContain("This provider does not offer an official preview.");
   });
 });

@@ -7,6 +7,7 @@ import type {
 import { useCallback, useEffect, useState } from "react";
 
 import { giveawayApi } from "./giveaway-api";
+import i18n from "@/i18n";
 
 export function useGiveaways(autoSelect = true) {
   const [items, setItems] = useState<Giveaway[]>([]);
@@ -34,7 +35,7 @@ export function useGiveaways(autoSelect = true) {
         setDetail(nextDetail);
         setHistory(nextHistory.items);
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível carregar os sorteios.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.loadGiveaways"));
       }
     },
     [autoSelect],
@@ -49,7 +50,7 @@ export function useGiveaways(autoSelect = true) {
       await load(detail?.giveaway.id);
       return result;
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "A operação não pôde ser concluída.");
+      setError(cause instanceof Error ? cause.message : i18n.t("errors.genericOperation"));
       return undefined;
     } finally {
       setBusy(false);
@@ -146,7 +147,7 @@ export function useGiveaways(autoSelect = true) {
         setHistory([]);
         await load();
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível excluir o sorteio.");
+        setError(cause instanceof Error ? cause.message : i18n.t("errors.deleteGiveaway"));
       } finally {
         setBusy(false);
       }

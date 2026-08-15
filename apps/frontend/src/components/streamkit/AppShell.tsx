@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Gift, LayoutGrid, ListTodo, Radio, Settings, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,24 +22,29 @@ import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 
 type Tab = "live" | "todo" | "giveaways" | "tournaments";
 
-const tabs: { id: Tab; label: string; description: string; icon: typeof ListTodo }[] = [
-  { id: "live", label: "LIVE", description: "Controle sua transmissão e seu chat.", icon: Radio },
+const tabs: { id: Tab; labelKey: string; descriptionKey: string; icon: typeof ListTodo }[] = [
+  {
+    id: "live",
+    labelKey: "navigation.live",
+    descriptionKey: "navigation.liveDescription",
+    icon: Radio,
+  },
   {
     id: "todo",
-    label: "TODO",
-    description: "Organize suas tarefas e prioridades.",
+    labelKey: "navigation.todo",
+    descriptionKey: "navigation.todoDescription",
     icon: ListTodo,
   },
   {
     id: "giveaways",
-    label: "GIVEAWAYS",
-    description: "Crie e controle seus sorteios.",
+    labelKey: "navigation.giveaways",
+    descriptionKey: "navigation.giveawaysDescription",
     icon: Gift,
   },
   {
     id: "tournaments",
-    label: "TOURNAMENTS",
-    description: "Create and manage bracket tournaments.",
+    labelKey: "navigation.tournaments",
+    descriptionKey: "navigation.tournamentsDescription",
     icon: Swords,
   },
 ];
@@ -52,6 +58,7 @@ export function AppShell() {
 }
 
 function AppShellContent() {
+  const { t } = useTranslation();
   useSettings(true);
   const live = useLiveSelection();
   const [tab, setTab] = useState<Tab>("live");
@@ -91,7 +98,7 @@ function AppShellContent() {
               variant="ghost"
               size="icon-sm"
               className="h-full w-10 rounded-none"
-              aria-label="Abrir módulos"
+              aria-label={t("navigation.openModules")}
               onClick={() => setLauncherOpen(true)}
             >
               <LayoutGrid />
@@ -107,7 +114,7 @@ function AppShellContent() {
                 variant="ghost"
                 size="icon-sm"
                 className="h-full w-10 rounded-none"
-                aria-label="Abrir configurações"
+                aria-label={t("navigation.openSettings")}
                 onClick={() => setSettings(true)}
               >
                 <Settings />
@@ -148,9 +155,9 @@ function AppShellContent() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <LayoutGrid className="size-4 text-primary" />
-              Módulos do StreamKit
+              {t("navigation.modules")}
             </DialogTitle>
-            <DialogDescription>Escolha uma área para continuar trabalhando.</DialogDescription>
+            <DialogDescription>{t("navigation.chooseModule")}</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3">
             {tabs.map((tabItem) => (
@@ -172,10 +179,10 @@ function AppShellContent() {
                 </span>
                 <span>
                   <span className="block text-sm font-semibold text-foreground">
-                    {tabItem.label}
+                    {t(tabItem.labelKey)}
                   </span>
                   <span className="mt-1 block text-xs text-muted-foreground">
-                    {tabItem.description}
+                    {t(tabItem.descriptionKey)}
                   </span>
                 </span>
               </button>

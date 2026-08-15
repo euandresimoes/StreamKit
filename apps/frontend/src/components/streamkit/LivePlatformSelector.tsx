@@ -1,4 +1,5 @@
 import type { LiveStream } from "@streamkit/contracts";
+import { useTranslation } from "react-i18next";
 import { BaseBrandIcon, brandName } from "@/components/base/BaseBrandIcon";
 import {
   Select,
@@ -17,16 +18,17 @@ export function LivePlatformSelector({
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex h-full min-w-0 items-center">
       <label className="flex h-full min-w-0 items-center gap-2 text-xs font-medium">
-        <span className="sr-only">Plataforma da transmissão</span>
+        <span className="sr-only">{t("live.platform")}</span>
         <Select value={selectedId ?? ""} onValueChange={onSelect}>
           <SelectTrigger
-            aria-label="Plataforma da transmissão"
+            aria-label={t("live.platform")}
             className="h-full max-w-72 rounded-none border-0 bg-transparent px-2 shadow-none"
           >
-            <SelectValue placeholder="Selecionar live" />
+            <SelectValue placeholder={t("live.selectStream")} />
           </SelectTrigger>
           <SelectContent>
             {streams.map((stream) => (
@@ -42,7 +44,7 @@ export function LivePlatformSelector({
             ))}
             {!streams.length && (
               <SelectItem value="empty" disabled>
-                Nenhuma live conectada
+                {t("live.noConnectedStreams")}
               </SelectItem>
             )}
           </SelectContent>

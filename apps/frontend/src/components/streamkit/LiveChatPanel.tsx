@@ -17,6 +17,7 @@ import {
   UserX,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BaseBrandIcon } from "@/components/base/BaseBrandIcon";
+import i18n from "@/i18n";
 import { integrationApi } from "@/modules/integration/integration-api";
 import { liveControlApi } from "@/modules/live-control/live-control-api";
 import {
@@ -64,6 +66,7 @@ function Avatar({ message }: { message: FocusedChatMessage }) {
 }
 
 export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
+  const { t } = useTranslation();
   const connectionId = stream?.connectionId ?? null;
   const [thread, setThread] = useState<FocusedChatThread | null>(null);
   const [displayedMessages, setDisplayedMessages] = useState<FocusedChatMessage[]>([]);
@@ -128,8 +131,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
         }
       } catch (cause) {
         delay = Math.min(delay * 2, 15_000);
-        if (active)
-          setError(cause instanceof Error ? cause.message : "Não foi possível carregar o chat.");
+        if (active) setError(cause instanceof Error ? cause.message : i18n.t("errors.loadChat"));
       }
     };
     void load();
@@ -161,7 +163,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
       await integrationApi.sendMessage(writer.id, message.trim());
       setMessage("");
     } catch {
-      setError("Não foi possível enviar a mensagem.");
+      setError(t("errors.sendMessage"));
     } finally {
       setSending(false);
     }
@@ -208,7 +210,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
         });
       setError(null);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível executar a ação.");
+      setError(cause instanceof Error ? cause.message : t("errors.chatAction"));
     } finally {
       setModerating(null);
     }
@@ -221,7 +223,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Voltar para o chat da live"
+            aria-label={t("common.back")}
             onClick={() => setPrivateUser(null)}
           >
             <ArrowLeft />
@@ -229,7 +231,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
           <Avatar message={privateUser} />
           <div className="min-w-0">
             <p className="truncate">{privateUser.displayName}</p>
-            <p className="text-[10px] font-normal text-muted-foreground">Chat privado</p>
+            <p className="text-[10px] font-normal text-muted-foreground">{t("live.privateChat")}</p>
           </div>
         </header>
         <div role="log" aria-live="polite" className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
@@ -244,7 +246,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
           ))}
           {!privateMessages.length && (
             <p className="py-8 text-center text-xs text-muted-foreground">
-              Nenhuma mensagem desse usuário ainda.
+              {t("live.noUserMessages")}
             </p>
           )}
         </div>
@@ -255,7 +257,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
     <section className="relative flex h-full min-h-64 flex-col bg-card">
       <header className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-semibold">
         {stream && <BaseBrandIcon provider={stream.provider} />}
-        Chat da live
+        {t("live.liveChat")}
       </header>
       <div role="log" aria-live="polite" className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
         {displayedMessages.map((item) =>
@@ -280,7 +282,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
                     </button>
                     {isBanned && (
                       <span className="rounded bg-destructive/15 px-1 text-[9px] text-destructive">
-                        BANIDO
+                        {t("live.bannedBadge")}
                       </span>
                     )}
                     {isModerator && (
@@ -303,27 +305,27 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
                           variant="ghost"
                           size="icon-sm"
                           className="ml-auto size-6 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                          aria-label={`Ações para ${item.displayName}`}
+                          aria-label={t("live.messageActions", { name: item.displayName })}
                         >
                           <MoreHorizontal />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onSelect={() => setPrivateUser(item)}>
-                          <UserRound /> Abrir chat privado
+                          <UserRound /> {t("live.openPrivateChat")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           disabled={!canModerate("delete_message") || moderating !== null}
                           onSelect={() => void moderate(item, "delete_message")}
                         >
-                          <Shield /> Excluir mensagem
+                          <Shield /> {t("live.deleteMessage")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={!canModerate("pin_message") || moderating !== null}
                           onSelect={() => void moderate(item, "pin_message")}
                         >
-                          <Pin /> Fixar mensagem
+                          <Pin /> {t("live.pinMessage")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={
@@ -333,7 +335,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
                           onSelect={() => void moderate(item, isBanned ? "unban_user" : "ban_user")}
                         >
                           {isBanned ? <UserX /> : <Ban />}
-                          {isBanned ? "Desbanir usuário" : "Banir usuário"}
+                          {isBanned ? t("live.unban") : t("live.ban")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={
@@ -345,7 +347,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
                           }
                         >
                           {isModerator ? <UserX /> : <UserCheck />}
-                          {isModerator ? "Remover moderador" : "Dar moderador"}
+                          {isModerator ? t("live.removeModerator") : t("live.giveModerator")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -358,7 +360,7 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
         )}
         {!displayedMessages.length && (
           <p className="py-8 text-center text-xs text-muted-foreground">
-            {stream ? "Nenhuma mensagem recente." : "Chat aguardando uma transmissão conectada."}
+            {stream ? t("live.noMessages") : t("live.waitingForStream")}
           </p>
         )}
       </div>
@@ -371,12 +373,12 @@ export function LiveChatPanel({ stream }: { stream: LiveStream | null }) {
               if (event.key === "Enter") void send();
             }}
             disabled={!writer || sending}
-            placeholder={writer ? "Responder no chat" : "Chat somente leitura"}
-            aria-label="Responder no chat"
+            placeholder={writer ? t("live.replyInChat") : t("live.readonlyChat")}
+            aria-label={t("live.replyInChat")}
           />
           <Button
             size="icon"
-            aria-label="Enviar mensagem"
+            aria-label={t("live.sendMessage")}
             disabled={!writer || !message.trim()}
             loading={sending}
             onClick={() => void send()}

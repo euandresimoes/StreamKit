@@ -1,19 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import i18n from "@/i18n";
 import { AppShell } from "@/components/streamkit/AppShell";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "StreamKit — Todo, torneios e sorteios para streamers" },
+      { title: i18n.t("routes.pageTitle") },
       {
         name: "description",
-        content:
-          "StreamKit é o app desktop para streamers: todo list kanban, torneios com chaveamento e sorteios em roleta ou caixa.",
+        content: i18n.t("routes.pageDescription"),
       },
-      { property: "og:title", content: "StreamKit — Painel do streamer" },
+      { property: "og:title", content: i18n.t("routes.socialTitle") },
       {
         property: "og:description",
-        content: "Kanban de tarefas, torneios individuais ou por equipe e sorteios ao vivo.",
+        content: i18n.t("routes.socialDescription"),
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

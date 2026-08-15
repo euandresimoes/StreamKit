@@ -1,12 +1,15 @@
 import type { LiveStream } from "@streamkit/contracts";
 import { ExternalLink, Radio } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
+import i18n from "@/i18n";
 
 export function LivePreview({ stream }: { stream: LiveStream | null }) {
+  const { t } = useTranslation(undefined, { i18n });
   if (!stream)
     return (
       <div className="flex h-full min-h-0 items-center justify-center border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-        <p>Preview oficial aguardando uma transmissão conectada.</p>
+        <p>{t("live.officialPreviewWaiting")}</p>
       </div>
     );
   if (stream.preview.state !== "ready")
@@ -16,10 +19,10 @@ export function LivePreview({ stream }: { stream: LiveStream | null }) {
           <Radio className="mx-auto mb-3 size-6" />
           <p>
             {stream.state === "offline"
-              ? "A transmissão está offline."
+              ? t("live.offline")
               : stream.state === "unavailable"
-                ? "Este provider não oferece preview oficial disponível."
-                : "O preview oficial não está disponível para este canal."}
+                ? t("live.providerNoPreview")
+                : t("live.previewUnavailable")}
           </p>
         </div>
       </div>
@@ -39,13 +42,13 @@ export function LivePreview({ stream }: { stream: LiveStream | null }) {
   if (!url)
     return (
       <div className="flex h-full min-h-0 items-center justify-center border border-border p-6 text-sm text-muted-foreground">
-        Identificador oficial do player ainda não foi retornado pelo provider.
+        {t("live.playerIdUnavailable")}
       </div>
     );
   return (
     <div className="relative h-full min-h-0 overflow-hidden border border-border bg-black">
       <iframe
-        title={`Preview oficial de ${stream.channelDisplayName}`}
+        title={`${t("live.officialPreview")} · ${stream.channelDisplayName}`}
         src={url}
         allow="autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
@@ -56,7 +59,7 @@ export function LivePreview({ stream }: { stream: LiveStream | null }) {
       <button
         type="button"
         className="absolute right-3 top-3 rounded-lg bg-black/70 p-2 text-white"
-        aria-label="Abrir player oficial"
+        aria-label={t("live.openOfficialPlayer")}
         onClick={() => void getDesktopBridge().openExternalAuth(url)}
       >
         <ExternalLink className="size-4" />
