@@ -114,6 +114,7 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
     minWidth: 960,
     show: false,
     title: STREAMKIT_APP_NAME,
+    transparent: true,
     ...(process.platform === 'darwin'
       ? {
           vibrancy: 'under-window' as const,
@@ -121,7 +122,7 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
         }
       : process.platform === 'win32'
         ? {
-            backgroundMaterial: 'mica' as const,
+            backgroundMaterial: 'acrylic' as const,
           }
         : {}),
     titleBarOverlay:
