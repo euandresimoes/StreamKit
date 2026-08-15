@@ -73,9 +73,8 @@ function AppShellContent() {
   }, []);
 
   return (
-    <main className="streamkit-shell relative h-screen w-screen overflow-hidden">
-      <div className="streamkit-app-backdrop" aria-hidden="true" />
-      <div className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-transparent">
+    <main className="h-screen w-screen overflow-hidden">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-background">
         <header className="streamkit-titlebar h-10 shrink-0 border-b border-border">
           <div
             className={cn(
