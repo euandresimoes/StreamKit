@@ -132,7 +132,7 @@ Não utiliza diretamente a aplicação no MVP, mas vê o resultado dos torneios 
 
 ### 4.1 Estrutura da janela principal
 
-- Sidebar com as abas **TODO**, **Games** e **Giveaway**.
+- Navigation with the tabs **LIVE**, **TODO**, **GIVEAWAYS** and **TOURNAMENTS**.
 - Acesso às configurações no rodapé ou cabeçalho.
 - Área central dedicada ao módulo atual.
 - Notificações discretas para sucesso, erro e persistência.
@@ -261,7 +261,7 @@ Workspace: Filmes
 
 ---
 
-## 6. Módulo Games — Tournament Bracket
+## 6. Módulo Tournaments — Tournament Bracket
 
 ### 6.1 Objetivo
 
@@ -710,7 +710,7 @@ streamkit/
 │   ├── frontend/
 │   │   ├── src/app/
 │   │   ├── src/modules/todo/
-│   │   ├── src/modules/games/
+│   │   ├── src/modules/tournament/
 │   │   ├── src/modules/giveaway/
 │   │   ├── src/modules/settings/
 │   │   ├── src/stores/

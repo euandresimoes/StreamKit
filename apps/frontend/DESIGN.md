@@ -374,7 +374,7 @@ const classes = computed(() => cn(BASE, VARIANTS[props.variant], SIZES[props.siz
 
     <!-- conteúdo: remonta na troca de aba para reproduzir a animação -->
     <div class="animate-sk-in flex min-h-0 flex-1 flex-col">
-      <!-- TodoTab | GamesTab | GiveawaysTab -->
+      <!-- TodoTab | TournamentsTab | GiveawaysTab -->
     </div>
   </div>
 </main>
@@ -385,7 +385,7 @@ Regras obrigatórias da topbar:
 - **Sem** logo, sem nome do app, sem badge "Manual".
 - **Sem** background no container das abas; fundo apenas na aba ativa (`bg-surface-2`).
 - **Sem** status bar no rodapé da janela.
-- Abas: `TODO` (ListTodo), `GAMES` (Swords), `GIVEAWAYS` (Gift) — ícones `size-3.5`.
+- Abas: `LIVE` (Radio), `TODO` (ListTodo), `GIVEAWAYS` (Gift), `TOURNAMENTS` (Swords) — ícones `size-3.5`.
 - Em Vue, use `:key="tab"` no wrapper do conteúdo para reexecutar `animate-sk-in`.
 
 ---
@@ -476,7 +476,7 @@ Depois: switches "Atualizar automaticamente" (ligado, desabilitado) e "Canal bet
 ## 8. Padrões das abas
 
 - **TODO (kanban)**: workspaces com emoji + nome; colunas em faixa horizontal com scroll (`overflow-x-auto`), cada coluna `w-[280px] rounded-2xl border border-border bg-surface/60 p-3` com header (nome + contador em `text-[11px] text-muted-foreground`). Card: `raise cursor-grab rounded-xl border border-border bg-card p-3 text-[12.5px]`, com nota `text-[11.5px] text-muted-foreground` e tag `rounded-md bg-surface-2 px-1.5 py-0.5 text-[10.5px]`. Drag & drop nativo HTML5 (`draggable`, `dragover.prevent`, `drop`), com destino em `ring-1 ring-ring`.
-- **GAMES (torneios)**: alternador Individual/Equipe usando o mesmo padrão de abas (fundo só no ativo). Lista de inscritos à esquerda, equipes/slots à direita: slot vazio `rounded-xl border border-dashed border-border-strong p-2.5 text-[11.5px] text-muted-foreground`. Bracket adaptativo: só renderiza as rodadas necessárias (`2^n ≥ inscritos`); colunas por rodada com pares conectados; label da rodada em caps.
+- **TOURNAMENTS**: alternador Individual/Equipe usando o mesmo padrão de abas (fundo só no ativo). Lista de inscritos à esquerda, equipes/slots à direita: slot vazio `rounded-xl border border-dashed border-border-strong p-2.5 text-[11.5px] text-muted-foreground`. Bracket adaptativo: só renderiza as rodadas necessárias (`2^n ≥ inscritos`); colunas por rodada com pares conectados; label da rodada em caps.
 - **GIVEAWAYS (sorteios)**: `textarea` (`min-h-[180px] rounded-2xl border border-input bg-surface-2/60 p-3 font-mono text-[12.5px]`) aceitando nomes separados por `,` ou quebra de linha. Dois modos: **Roleta** (rotação com `transition: transform 5s var(--ease-mac)`, ponteiro no topo) e **Caixa** (esteira horizontal com `translateX` desacelerando, marcador central `animate-sk-ping`). Vencedor em `text-gradient-primary` com `text-2xl font-semibold`.
 
 ---

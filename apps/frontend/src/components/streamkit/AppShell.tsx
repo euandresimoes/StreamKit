@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { TodoTab } from "./TodoTab";
-import { GamesTab } from "./GamesTab";
+import { TournamentsTab } from "./TournamentsTab";
 import { GiveawaysTab } from "./GiveawaysTab";
 import { SettingsDialog } from "./SettingsDialog";
 import { useSettings } from "@/modules/settings/use-settings";
@@ -19,23 +19,28 @@ import { LivePlatformSelector } from "./LivePlatformSelector";
 import { LiveSelectionProvider, useLiveSelection } from "@/modules/live-control/use-live-control";
 import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 
-type Tab = "todo" | "games" | "giveaways" | "live";
+type Tab = "live" | "todo" | "giveaways" | "tournaments";
 
 const tabs: { id: Tab; label: string; description: string; icon: typeof ListTodo }[] = [
+  { id: "live", label: "LIVE", description: "Controle sua transmissão e seu chat.", icon: Radio },
   {
     id: "todo",
     label: "TODO",
     description: "Organize suas tarefas e prioridades.",
     icon: ListTodo,
   },
-  { id: "games", label: "GAMES", description: "Gerencie jogos e participantes.", icon: Swords },
   {
     id: "giveaways",
     label: "GIVEAWAYS",
     description: "Crie e controle seus sorteios.",
     icon: Gift,
   },
-  { id: "live", label: "LIVE", description: "Controle sua transmissão e seu chat.", icon: Radio },
+  {
+    id: "tournaments",
+    label: "TOURNAMENTS",
+    description: "Create and manage bracket tournaments.",
+    icon: Swords,
+  },
 ];
 
 export function AppShell() {
@@ -49,7 +54,7 @@ export function AppShell() {
 function AppShellContent() {
   useSettings(true);
   const live = useLiveSelection();
-  const [tab, setTab] = useState<Tab>("todo");
+  const [tab, setTab] = useState<Tab>("live");
   const [settings, setSettings] = useState(false);
   const [launcherOpen, setLauncherOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -128,7 +133,7 @@ function AppShellContent() {
                 )}
               >
                 {tabItem.id === "todo" && <TodoTab />}
-                {tabItem.id === "games" && <GamesTab />}
+                {tabItem.id === "tournaments" && <TournamentsTab />}
                 {tabItem.id === "giveaways" && <GiveawaysTab />}
                 {tabItem.id === "live" && <LiveControlTab />}
               </div>

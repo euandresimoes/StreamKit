@@ -48,7 +48,7 @@ function getParticipantInitials(displayName: string) {
   return Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
 }
 
-export function GamesTab() {
+export function TournamentsTab() {
   const tournaments = useTournaments(false);
   const live = useLiveSelection();
   const [name, setName] = useState("");
