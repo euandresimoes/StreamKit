@@ -26,4 +26,22 @@ export class SettingsController {
   @Put('credentials/youtube-client-secret') public saveYouTubeClientSecret(@Body() body: unknown) {
     return this.service.saveYouTubeClientSecret(SaveCredentialRequestSchema.parse(body).credential)
   }
+  @Get('credentials/twitch-client-id') public twitchClientIdStatus() {
+    return this.service.twitchClientIdStatus()
+  }
+  @Put('credentials/twitch-client-id') public saveTwitchClientId(@Body() body: unknown) {
+    return this.service.saveProviderClientId(
+      'twitch.client-id',
+      SaveCredentialRequestSchema.parse(body).credential,
+    )
+  }
+  @Get('credentials/youtube-client-id') public youtubeClientIdStatus() {
+    return this.service.youtubeClientIdStatus()
+  }
+  @Put('credentials/youtube-client-id') public saveYouTubeClientId(@Body() body: unknown) {
+    return this.service.saveProviderClientId(
+      'youtube.client-id',
+      SaveCredentialRequestSchema.parse(body).credential,
+    )
+  }
 }

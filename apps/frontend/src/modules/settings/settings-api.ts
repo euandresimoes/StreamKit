@@ -38,6 +38,18 @@ export const settingsApi = {
       method: "PUT",
       schema: CredentialStatusSchema,
     }),
+  saveTwitchClientId: (credential: string) =>
+    apiClient.request("/api/v1/settings/credentials/twitch-client-id", {
+      body: { credential },
+      method: "PUT",
+      schema: CredentialStatusSchema,
+    }),
+  saveYouTubeClientId: (credential: string) =>
+    apiClient.request("/api/v1/settings/credentials/youtube-client-id", {
+      body: { credential },
+      method: "PUT",
+      schema: CredentialStatusSchema,
+    }),
   livepixStatus: () =>
     apiClient.request("/api/v1/payments/livepix/status", { schema: PaymentConnectionStatusSchema }),
   connectLivepix: () =>

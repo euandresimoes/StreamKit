@@ -304,7 +304,7 @@ export function SettingsDialog({
                         ? t("settings.connectedAs", { login: integrations.twitchAuth.login })
                         : integrations.twitchAuth?.available
                           ? t("settings.readyToConnect")
-                          : t("settings.twitchClientMissing")}
+                          : t("settings.configureProvider")}
                     </p>
                     {integrations.twitchDevice && (
                       <p className="mt-1 text-xs font-semibold tracking-widest text-primary">
@@ -325,7 +325,6 @@ export function SettingsDialog({
                     <Button
                       size="sm"
                       loading={integrations.busy}
-                      disabled={!integrations.twitchAuth?.available}
                       onClick={() => setSetupProvider("twitch")}
                     >
                       {t("settings.connect")}
@@ -345,7 +344,7 @@ export function SettingsDialog({
                           ? t("settings.authorizedSelectActiveStream")
                           : integrations.youtubeAuth?.available
                             ? t("settings.readyToConnect")
-                            : t("settings.youtubeClientMissing")}
+                            : t("settings.configureProvider")}
                       </p>
                     </div>
                     {integrations.youtubeAuth?.configured ? (
@@ -363,7 +362,6 @@ export function SettingsDialog({
                       <Button
                         size="sm"
                         loading={integrations.busy}
-                        disabled={!integrations.youtubeAuth?.available}
                         onClick={() => setSetupProvider("youtube")}
                       >
                         {t("settings.connect")}
@@ -533,15 +531,23 @@ export function SettingsDialog({
                 return;
               }
               if (setupProvider === "youtube" && credentials) {
+                const saveClientId = settingsApi.saveYouTubeClientId(credentials.clientId);
                 const saveSecret = credentials.clientSecret
                   ? settingsApi.saveYouTubeClientSecret(credentials.clientSecret)
                   : Promise.resolve();
                 void saveSecret
+                  .then(() => saveClientId)
                   .then(() => integrations.connectYouTube())
                   .finally(() => setSetupProvider(null));
                 return;
               }
-              if (setupProvider === "twitch") void integrations.connectTwitch();
+              if (setupProvider === "twitch" && credentials) {
+                void settingsApi
+                  .saveTwitchClientId(credentials.clientId)
+                  .then(() => integrations.connectTwitch())
+                  .finally(() => setSetupProvider(null));
+                return;
+              }
               if (setupProvider === "youtube") void integrations.connectYouTube();
             }}
           />

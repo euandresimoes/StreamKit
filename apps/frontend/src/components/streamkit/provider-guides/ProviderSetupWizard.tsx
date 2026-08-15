@@ -37,6 +37,7 @@ export function ProviderSetupWizard({
   const [clientSecret, setClientSecret] = useState("");
   const isLivePix = provider === "livepix";
   const isYouTube = provider === "youtube";
+  const needsClientId = isLivePix || provider === "twitch" || isYouTube;
   const isKick = provider === "kick";
 
   const close = (value: boolean) => {
@@ -112,12 +113,12 @@ export function ProviderSetupWizard({
                 ))}
               </div>
             </div>
-            {(isLivePix || isYouTube) && (
+            {needsClientId && (
               <div className="mt-6 space-y-2 border-t border-border pt-4">
                 <div className="flex items-center gap-2 text-xs font-semibold">
                   <KeyRound className="size-3.5" /> Secure credentials
                 </div>
-                {isLivePix && (
+                {needsClientId && (
                   <Input
                     value={clientId}
                     onChange={(event) => setClientId(event.target.value)}
@@ -125,13 +126,15 @@ export function ProviderSetupWizard({
                     autoComplete="off"
                   />
                 )}
-                <Input
-                  value={clientSecret}
-                  onChange={(event) => setClientSecret(event.target.value)}
-                  placeholder="Client Secret (optional for Desktop OAuth)"
-                  type="password"
-                  autoComplete="new-password"
-                />
+                {(isLivePix || isYouTube) && (
+                  <Input
+                    value={clientSecret}
+                    onChange={(event) => setClientSecret(event.target.value)}
+                    placeholder="Client Secret (optional for Desktop OAuth)"
+                    type="password"
+                    autoComplete="new-password"
+                  />
+                )}
                 <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
                   <ShieldCheck className="size-3" /> Stored with the operating system secure
                   storage.
@@ -152,13 +155,11 @@ export function ProviderSetupWizard({
                   <Button onClick={() => setStep((value) => value + 1)}>Next</Button>
                 ) : (
                   <Button
-                    disabled={busy || isKick || (isLivePix && (!clientId.trim() || !clientSecret))}
+                    disabled={busy || isKick || !clientId.trim() || (isLivePix && !clientSecret)}
                     loading={busy}
                     onClick={() =>
                       onConnect(
-                        isLivePix || isYouTube
-                          ? { clientId: clientId.trim(), clientSecret }
-                          : undefined,
+                        needsClientId ? { clientId: clientId.trim(), clientSecret } : undefined,
                       )
                     }
                   >

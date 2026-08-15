@@ -11,16 +11,16 @@ Excluir uma credencial não remove participantes ou resultados já persistidos.
 
 ## Twitch
 
-Defina `STREAMKIT_TWITCH_CLIENT_ID` com o Client ID de um aplicativo Twitch registrado antes do
-build do desktop. O Client ID é público e será embutido no aplicativo; tokens e credenciais do
-usuário nunca devem ser embutidos. A conexão
+O Client ID do aplicativo Twitch é configurado pelo usuário no guia de integração do StreamKit.
+Tokens e credenciais do usuário nunca devem ser embutidos. A conexão
 usa Device Authorization, EventSub WebSocket e os escopos mínimos de leitura/escrita de chat.
 
 ## YouTube
 
 1. Crie um projeto no Google Cloud, habilite **YouTube Data API v3** e configure uma credencial OAuth
    do tipo aplicativo para computador.
-2. Defina `STREAMKIT_YOUTUBE_CLIENT_ID` antes do build do desktop. Para clientes do Google que
+2. Configure `STREAMKIT_YOUTUBE_CLIENT_ID` apenas como fallback de desenvolvimento. No desktop,
+   o Client ID é configurado pelo usuário no guia. Para clientes do Google que
    exigem autenticação na troca do code, defina também `STREAMKIT_YOUTUBE_CLIENT_SECRET` com o valor
    baixado no JSON do cliente desktop. Ele permanece somente no processo principal e nunca é enviado
    ao renderer, SQLite ou logs.

@@ -25,6 +25,12 @@ export class SettingsService {
   public youtubeClientSecretStatus() {
     return this.credentials.status('youtube.client-secret')
   }
+  public twitchClientIdStatus() {
+    return this.credentials.status('twitch.client-id')
+  }
+  public youtubeClientIdStatus() {
+    return this.credentials.status('youtube.client-id')
+  }
   public async saveCredential(value: string) {
     try {
       await this.credentials.save('livepix', value)
@@ -54,6 +60,19 @@ export class SettingsService {
     try {
       await this.credentials.save('youtube.client-secret', value)
       return this.credentials.status('youtube.client-secret')
+    } catch {
+      throw new ApiApplicationError(
+        'SECURE_STORAGE_UNAVAILABLE',
+        'Secure credential storage is unavailable',
+        503,
+      )
+    }
+  }
+
+  public async saveProviderClientId(name: 'twitch.client-id' | 'youtube.client-id', value: string) {
+    try {
+      await this.credentials.save(name, value)
+      return this.credentials.status(name)
     } catch {
       throw new ApiApplicationError(
         'SECURE_STORAGE_UNAVAILABLE',

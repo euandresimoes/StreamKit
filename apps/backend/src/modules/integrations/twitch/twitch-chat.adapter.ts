@@ -9,10 +9,6 @@ import type {
 } from '../chat-provider.adapter'
 import { downloadAvatarDataUrl } from '../avatar-data-url'
 import { ChatProviderRegistry } from '../chat-provider.registry'
-import {
-  INTEGRATION_RUNTIME_CONFIG,
-  type IntegrationRuntimeConfig,
-} from '../integration-runtime.config'
 import { TwitchAuthService } from './twitch-auth.service'
 
 const TWITCH_EVENTSUB_URL = 'wss://eventsub.wss.twitch.tv/ws'
@@ -63,7 +59,6 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
   public constructor(
     @Inject(TwitchAuthService) private readonly auth: TwitchAuthService,
     @Inject(ChatProviderRegistry) private readonly registry: ChatProviderRegistry,
-    @Inject(INTEGRATION_RUNTIME_CONFIG) private readonly config: IntegrationRuntimeConfig,
   ) {}
 
   public onApplicationBootstrap(): void {
@@ -71,7 +66,7 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
   }
 
   public async sendMessage(channelId: string, message: string): Promise<void> {
-    const clientId = this.config.twitchClientId
+    const clientId = await this.auth.getClientId()
     if (!clientId) throw new Error('INTEGRATION_CLIENT_NOT_CONFIGURED')
     const token = await this.auth.getAccessToken()
     const response = await fetch('https://api.twitch.tv/helix/chat/messages', {
@@ -147,7 +142,7 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
     channelId: string,
     params: Record<string, string>,
   ): Promise<void> {
-    const clientId = this.config.twitchClientId
+    const clientId = await this.auth.getClientId()
     if (!clientId) throw new Error('INTEGRATION_CLIENT_NOT_CONFIGURED')
     const token = await this.auth.getAccessToken()
     const url = new URL(endpoint)
@@ -167,7 +162,7 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
     channelId: string,
     body: unknown,
   ): Promise<void> {
-    const clientId = this.config.twitchClientId
+    const clientId = await this.auth.getClientId()
     if (!clientId) throw new Error('INTEGRATION_CLIENT_NOT_CONFIGURED')
     const token = await this.auth.getAccessToken()
     const url = new URL(endpoint)
@@ -189,7 +184,7 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
   }
 
   public async connect(context: ChatProviderConnectionContext): Promise<ChatProviderSession> {
-    const clientId = this.config.twitchClientId
+    const clientId = await this.auth.getClientId()
     if (!clientId) throw new Error('INTEGRATION_CLIENT_NOT_CONFIGURED')
     const token = await this.auth.getAccessToken()
     const socket = new WebSocket(TWITCH_EVENTSUB_URL)

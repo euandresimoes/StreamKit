@@ -21,6 +21,7 @@ import {
 import { IntegrationRepository } from '../integration.repository'
 
 const CREDENTIAL_NAME = 'youtube.oauth'
+const CLIENT_ID_CREDENTIAL_NAME = 'youtube.client-id'
 const CLIENT_SECRET_CREDENTIAL_NAME = 'youtube.client-secret'
 const YOUTUBE_SCOPE = 'https://www.googleapis.com/auth/youtube.force-ssl'
 const TokenResponseSchema = z.object({
@@ -60,7 +61,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
   ) {}
 
   public async begin() {
-    const clientId = this.requireClientId()
+    const clientId = await this.requireClientId()
     const flowId = randomUUID()
     const state = randomBytes(32).toString('base64url')
     const codeVerifier = randomBytes(64).toString('base64url')
@@ -159,7 +160,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
     const vault = await this.credentials.status(CREDENTIAL_NAME)
     const token = vault.configured ? await this.readStoredToken() : null
     return YouTubeAuthorizationStatusSchema.parse({
-      available: vault.available && Boolean(this.config.youtubeClientId),
+      available: vault.available && Boolean(await this.clientId()),
       configured: Boolean(token),
       expiresAt: token?.expiresAt ?? null,
       scopes: token?.scopes ?? [],
@@ -193,7 +194,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
       try {
         const response = await fetch('https://oauth2.googleapis.com/token', {
           body: await this.tokenRequest({
-            client_id: this.requireClientId(),
+            client_id: await this.requireClientId(),
             code,
             code_verifier: flow.codeVerifier,
             grant_type: 'authorization_code',
@@ -237,7 +238,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
   private async refresh(stored: z.infer<typeof StoredTokenSchema>) {
     const response = await fetch('https://oauth2.googleapis.com/token', {
       body: await this.tokenRequest({
-        client_id: this.requireClientId(),
+        client_id: await this.requireClientId(),
         grant_type: 'refresh_token',
         refresh_token: stored.refreshToken,
       }),
@@ -260,14 +261,30 @@ export class YouTubeAuthService implements OnModuleDestroy {
     return refreshed
   }
 
-  private requireClientId(): string {
-    if (!this.config.youtubeClientId)
+  private async clientId(): Promise<string | null> {
+    try {
+      return (
+        (await this.credentials.read(CLIENT_ID_CREDENTIAL_NAME))?.trim() ||
+        this.config.youtubeClientId
+      )
+    } catch {
+      return this.config.youtubeClientId
+    }
+  }
+
+  public getClientId(): Promise<string | null> {
+    return this.clientId()
+  }
+
+  private async requireClientId(): Promise<string> {
+    const clientId = await this.clientId()
+    if (!clientId)
       throw new ApiApplicationError(
         'INTEGRATION_CLIENT_NOT_CONFIGURED',
         'The StreamKit YouTube Client ID is not configured',
         503,
       )
-    return this.config.youtubeClientId
+    return clientId
   }
 
   private async tokenRequest(parameters: Record<string, string>): Promise<URLSearchParams> {

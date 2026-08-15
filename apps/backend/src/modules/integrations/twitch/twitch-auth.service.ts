@@ -25,6 +25,7 @@ import {
 import { IntegrationRepository } from '../integration.repository'
 
 const CREDENTIAL_NAME = 'twitch.oauth'
+const CLIENT_ID_CREDENTIAL_NAME = 'twitch.client-id'
 const TWITCH_SCOPES = [
   'channel:manage:broadcast',
   'channel:manage:moderators',
@@ -77,8 +78,10 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
   ) {}
 
   public onApplicationBootstrap(): void {
-    if (!this.config.twitchClientId) return
-    void this.validateStoredAuthorization()
+    void this.clientId().then((clientId) => {
+      if (!clientId) return
+      void this.validateStoredAuthorization()
+    })
     this.validationTimer = setInterval(
       () => void this.validateStoredAuthorization(),
       60 * 60 * 1_000,
@@ -91,7 +94,7 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
   }
 
   public async begin() {
-    const clientId = this.requireClientId()
+    const clientId = await this.requireClientId()
     const response = await fetch('https://id.twitch.tv/oauth2/device', {
       body: new URLSearchParams({ client_id: clientId, scopes: TWITCH_SCOPES.join(' ') }),
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -152,7 +155,7 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
     }
     const response = await fetch('https://id.twitch.tv/oauth2/token', {
       body: new URLSearchParams({
-        client_id: this.requireClientId(),
+        client_id: await this.requireClientId(),
         device_code: pending.device_code,
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
         scope: TWITCH_SCOPES.join(' '),
@@ -214,7 +217,7 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
     const vault = await this.credentials.status(CREDENTIAL_NAME)
     const token = vault.configured ? await this.readStoredToken() : null
     return TwitchAuthorizationStatusSchema.parse({
-      available: vault.available && Boolean(this.config.twitchClientId),
+      available: vault.available && Boolean(await this.clientId()),
       configured: Boolean(token),
       expiresAt: token?.expiresAt ?? null,
       login: token?.login ?? null,
@@ -233,14 +236,30 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
     }
   }
 
-  private requireClientId(): string {
-    if (!this.config.twitchClientId)
+  private async clientId(): Promise<string | null> {
+    try {
+      return (
+        (await this.credentials.read(CLIENT_ID_CREDENTIAL_NAME))?.trim() ||
+        this.config.twitchClientId
+      )
+    } catch {
+      return this.config.twitchClientId
+    }
+  }
+
+  public getClientId(): Promise<string | null> {
+    return this.clientId()
+  }
+
+  private async requireClientId(): Promise<string> {
+    const clientId = await this.clientId()
+    if (!clientId)
       throw new ApiApplicationError(
         'INTEGRATION_CLIENT_NOT_CONFIGURED',
         'The StreamKit Twitch Client ID is not configured',
         503,
       )
-    return this.config.twitchClientId
+    return clientId
   }
 
   private async validate(accessToken: string) {
@@ -255,7 +274,7 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
   private async refresh(stored: z.infer<typeof StoredTokenSchema>) {
     const response = await fetch('https://id.twitch.tv/oauth2/token', {
       body: new URLSearchParams({
-        client_id: this.requireClientId(),
+        client_id: await this.requireClientId(),
         grant_type: 'refresh_token',
         refresh_token: stored.refreshToken,
       }),
