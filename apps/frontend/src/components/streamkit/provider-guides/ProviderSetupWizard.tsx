@@ -92,7 +92,7 @@ export function ProviderSetupWizard({
               <img
                 src={guide.steps[step]!.imageUrl}
                 alt=""
-                className="mt-4 max-h-[270px] w-full rounded-md border border-border object-contain object-left-top"
+                className="mt-4 block h-auto w-full rounded-md border border-border"
               />
             )}
             {guide.steps[step]?.actionUrl && (
