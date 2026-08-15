@@ -92,6 +92,9 @@ importers:
       class-validator:
         specifier: 0.14.2
         version: 0.14.2
+      cloudflared:
+        specifier: 0.7.3
+        version: 0.7.3
       drizzle-orm:
         specifier: 0.45.2
         version: 0.45.2(@types/better-sqlite3@9.6.0)(better-sqlite3@12.11.1)
@@ -3157,6 +3160,10 @@ packages:
 
   clone-response@1.0.3:
     resolution: {integrity: sha512-ROoL94jJH2dUVML2Y/5PEDNaSHgeOdSDicUyS7izcF63G6sTc/FTjLub4b8Il9S8S0beOfYt0TaA5qvFK+w0wA==}
+
+  cloudflared@0.7.3:
+    resolution: {integrity: sha512-dR4QMS4PbD287QqOV/vAoE1BcQCXphLOVrN9vjNUgkLrPDA5qxn9Dz0VId0P7/Czj4Mxu3hoLgbrVx5OtOWr5Q==}
+    hasBin: true
 
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
@@ -8790,6 +8797,8 @@ snapshots:
   clone-response@1.0.3:
     dependencies:
       mimic-response: 1.0.1
+
+  cloudflared@0.7.3: {}
 
   clsx@2.1.1: {}
 

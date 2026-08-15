@@ -342,4 +342,28 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
       CREATE INDEX todo_templates_workspace_index ON todo_templates(workspace_id, updated_at);
     `,
   },
+  {
+    destructive: false,
+    name: 'optional_external_event_queue',
+    version: 17,
+    sql: `
+      CREATE TABLE external_event_queue (
+        id TEXT PRIMARY KEY NOT NULL,
+        provider TEXT NOT NULL,
+        event_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        occurred_at TEXT NOT NULL,
+        received_at TEXT NOT NULL,
+        status TEXT NOT NULL,
+        attempt_count INTEGER NOT NULL DEFAULT 0,
+        next_attempt_at TEXT,
+        processed_at TEXT,
+        last_error_code TEXT,
+        UNIQUE(provider, event_id)
+      );
+      CREATE INDEX external_event_queue_ready_index
+        ON external_event_queue(status, next_attempt_at, received_at);
+    `,
+  },
 ]

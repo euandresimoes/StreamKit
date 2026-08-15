@@ -16,11 +16,13 @@ import {
   type StreamKitLogger,
 } from '../infrastructure/logging/streamkit-logger'
 import type { IntegrationRuntimeConfig } from '../modules/integrations/integration-runtime.config'
+import { ExternalTransportService } from '../modules/integrations/external-events/external-transport.service'
 
 export type StartLocalBackendOptions = {
   allowedOrigins?: readonly string[]
   authenticationToken: string
   backupDirectory?: string
+  cloudflaredBinaryPath?: string
   databasePath: string
   enableDocumentation?: boolean
   secureCredentialRepository?: SecureCredentialRepository
@@ -52,6 +54,7 @@ export async function startLocalBackend(
       options.secureCredentialRepository,
       logger,
       options.integrationConfig,
+      options.cloudflaredBinaryPath,
     ),
     adapter,
     {
@@ -102,6 +105,7 @@ export async function startLocalBackend(
     environment: process.env.NODE_ENV ?? 'development',
   })
   const address = app.getHttpServer().address() as AddressInfo
+  app.get(ExternalTransportService).setLocalBaseUrl(`http://127.0.0.1:${address.port}`)
 
   return {
     baseUrl: `http://127.0.0.1:${address.port}`,

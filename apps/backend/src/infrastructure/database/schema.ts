@@ -115,6 +115,25 @@ export const integrationEvents = sqliteTable(
   (table) => [unique().on(table.provider, table.externalEventId)],
 )
 
+export const externalEventQueue = sqliteTable(
+  'external_event_queue',
+  {
+    attemptCount: integer('attempt_count').notNull().default(0),
+    eventId: text('event_id').notNull(),
+    eventType: text('event_type').notNull(),
+    id: text('id').primaryKey(),
+    lastErrorCode: text('last_error_code'),
+    nextAttemptAt: text('next_attempt_at'),
+    payloadJson: text('payload_json').notNull(),
+    processedAt: text('processed_at'),
+    provider: text('provider').notNull(),
+    receivedAt: text('received_at').notNull(),
+    status: text('status').notNull(),
+    timestamp: text('occurred_at').notNull(),
+  },
+  (table) => [unique().on(table.provider, table.eventId)],
+)
+
 export const tournaments = sqliteTable('tournaments', {
   bracketSize: integer('bracket_size').notNull(),
   createdAt: text('created_at').notNull(),

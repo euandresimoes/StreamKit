@@ -15,6 +15,7 @@ import { todoWorkspaces } from '../src/infrastructure/database/schema'
 const expectedTables = [
   'app_settings',
   'chat_message_buffer',
+  'external_event_queue',
   'giveaway_capture_rules',
   'giveaway_participants',
   'giveaway_round_entries',
@@ -50,6 +51,7 @@ describe('SQLite infrastructure', () => {
         'chat_message_buffer_retention_index',
         'giveaway_capture_rules_active_index',
         'integration_events_identity_index',
+        'external_event_queue_ready_index',
         'tournament_capture_rules_active_index',
       ]),
     )
@@ -96,7 +98,7 @@ describe('SQLite infrastructure', () => {
           {
             destructive: false,
             name: 'broken',
-            sql: 'THIS IS INVALID SQL;',
+            sql: 'ALTER TABLE missing_table ADD COLUMN value TEXT;',
             version: 99,
           },
         ],

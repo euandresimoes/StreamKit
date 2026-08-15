@@ -1,4 +1,5 @@
 import type {
+  ExternalTransportSnapshot,
   IntegrationConnection,
   KickIntegrationSupport,
   SaveIntegrationConnectionRequest,
@@ -21,17 +22,25 @@ export function useIntegrations(active: boolean) {
   const [youtubeAuth, setYouTubeAuth] = useState<YouTubeAuthorizationStatus | null>(null);
   const [youtubeBroadcasts, setYouTubeBroadcasts] = useState<YouTubeLiveBroadcast[]>([]);
   const [kickSupport, setKickSupport] = useState<KickIntegrationSupport | null>(null);
+  const [externalTransport, setExternalTransport] = useState<ExternalTransportSnapshot | null>(
+    null,
+  );
   const load = useCallback(async () => {
     try {
       setError(null);
-      const [nextConnections, nextTwitchAuth, nextYouTubeAuth, nextKickSupport] = await Promise.all(
-        [
-          integrationApi.listConnections(),
-          integrationApi.twitchAuthStatus(),
-          integrationApi.youtubeAuthStatus(),
-          integrationApi.kickSupport(),
-        ],
-      );
+      const [
+        nextConnections,
+        nextTwitchAuth,
+        nextYouTubeAuth,
+        nextKickSupport,
+        nextExternalTransport,
+      ] = await Promise.all([
+        integrationApi.listConnections(),
+        integrationApi.twitchAuthStatus(),
+        integrationApi.youtubeAuthStatus(),
+        integrationApi.kickSupport(),
+        integrationApi.externalTransportStatus(),
+      ]);
       setConnections(nextConnections);
       setTwitchAuth(nextTwitchAuth);
       setYouTubeAuth(nextYouTubeAuth);
@@ -39,6 +48,7 @@ export function useIntegrations(active: boolean) {
         nextYouTubeAuth.configured ? await integrationApi.listYouTubeBroadcasts() : [],
       );
       setKickSupport(nextKickSupport);
+      setExternalTransport(nextExternalTransport);
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Não foi possível carregar as integrações.",
@@ -69,6 +79,7 @@ export function useIntegrations(active: boolean) {
     youtubeAuth,
     youtubeBroadcasts,
     kickSupport,
+    externalTransport,
     connectTwitch: async () => {
       setBusy(true);
       setError(null);

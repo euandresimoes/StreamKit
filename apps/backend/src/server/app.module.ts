@@ -59,6 +59,12 @@ import { YouTubeAuthService } from '../modules/integrations/youtube/youtube-auth
 import { YouTubeBroadcastService } from '../modules/integrations/youtube/youtube-broadcast.service'
 import { YouTubeChatAdapter } from '../modules/integrations/youtube/youtube-chat.adapter'
 import { YouTubeController } from '../modules/integrations/youtube/youtube.controller'
+import { ExternalEventController } from '../modules/integrations/external-events/external-event.controller'
+import { ExternalEventBus } from '../modules/integrations/external-events/external-event.bus'
+import { ExternalEventQueueRepository } from '../modules/integrations/external-events/external-event-queue.repository'
+import { ExternalEventService } from '../modules/integrations/external-events/external-event.service'
+import { CloudflareQuickTunnelAdapter } from '../modules/integrations/external-events/external-tunnel.adapter'
+import { ExternalTransportService } from '../modules/integrations/external-events/external-transport.service'
 
 @Module({})
 export class AppModule {
@@ -67,6 +73,7 @@ export class AppModule {
     secureCredentials: SecureCredentialRepository = new UnavailableSecureCredentialRepository(),
     logger: StreamKitLogger = new SilentStreamKitLogger(),
     integrationConfig: IntegrationRuntimeConfig = DEFAULT_INTEGRATION_RUNTIME_CONFIG,
+    cloudflaredBinaryPath?: string,
   ): DynamicModule {
     return {
       controllers: [
@@ -75,6 +82,7 @@ export class AppModule {
         GiveawayController,
         HealthController,
         IntegrationController,
+        ExternalEventController,
         KickController,
         TwitchAuthController,
         YouTubeController,
@@ -100,6 +108,15 @@ export class AppModule {
         ChatSimulationService,
         IntegrationConnectionManager,
         IntegrationEventBus,
+        ExternalEventBus,
+        ExternalEventQueueRepository,
+        ExternalEventService,
+        ExternalTransportService,
+        {
+          provide: CloudflareQuickTunnelAdapter,
+          useFactory: () => new CloudflareQuickTunnelAdapter(cloudflaredBinaryPath),
+        },
+        { provide: 'EXTERNAL_TUNNEL_ADAPTER', useExisting: CloudflareQuickTunnelAdapter },
         IntegrationRepository,
         IntegrationService,
         LiveControlService,

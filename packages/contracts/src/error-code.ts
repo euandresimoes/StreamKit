@@ -5,6 +5,8 @@ export const ErrorCodeSchema = z.enum([
   'DATABASE_INCOMPATIBLE',
   'DATABASE_MIGRATION_FAILED',
   'DATABASE_RESTORE_FAILED',
+  'EXTERNAL_EVENT_HANDLER_FAILED',
+  'EXTERNAL_TUNNEL_UNAVAILABLE',
   'HTTP_400',
   'HTTP_401',
   'HTTP_404',
@@ -40,6 +42,8 @@ export const ErrorCodeSchema = z.enum([
   'TOURNAMENT_NOT_FOUND',
   'TOURNAMENT_PARTICIPANT_NOT_FOUND',
   'VALIDATION_FAILED',
+  'UNAUTHORIZED',
+  'RATE_LIMITED',
 ])
 
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>

@@ -203,6 +203,10 @@ async function bootstrap(): Promise<void> {
       : {}),
     authenticationToken: token,
     backupDirectory: directories.backups,
+    cloudflaredBinaryPath: join(
+      directories.data,
+      process.platform === 'win32' ? 'cloudflared.exe' : 'cloudflared',
+    ),
     databasePath: directories.database,
     enableDocumentation:
       !app.isPackaged || process.env.STREAMKIT_DEBUG === 'true' || process.argv.includes('--debug'),

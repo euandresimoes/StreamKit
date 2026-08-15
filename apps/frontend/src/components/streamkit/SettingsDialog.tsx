@@ -181,6 +181,31 @@ export function SettingsDialog({
                   Cadastre canais que poderão fornecer participantes para sorteios e torneios.
                 </p>
 
+                <div className="mt-4 rounded-2xl border border-border bg-surface-2/40 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 items-center justify-center rounded-xl bg-primary/15">
+                      <Plug className="size-5 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold">Transporte externo opcional</p>
+                      <p className="text-[11.5px] text-muted-foreground">
+                        Ativado apenas quando uma integração precisar receber eventos externos.
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-medium capitalize text-muted-foreground">
+                      {integrations.externalTransport?.state ?? "indisponível"}
+                    </span>
+                  </div>
+                  {integrations.externalTransport && (
+                    <p className="mt-2 text-[10.5px] text-muted-foreground">
+                      {integrations.externalTransport.mode === "tunnel"
+                        ? "Túnel automático protegido e temporário"
+                        : "Nenhum endpoint externo ativo"}
+                      {` · ${integrations.externalTransport.endpointCount} endpoint(s)`}
+                    </p>
+                  )}
+                </div>
+
                 <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-surface-2/60 p-4">
                   <div className="flex size-9 items-center justify-center rounded-xl bg-[#9146ff]/15">
                     <BaseBrandIcon provider="twitch" className="size-5" />

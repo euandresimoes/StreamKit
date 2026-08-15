@@ -1,5 +1,6 @@
 import {
   ChatSimulationStatusSchema,
+  ExternalTransportSnapshotSchema,
   FocusedChatThreadSchema,
   IntegrationConnectionSchema,
   KickIntegrationSupportSchema,
@@ -16,6 +17,10 @@ import {
 import { apiClient } from "@/infrastructure/api-client";
 
 export const integrationApi = {
+  externalTransportStatus: () =>
+    apiClient.request("/api/v1/external-events/transport", {
+      schema: ExternalTransportSnapshotSchema,
+    }),
   focusedChat: (target: "giveaways" | "tournaments", id: string) =>
     apiClient.request(`/api/v1/integrations/focused-chat/${target}/${id}`, {
       schema: FocusedChatThreadSchema,

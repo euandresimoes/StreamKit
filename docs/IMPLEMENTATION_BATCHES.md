@@ -773,6 +773,11 @@ StreamKit, sem expor o restante da API local.
 fila de eventos, não deixar uma rota pública permanente e não usar polling como substituto universal de
 eventos push. Providers que já oferecem WebSocket/streaming continuam usando seus adapters atuais.
 
+> **Status:** infraestrutura base implementada: contrato, estados, fila SQLite idempotente com retry e
+> dead letter, ingress local autenticado, Quick Tunnel automático sob demanda, diagnóstico no frontend
+> e testes de migração, deduplicação e isolamento. Assinaturas e replay específicos ficam nos adapters
+> de LivePix/Kick das próximas batches.
+
 ### 26.1 Contrato e ciclo de vida do transporte
 
 - [ ] Criar contrato compartilhado `InboundEventTransport` com start, stop, status, health e callbacks.
