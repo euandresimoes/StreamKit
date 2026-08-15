@@ -4,6 +4,13 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 
 const optionalNestModule = resolve(__dirname, 'src/main/optional-nest-module.ts')
 
+// OAuth client IDs identify the desktop application and are safe to distribute.
+// Secrets and user tokens must never be compiled into the desktop bundle.
+const buildClientIds = {
+  twitch: process.env.STREAMKIT_TWITCH_CLIENT_ID?.trim() ?? '',
+  youtube: process.env.STREAMKIT_YOUTUBE_CLIENT_ID?.trim() ?? '',
+}
+
 const bundledWorkspaceDependencies = [
   '@renderizer/core',
   '@renderizer/vue',
@@ -14,6 +21,10 @@ const bundledWorkspaceDependencies = [
 
 export default defineConfig({
   main: {
+    define: {
+      'process.env.STREAMKIT_TWITCH_CLIENT_ID': JSON.stringify(buildClientIds.twitch),
+      'process.env.STREAMKIT_YOUTUBE_CLIENT_ID': JSON.stringify(buildClientIds.youtube),
+    },
     build: {
       rollupOptions: {
         input: resolve(__dirname, 'src/main/index.ts'),
