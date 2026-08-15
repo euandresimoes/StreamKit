@@ -28,6 +28,9 @@ export class LivePixPaymentProvider
   private monitorTimer: NodeJS.Timeout | null = null
   private stopped = false
   private retryAttempt = 0
+  private connectPromise: Promise<
+    Awaited<ReturnType<LivePixPaymentProvider['connectInternal']>>
+  > | null = null
 
   public constructor(
     @Inject(ExternalEventBus) private readonly events: ExternalEventBus,
@@ -64,7 +67,15 @@ export class LivePixPaymentProvider
     })
   }
 
-  public async connect() {
+  public connect() {
+    if (this.connectPromise) return this.connectPromise
+    this.connectPromise = this.connectInternal().finally(() => {
+      this.connectPromise = null
+    })
+    return this.connectPromise
+  }
+
+  private async connectInternal() {
     this.stopped = false
     const current = await this.repository.connection()
     await this.repository.saveConnection({
@@ -112,7 +123,9 @@ export class LivePixPaymentProvider
             : 'degraded',
         webhookUrl: current?.webhookUrl ?? null,
       })
-      this.scheduleRetry()
+      this.scheduleRetry(
+        cause instanceof ApiApplicationError && cause.code === 'RATE_LIMITED' ? 60_000 : 5_000,
+      )
       throw cause
     }
   }
@@ -186,7 +199,8 @@ export class LivePixPaymentProvider
 
   private scheduleRetry(delay = 5_000): void {
     if (this.stopped || this.retryTimer) return
-    const backoff = delay === 0 ? 0 : Math.min(300_000, 5_000 * 2 ** this.retryAttempt++)
+    const backoff =
+      delay === 0 ? 0 : Math.max(delay, Math.min(300_000, 5_000 * 2 ** this.retryAttempt++))
     const jitter = backoff === 0 ? 0 : Math.floor(Math.random() * Math.max(1_000, backoff * 0.2))
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null
