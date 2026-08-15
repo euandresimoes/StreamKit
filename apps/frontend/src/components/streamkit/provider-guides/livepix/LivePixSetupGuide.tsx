@@ -4,34 +4,44 @@ export const livePixSetupGuide: ProviderGuide = {
   provider: "livepix",
   title: "Connect LivePix",
   summary:
-    "Create an OAuth application and let StreamKit register the local webhook automatically.",
+    "The API documentation does not contain the application-creation button. Create the app from your logged-in LivePix dashboard first.",
   requirements: [
     "A LivePix account",
-    "A LivePix OAuth application",
-    "The application Client ID and Client Secret",
+    "Access to the account settings/dashboard",
+    "A LivePix API application with Client ID and Client Secret",
   ],
-  docsUrl: "https://docs.livepix.gg/",
+  docsUrl: "https://docs.livepix.gg/api",
   steps: [
     {
-      title: "Create the application",
-      description: "Open the LivePix developer area and create an OAuth application for StreamKit.",
-      actionLabel: "Open LivePix documentation",
-      actionUrl: "https://docs.livepix.gg/",
+      title: "Open your LivePix dashboard",
+      description:
+        "Do not look for the create button on docs.livepix.gg. Open the main LivePix website, sign in to the account that receives the payments, and enter the dashboard.",
+      actionLabel: "Open LivePix",
+      actionUrl: "https://livepix.gg/",
     },
     {
-      title: "Copy the credentials",
+      title: "Open account settings",
       description:
-        "Copy the Client ID and Client Secret into the secure fields below. They are never sent to a StreamKit server.",
+        "Inside the dashboard, open Configurações and look for the API, Developer or Applications section. The exact label may vary with the current LivePix dashboard.",
+      actionLabel: "Open LivePix integrations help",
+      actionUrl: "https://livepix.gg/paraseucanal/integracoes",
     },
     {
-      title: "Allow the required scopes",
+      title: "Create or request an API application",
       description:
-        "StreamKit uses account:read, wallet:read and webhooks to receive confirmed payments and fetch their details.",
+        "Create an application for StreamKit if the option is available. If your account has no API, Developer or Applications option, contact LivePix support; the public documentation does not expose a separate self-service registration URL.",
+      actionLabel: "Open LivePix API documentation",
+      actionUrl: "https://docs.livepix.gg/api",
     },
     {
-      title: "Enable the webhook",
+      title: "Copy the credentials into StreamKit",
       description:
-        "StreamKit starts a temporary local tunnel only for this integration and registers the webhook automatically.",
+        "Copy the Client ID and Client Secret into the secure fields below. StreamKit requests account:read, wallet:read and webhooks, reuses tokens until expiration and never sends your credentials to a StreamKit server.",
+    },
+    {
+      title: "Let StreamKit configure the webhook",
+      description:
+        "After connecting, StreamKit starts the temporary local transport and registers the webhook automatically. The LivePix dashboard does not need a manually pasted callback URL.",
     },
   ],
 };
