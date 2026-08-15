@@ -353,8 +353,8 @@ export function TodoTab() {
   }, [cardsByColumn, dragItem, todo]);
 
   return (
-    <div className="flex h-full min-h-0 gap-4 p-4 md:p-5">
-      <aside className="glass-panel flex w-[248px] shrink-0 flex-col rounded-2xl p-3">
+    <div className="flex h-full min-h-0">
+      <aside className="flex w-[248px] shrink-0 flex-col border-r border-border p-3">
         <div className="mb-3 flex items-center justify-between px-2">
           <span className="text-[11px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
             {TODO_TEXT.workspaces}
@@ -363,7 +363,7 @@ export function TodoTab() {
             <Plus />
           </Button>
         </div>
-        <div className="mb-3 flex items-center gap-2 rounded-lg border border-border bg-background/30 px-2">
+        <div className="mb-3 flex items-center gap-2 bg-background/30 px-2">
           <Search className="size-3.5 text-muted-foreground" />
           <Input
             value={workspaceQuery}
@@ -439,11 +439,11 @@ export function TodoTab() {
         </Button>
       </aside>
 
-      <main className="glass-panel flex min-w-0 flex-1 flex-col rounded-2xl">
-        <header className="flex items-center gap-3 border-b border-border px-5 py-4">
+      <main className="flex min-w-0 flex-1 flex-col rounded-2xl">
+        <header className="flex items-center gap-3 border-b border-border px-5 py-2">
           <Popover>
             <PopoverTrigger asChild>
-              <button className="grid size-10 place-items-center rounded-xl border border-border bg-background/40 text-xl">
+              <button className="grid size-10 place-items-center rounded-xl bg-background/40 text-xl">
                 {todo.board?.workspace.icon ?? "📋"}
               </button>
             </PopoverTrigger>
@@ -982,7 +982,7 @@ function CardInspector({
   const [color, setColor] = useState(card.accentColor);
 
   return (
-    <aside className="glass-panel flex w-[320px] shrink-0 flex-col rounded-2xl border-l border-border p-4">
+    <aside className=" flex w-[320px] shrink-0 flex-col rounded-2xl border-l border-border p-4">
       <div className="mb-4 flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {TODO_TEXT.cardDetails}

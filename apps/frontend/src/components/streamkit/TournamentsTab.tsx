@@ -3,7 +3,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleCheck,
-  DoorOpen,
   GripVertical,
   MessageCircle,
   Play,
@@ -160,14 +159,14 @@ export function TournamentsTab() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {detail && (
-        <header className="flex flex-wrap items-center gap-2 px-4 py-3">
+        <header className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-border">
           <Button
             variant="ghost"
             size="icon-sm"
             aria-label="Leave tournament"
             onClick={() => void tournaments.select("")}
           >
-            <DoorOpen />
+            <ChevronLeft />
           </Button>
           <h2 className="text-lg font-semibold">{detail.tournament.name}</h2>
           <div className="ml-auto">
@@ -343,7 +342,7 @@ export function TournamentsTab() {
           onSelect={(id) => void tournaments.select(id)}
         />
       ) : (
-        <div className="flex min-h-0 flex-1 gap-2 px-2 pb-2">
+        <div className="flex min-h-0 flex-1">
           {detail.tournament.mode === "team" &&
             (() => {
               const assignedIds = new Set(detail.teamMembers.map((member) => member.participantId));
@@ -353,7 +352,7 @@ export function TournamentsTab() {
               return (
                 <aside
                   className={cn(
-                    "glass flex shrink-0 flex-col overflow-x-hidden rounded-3xl p-3 transition-[width] duration-300",
+                    "flex shrink-0 flex-col overflow-x-hidden rounded-3xl p-3 border-r border-border transition-[width] duration-300",
                     participantsExpanded ? "w-60" : "w-14",
                   )}
                 >
@@ -476,7 +475,7 @@ export function TournamentsTab() {
             })()}
           <aside
             className={cn(
-              "glass flex shrink-0 flex-col overflow-x-hidden rounded-3xl p-3 transition-[width] duration-300",
+              "flex shrink-0 flex-col border-r border-border overflow-x-hidden rounded-3xl p-3 transition-[width] duration-300",
               teamsExpanded ? (detail.tournament.mode === "team" ? "w-[380px]" : "w-72") : "w-14",
             )}
           >
@@ -917,7 +916,7 @@ export function TournamentsTab() {
             )}
           </aside>
 
-          <div className="glass-panel min-w-0 flex-1 overflow-auto rounded-3xl p-5">
+          <div className="min-w-0 flex-1 overflow-auto rounded-3xl p-5">
             {!!bracketMatches.length && (
               <div
                 className="sticky top-0 z-20 mb-3 grid min-w-[720px] gap-8 border-b border-border pb-3"

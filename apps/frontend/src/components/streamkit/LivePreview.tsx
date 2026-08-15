@@ -8,7 +8,7 @@ export function LivePreview({ stream }: { stream: LiveStream | null }) {
   const { t } = useTranslation(undefined, { i18n });
   if (!stream)
     return (
-      <div className="flex h-full min-h-0 items-center justify-center border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+      <div className="flex h-full min-h-0 items-center justify-center border-border bg-card p-6 text-center text-sm text-muted-foreground">
         <p>{t("live.officialPreviewWaiting")}</p>
       </div>
     );

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Box,
-  DoorOpen,
+  ChevronLeft,
   Gift,
   ListPlus,
   MessageCircle,
@@ -114,16 +114,16 @@ export function GiveawaysTab() {
   const visibleParticipants = filteredParticipants.slice(0, MAX_VISIBLE_PARTICIPANTS);
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-auto px-2 pb-2">
+    <div className="flex h-full min-h-0 flex-col overflow-auto">
       {detail && (
-        <header className="flex flex-wrap items-center gap-2 py-3 px-4">
+        <header className="flex flex-wrap items-center gap-2 py-3 px-4 border-b border-border">
           <Button
             variant="ghost"
             size="icon-sm"
             aria-label="Leave giveaway"
             onClick={() => void giveaways.select("")}
           >
-            <DoorOpen />
+            <ChevronLeft />
           </Button>
           <h2 className="text-lg font-semibold">{detail.giveaway.name}</h2>
           <div className="ml-auto flex items-center gap-1.5">
@@ -157,8 +157,8 @@ export function GiveawaysTab() {
           onSelect={(id) => void giveaways.select(id)}
         />
       ) : (
-        <div className="grid min-h-0 flex-1 gap-2 xl:grid-cols-[300px_minmax(400px,1fr)_280px]">
-          <aside className="glass flex flex-col rounded-3xl p-4">
+        <div className="grid min-h-0 flex-1 xl:grid-cols-[300px_minmax(400px,1fr)_280px]">
+          <aside className="flex flex-col rounded-3xl p-4 border-r border-border">
             <div className="mb-3">
               <BaseSegmentedControl
                 ariaLabel="Giveaway type"
@@ -256,7 +256,7 @@ export function GiveawaysTab() {
             </div>
           </aside>
 
-          <section className="glass-panel min-h-[430px] rounded-3xl p-3 text-center">
+          <section className="min-h-[430px] rounded-3xl p-3 text-center">
             <GiveawayStage
               disabled={
                 giveaways.busy ||
@@ -273,7 +273,7 @@ export function GiveawaysTab() {
             />
           </section>
 
-          <aside className="glass flex min-h-0 flex-col rounded-3xl p-4">
+          <aside className="flex min-h-0 flex-col rounded-3xl p-4 border-l border-border">
             <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl border border-border bg-card/60 p-4 text-center">
               <Trophy
                 className={
