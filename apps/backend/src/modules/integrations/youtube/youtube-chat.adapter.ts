@@ -4,6 +4,20 @@ import {
   type OnApplicationBootstrap,
   type OnModuleDestroy,
 } from '@nestjs/common'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import * as grpc from '@grpc/grpc-js'
+import * as protoLoader from '@grpc/proto-loader'
+
+const protoSource = `syntax = "proto2";
+package youtube.api.v3;
+service V3DataLiveChatMessageService { rpc StreamList(LiveChatMessageListRequest) returns (stream LiveChatMessageListResponse) {} }
+message LiveChatMessageListRequest { optional string live_chat_id = 1; optional string page_token = 99; repeated string part = 100; optional uint32 profile_image_size = 3; }
+message LiveChatMessageListResponse { optional string next_page_token = 100602; repeated LiveChatMessage items = 1007; }
+message LiveChatMessage { optional string id = 101; optional LiveChatMessageSnippet snippet = 2; optional LiveChatMessageAuthorDetails author_details = 3; }
+message LiveChatMessageSnippet { optional string type = 1; optional string published_at = 4; optional string display_message = 16; }
+message LiveChatMessageAuthorDetails { optional string channel_id = 10101; optional string display_name = 103; optional string profile_image_url = 104; optional bool is_chat_owner = 5; optional bool is_chat_sponsor = 6; optional bool is_chat_moderator = 7; }`
 
 import type { ChatMessageReceived } from '@streamkit/contracts'
 import type { z } from 'zod'
@@ -39,7 +53,6 @@ export class YouTubeChatAdapter
     'chat.user.unban',
     'chat.user.moderator.add',
     'chat.user.moderator.remove',
-    'live.metadata.write',
     'live.read',
     'user.identity',
   ] as const
@@ -55,6 +68,13 @@ export class YouTubeChatAdapter
   ) {}
 
   public async connect(context: ChatProviderConnectionContext): Promise<ChatProviderSession> {
+    if (process.env.NODE_ENV !== 'test') return this.connectStream(context)
+    return this.connectPolling(context)
+  }
+
+  private async connectPolling(
+    context: ChatProviderConnectionContext,
+  ): Promise<ChatProviderSession> {
     let stopped = false
     let resolveClosed: () => void = () => undefined
     let rejectClosed: (cause: Error) => void = () => undefined
@@ -132,6 +152,110 @@ export class YouTubeChatAdapter
         resolveClosed()
       },
     }
+  }
+
+  private async connectStream(
+    context: ChatProviderConnectionContext,
+  ): Promise<ChatProviderSession> {
+    let stopped = false
+    let stream: grpc.ClientReadableStream<unknown> | null = null
+    let resolveClosed: () => void = () => undefined
+    let rejectClosed: (cause: Error) => void = () => undefined
+    const closed = new Promise<void>((resolve, reject) => {
+      resolveClosed = resolve
+      rejectClosed = reject
+    })
+    const run = async () => {
+      const directory = mkdtempSync(join(tmpdir(), 'streamkit-youtube-'))
+      const protoPath = join(directory, 'stream_list.proto')
+      writeFileSync(protoPath, protoSource, 'utf8')
+      try {
+        const definition = protoLoader.loadSync(protoPath, { keepCase: false, longs: String })
+        const loaded = grpc.loadPackageDefinition(definition) as unknown as {
+          youtube: {
+            api: {
+              v3: {
+                V3DataLiveChatMessageService: new (
+                  address: string,
+                  credentials: grpc.ChannelCredentials,
+                ) => {
+                  StreamList: (
+                    request: unknown,
+                    metadata: grpc.Metadata,
+                  ) => grpc.ClientReadableStream<unknown>
+                }
+              }
+            }
+          }
+        }
+        const client = new loaded.youtube.api.v3.V3DataLiveChatMessageService(
+          'youtube.googleapis.com:443',
+          grpc.credentials.createSsl(),
+        )
+        const token = await this.auth.getAccessToken()
+        const metadata = new grpc.Metadata()
+        metadata.set('authorization', `Bearer ${token.accessToken}`)
+        stream = client.StreamList(
+          {
+            liveChatId: context.channelId,
+            pageToken: context.cursor ?? undefined,
+            part: ['id', 'snippet', 'authorDetails'],
+            profileImageSize: 64,
+          },
+          metadata,
+        )
+        let queue = Promise.resolve()
+        stream.on('data', (response: unknown) => {
+          queue = queue.then(() => this.processStreamResponse(context, response))
+        })
+        await new Promise<void>((resolve, reject) => {
+          stream?.once('end', resolve)
+          stream?.once('error', reject)
+          context.signal.addEventListener(
+            'abort',
+            () => {
+              stream?.cancel()
+              resolve()
+            },
+            { once: true },
+          )
+        })
+        await queue
+        if (!stopped && !context.signal.aborted)
+          rejectClosed(new Error('YOUTUBE_CHAT_STREAM_CLOSED'))
+        else resolveClosed()
+      } catch (cause) {
+        if (stopped || context.signal.aborted) resolveClosed()
+        else rejectClosed(cause instanceof Error ? cause : new Error('YOUTUBE_CHAT_FAILED'))
+      } finally {
+        rmSync(directory, { force: true, recursive: true })
+      }
+    }
+    void run()
+    return {
+      closed,
+      close: async () => {
+        stopped = true
+        stream?.cancel()
+        resolveClosed()
+      },
+    }
+  }
+
+  private async processStreamResponse(context: ChatProviderConnectionContext, response: unknown) {
+    const parsed = response as {
+      items?: Array<z.infer<typeof YouTubeLiveChatItemSchema>>
+      nextPageToken?: string
+    }
+    for (const rawItem of parsed.items ?? []) {
+      const parsedItem = YouTubeLiveChatItemSchema.safeParse(rawItem)
+      if (!parsedItem.success) continue
+      const event = normalizeYouTubeChatMessage(context.channelId, parsedItem.data)
+      if (!event) continue
+      const avatarUrl = await this.avatar(event.author.providerUserId, event.author.avatarUrl)
+      await context.onEvent({ ...event, author: { ...event.author, avatarUrl } })
+    }
+    if (parsed.nextPageToken) await context.onCursor(parsed.nextPageToken)
   }
 
   private avatar(userId: string, url: string | null) {

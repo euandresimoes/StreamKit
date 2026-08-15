@@ -21,6 +21,8 @@
     "typecheck": "tsc -p tsconfig.typecheck.json --noEmit"
   },
   "dependencies": {
+    "@grpc/grpc-js": "1.14.0",
+    "@grpc/proto-loader": "0.8.0",
     "@nestjs/common": "11.1.29",
     "@nestjs/core": "11.1.29",
     "@nestjs/platform-fastify": "11.1.29",

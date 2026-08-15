@@ -1,7 +1,6 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Put } from '@nestjs/common'
 import {
   ChatModerationRequestSchema,
-  LiveMetadataUpdateSchema,
   SaveIntegrationConnectionRequestSchema,
   SendChatMessageRequestSchema,
   StartChatSimulationRequestSchema,
@@ -44,13 +43,6 @@ export class IntegrationController {
     @Body() body: unknown,
   ) {
     return this.liveControl.moderateChat(id, ChatModerationRequestSchema.parse(body))
-  }
-
-  @Put('live-control/:id/metadata') public updateLiveMetadata(
-    @Param('id') id: string,
-    @Body() body: unknown,
-  ) {
-    return this.liveControl.updateMetadata(id, LiveMetadataUpdateSchema.parse(body))
   }
 
   @Get('debug/simulation') public simulationStatus() {

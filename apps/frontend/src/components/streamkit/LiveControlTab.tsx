@@ -1,26 +1,11 @@
 import { RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { BaseDockPanel } from "@/components/base/BaseDockPanel";
 import { BaseResizablePanel } from "@/components/base/BaseResizablePanel";
 import { useLiveControl } from "@/modules/live-control/use-live-control";
 import { LivePlatformSelector } from "./LivePlatformSelector";
 import { LivePreview } from "./LivePreview";
 import { LiveChatPanel } from "./LiveChatPanel";
-import { LiveMetadataEditor } from "./LiveMetadataEditor";
-
-const EMPTY_METADATA = {
-  category: null,
-  description: null,
-  emotesEnabled: null,
-  followersOnly: null,
-  language: null,
-  slowMode: null,
-  subscribersOnly: null,
-  tags: [],
-  title: null,
-  visibility: null,
-};
 
 export function LiveControlTab() {
   const live = useLiveControl(true);
@@ -31,15 +16,6 @@ export function LiveControlTab() {
     if (!live.selectedId && selected) live.select(selected.connectionId);
   }, [live.selectedId, live.select, selected]);
 
-  const metrics = [
-    ["Status", selected?.state ?? "offline"],
-    ["Espectadores", selected?.viewerCount?.toLocaleString() ?? "—"],
-    [
-      "Duração",
-      selected?.durationSeconds ? `${Math.floor(selected.durationSeconds / 60)} min` : "—",
-    ],
-  ];
-
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
       <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-4 border-b border-border px-5 py-2">
@@ -49,12 +25,10 @@ export function LiveControlTab() {
           onSelect={live.select}
         />
         <div className="ml-auto flex items-center gap-2">
-          {metrics.map(([label, value]) => (
-            <div key={label} className="hidden min-w-20 border-l border-border pl-3 sm:block">
-              <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</p>
-              <p className="max-w-32 truncate text-xs font-semibold">{value}</p>
-            </div>
-          ))}
+          <div className="hidden border-l border-border pl-3 sm:block">
+            <p className="text-[9px] uppercase tracking-wide text-muted-foreground">Status</p>
+            <p className="text-xs font-semibold">{selected?.state ?? "offline"}</p>
+          </div>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -79,34 +53,6 @@ export function LiveControlTab() {
             <div className="min-h-0 min-w-0 flex-1">
               <LivePreview stream={selected} />
             </div>
-            <BaseResizablePanel
-              panelId="live-metadata"
-              mode="horizontal"
-              resize="top"
-              defaultSize={260}
-              minSize={180}
-              maxSize={520}
-              className="w-full shrink-0 border-t border-border bg-card"
-            >
-              <div className="flex h-full w-full min-w-0 overflow-hidden bg-card">
-                <BaseDockPanel
-                  panelId="live-metadata-dock"
-                  title="Metadados da live"
-                  defaultSize={600}
-                  minSize={420}
-                  maxSize={1000}
-                >
-                  <LiveMetadataEditor
-                    metadata={selected?.metadata ?? EMPTY_METADATA}
-                    controls={selected?.metadataControls ?? []}
-                    busy={live.busy}
-                    canEdit={Boolean(selected?.capabilities.includes("live.metadata.write"))}
-                    onSave={live.updateMetadata}
-                    showHeader={false}
-                  />
-                </BaseDockPanel>
-              </div>
-            </BaseResizablePanel>
           </div>
           <BaseResizablePanel
             panelId="live-chat"

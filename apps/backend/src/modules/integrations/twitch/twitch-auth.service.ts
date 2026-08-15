@@ -196,7 +196,6 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
         'chat.user.unban',
         'chat.user.moderator.add',
         'chat.user.moderator.remove',
-        'live.metadata.write',
         'live.read',
         'user.identity',
       ],

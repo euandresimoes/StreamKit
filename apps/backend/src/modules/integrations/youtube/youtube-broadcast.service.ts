@@ -10,17 +10,12 @@ import { IntegrationRepository } from '../integration.repository'
 import {
   YouTubeApiErrorResponseSchema,
   YouTubeBroadcastListResponseSchema,
-  YouTubeVideoLiveDetailsResponseSchema,
 } from './youtube-api.schemas'
 import { YouTubeAuthService } from './youtube-auth.service'
 
 @Injectable()
 export class YouTubeBroadcastService {
   private static readonly BROADCASTS_CACHE_TTL_MS = 30_000
-  private static readonly LIVE_DETAILS_CACHE_TTL_MS = 10_000
-  private static readonly VIDEO_METADATA_CACHE_TTL_MS = 30_000
-  private static readonly CATEGORY_CACHE_TTL_MS = 10 * 60_000
-
   private broadcastsCache: {
     expiresAt: number
     value: Awaited<ReturnType<YouTubeBroadcastService['listFromApi']>>
@@ -28,23 +23,6 @@ export class YouTubeBroadcastService {
   private broadcastsRequest: Promise<
     Awaited<ReturnType<YouTubeBroadcastService['listFromApi']>>
   > | null = null
-  private readonly liveDetailsCache = new Map<
-    string,
-    { expiresAt: number; value: { startedAt: string | null; viewerCount: number | null } }
-  >()
-  private readonly videoMetadataCache = new Map<
-    string,
-    {
-      expiresAt: number
-      value: Awaited<ReturnType<YouTubeBroadcastService['videoMetadataFromApi']>>
-    }
-  >()
-  private readonly categoryNameCache = new Map<string, { expiresAt: number; value: string }>()
-  private categoryListCache: {
-    expiresAt: number
-    value: Array<{ id: string; title: string }>
-  } | null = null
-
   public constructor(
     @Inject(YouTubeAuthService) private readonly auth: YouTubeAuthService,
     @Inject(IntegrationRepository) private readonly integrations: IntegrationRepository,
@@ -105,7 +83,6 @@ export class YouTubeBroadcastService {
         'chat.user.unban',
         'chat.user.moderator.add',
         'chat.user.moderator.remove',
-        'live.metadata.write',
         'live.read',
         'user.identity',
       ],
@@ -113,185 +90,6 @@ export class YouTubeBroadcastService {
       channelId: input.liveChatId,
       provider: 'youtube',
     })
-  }
-
-  public async updateTitle(videoId: string, title: string): Promise<void> {
-    const token = await this.auth.getAccessToken()
-    const readUrl = new URL('https://www.googleapis.com/youtube/v3/videos')
-    readUrl.search = new URLSearchParams({ id: videoId, part: 'snippet' }).toString()
-    const readResponse = await fetch(readUrl, {
-      headers: { authorization: `Bearer ${token.accessToken}` },
-    })
-    if (!readResponse.ok) throw await this.apiError(readResponse)
-    const payload = z
-      .object({ items: z.array(z.object({ snippet: z.record(z.string(), z.unknown()) })) })
-      .parse(await readResponse.json())
-    const snippet = payload.items[0]?.snippet
-    if (!snippet)
-      throw new ApiApplicationError(
-        'INTEGRATION_PROVIDER_ERROR',
-        'YouTube video metadata is unavailable',
-        503,
-      )
-    const response = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet', {
-      body: JSON.stringify({ id: videoId, snippet: { ...snippet, title } }),
-      headers: { authorization: `Bearer ${token.accessToken}`, 'content-type': 'application/json' },
-      method: 'PUT',
-    })
-    if (!response.ok) throw await this.apiError(response)
-    this.videoMetadataCache.delete(videoId)
-  }
-
-  public async updateMetadata(
-    videoId: string,
-    input: {
-      category?: string | null | undefined
-      description?: string | null | undefined
-      language?: string | null | undefined
-      title?: string | undefined
-    },
-  ): Promise<void> {
-    const token = await this.auth.getAccessToken()
-    const readUrl = new URL('https://www.googleapis.com/youtube/v3/videos')
-    readUrl.search = new URLSearchParams({ id: videoId, part: 'snippet' }).toString()
-    const readResponse = await fetch(readUrl, {
-      headers: { authorization: `Bearer ${token.accessToken}` },
-    })
-    if (!readResponse.ok) throw await this.apiError(readResponse)
-    const payload = z
-      .object({ items: z.array(z.object({ snippet: z.record(z.string(), z.unknown()) })) })
-      .parse(await readResponse.json())
-    const snippet = payload.items[0]?.snippet
-    if (!snippet)
-      throw new ApiApplicationError(
-        'INTEGRATION_PROVIDER_ERROR',
-        'YouTube video metadata is unavailable',
-        503,
-      )
-    const currentCategoryId = typeof snippet.categoryId === 'string' ? snippet.categoryId : null
-    const categoryId =
-      input.category && input.category !== currentCategoryId
-        ? await this.resolveCategoryId(input.category, currentCategoryId)
-        : currentCategoryId
-    const response = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet', {
-      body: JSON.stringify({
-        id: videoId,
-        snippet: {
-          ...snippet,
-          categoryId,
-          defaultLanguage:
-            input.language === undefined ? snippet.defaultLanguage : input.language || undefined,
-          description:
-            input.description === undefined ? snippet.description : (input.description ?? ''),
-          title: input.title ?? snippet.title,
-        },
-      }),
-      headers: { authorization: `Bearer ${token.accessToken}`, 'content-type': 'application/json' },
-      method: 'PUT',
-    })
-    if (!response.ok) throw await this.apiError(response)
-    this.videoMetadataCache.delete(videoId)
-  }
-
-  public async videoMetadata(videoId: string) {
-    const cached = this.videoMetadataCache.get(videoId)
-    if (cached && cached.expiresAt > Date.now()) return cached.value
-    const value = await this.videoMetadataFromApi(videoId)
-    this.videoMetadataCache.set(videoId, {
-      expiresAt: Date.now() + YouTubeBroadcastService.VIDEO_METADATA_CACHE_TTL_MS,
-      value,
-    })
-    return value
-  }
-
-  private async videoMetadataFromApi(videoId: string) {
-    const token = await this.auth.getAccessToken()
-    const url = new URL('https://www.googleapis.com/youtube/v3/videos')
-    url.search = new URLSearchParams({ id: videoId, part: 'snippet' }).toString()
-    const response = await fetch(url, { headers: { authorization: `Bearer ${token.accessToken}` } })
-    if (!response.ok) throw await this.apiError(response)
-    const payload = z
-      .object({
-        items: z.array(
-          z.object({
-            snippet: z.object({
-              categoryId: z.string().optional(),
-              defaultLanguage: z.string().optional(),
-              description: z.string().optional(),
-              title: z.string(),
-            }),
-          }),
-        ),
-      })
-      .parse(await response.json())
-    const snippet = payload.items[0]?.snippet
-    if (!snippet) return null
-    let category = snippet.categoryId ?? null
-    if (category) {
-      try {
-        category = await this.resolveCategoryName(category)
-      } catch {
-        // Category is optional; preserve the rest of the metadata if its lookup is unavailable.
-      }
-    }
-    return {
-      category,
-      description: snippet.description ?? null,
-      language: snippet.defaultLanguage ?? null,
-      title: snippet.title,
-    }
-  }
-
-  private async resolveCategoryId(value: string, fallback: string | null) {
-    if (/^\d+$/.test(value)) return value
-    const categories = await this.categoryList()
-    return (
-      categories.find((item) => item.title.toLowerCase() === value.toLowerCase())?.id ?? fallback
-    )
-  }
-
-  private async categoryList() {
-    if (this.categoryListCache && this.categoryListCache.expiresAt > Date.now())
-      return this.categoryListCache.value
-    const token = await this.auth.getAccessToken()
-    const url = new URL('https://www.googleapis.com/youtube/v3/videoCategories')
-    url.search = new URLSearchParams({
-      maxResults: '50',
-      part: 'snippet',
-      regionCode: 'BR',
-    }).toString()
-    const response = await fetch(url, { headers: { authorization: `Bearer ${token.accessToken}` } })
-    if (!response.ok) return []
-    const payload = z
-      .object({
-        items: z.array(z.object({ id: z.string(), snippet: z.object({ title: z.string() }) })),
-      })
-      .parse(await response.json())
-    const value = payload.items.map((item) => ({ id: item.id, title: item.snippet.title }))
-    this.categoryListCache = {
-      expiresAt: Date.now() + YouTubeBroadcastService.CATEGORY_CACHE_TTL_MS,
-      value,
-    }
-    return value
-  }
-
-  private async resolveCategoryName(categoryId: string): Promise<string> {
-    const cached = this.categoryNameCache.get(categoryId)
-    if (cached && cached.expiresAt > Date.now()) return cached.value
-    const token = await this.auth.getAccessToken()
-    const url = new URL('https://www.googleapis.com/youtube/v3/videoCategories')
-    url.search = new URLSearchParams({ id: categoryId, part: 'snippet' }).toString()
-    const response = await fetch(url, { headers: { authorization: `Bearer ${token.accessToken}` } })
-    if (!response.ok) return categoryId
-    const payload = z
-      .object({ items: z.array(z.object({ snippet: z.object({ title: z.string() }) })) })
-      .parse(await response.json())
-    const value = payload.items[0]?.snippet.title ?? categoryId
-    this.categoryNameCache.set(categoryId, {
-      expiresAt: Date.now() + YouTubeBroadcastService.CATEGORY_CACHE_TTL_MS,
-      value,
-    })
-    return value
   }
 
   public async deleteMessage(messageId: string): Promise<void> {
@@ -401,29 +199,6 @@ export class YouTubeBroadcastService {
       method: 'DELETE',
     })
     if (!response.ok) throw await this.apiError(response)
-  }
-
-  public async liveDetails(videoId: string) {
-    const cached = this.liveDetailsCache.get(videoId)
-    if (cached && cached.expiresAt > Date.now()) return cached.value
-    const token = await this.auth.getAccessToken()
-    const url = new URL('https://www.googleapis.com/youtube/v3/videos')
-    url.search = new URLSearchParams({ id: videoId, part: 'liveStreamingDetails' }).toString()
-    const response = await fetch(url, {
-      headers: { authorization: `Bearer ${token.accessToken}` },
-    })
-    if (!response.ok) throw await this.apiError(response)
-    const payload = YouTubeVideoLiveDetailsResponseSchema.parse(await response.json())
-    const details = payload.items[0]?.liveStreamingDetails
-    const value = {
-      startedAt: details?.actualStartTime ?? null,
-      viewerCount: details?.concurrentViewers ? Number(details.concurrentViewers) : null,
-    }
-    this.liveDetailsCache.set(videoId, {
-      expiresAt: Date.now() + YouTubeBroadcastService.LIVE_DETAILS_CACHE_TTL_MS,
-      value,
-    })
-    return value
   }
 
   private async apiError(response: Response): Promise<ApiApplicationError> {

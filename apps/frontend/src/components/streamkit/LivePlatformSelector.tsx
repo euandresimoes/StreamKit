@@ -23,11 +23,6 @@ export function LivePlatformSelector({
     <div className="flex min-w-0 items-center gap-3">
       <label className="flex min-w-0 items-center gap-2 text-xs font-medium">
         <span className="sr-only">Plataforma da transmissão</span>
-        <BaseBrandIcon
-          provider={
-            streams.find((stream) => stream.connectionId === selectedId)?.provider ?? "twitch"
-          }
-        />
         <Select value={selectedId ?? ""} onValueChange={onSelect}>
           <SelectTrigger aria-label="Plataforma da transmissão" className="max-w-72">
             <SelectValue placeholder="Selecionar live" />
@@ -38,7 +33,7 @@ export function LivePlatformSelector({
                 <span className="flex min-w-0 items-center gap-2">
                   <BaseBrandIcon provider={stream.provider} />
                   <span className="truncate">
-                    {brandName(stream.provider)} · {stream.title ?? stream.channelDisplayName}
+                    {brandName(stream.provider)} · {stream.channelDisplayName}
                   </span>
                   <span className="ml-auto text-[10px] text-muted-foreground">{stream.state}</span>
                 </span>

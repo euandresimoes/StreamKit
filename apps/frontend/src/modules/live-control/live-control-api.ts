@@ -2,8 +2,6 @@ import {
   type ChatModerationRequest,
   ChatModerationRequestSchema,
   FocusedChatThreadSchema,
-  type LiveMetadataUpdate,
-  LiveMetadataUpdateSchema,
   LiveStreamSchema,
 } from "@streamkit/contracts";
 
@@ -21,11 +19,5 @@ export const liveControlApi = {
       body: ChatModerationRequestSchema.parse(input),
       method: "POST",
       schema: ChatModerationRequestSchema.pick({ action: true, externalMessageId: true }),
-    }),
-  updateMetadata: (id: string, input: LiveMetadataUpdate) =>
-    apiClient.request(`/api/v1/integrations/live-control/${id}/metadata`, {
-      body: LiveMetadataUpdateSchema.parse(input),
-      method: "PUT",
-      schema: LiveStreamSchema,
     }),
 };
