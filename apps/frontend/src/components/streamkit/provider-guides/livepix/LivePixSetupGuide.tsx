@@ -18,11 +18,12 @@ export const livePixSetupGuide: ProviderGuide = {
         "Do not look for the create button on docs.livepix.gg. Open the main LivePix website, sign in to the account that receives the payments, and enter the dashboard.",
       actionLabel: "Open LivePix",
       actionUrl: "https://livepix.gg/",
+      imageUrl: "/assets/provider-guides/livepix/step-1.png",
     },
     {
       title: "Open account settings",
       description:
-        "Inside the dashboard, open Configurações and look for the API, Developer or Applications section. The exact label may vary with the current LivePix dashboard.",
+        "Inside the dashboard, open Settings, then API. Create a new application named StreamKit. If the form shows a notification URL/webhook field, leave it empty: StreamKit creates the temporary public URL and registers the webhook automatically after connecting.",
       actionLabel: "Open LivePix integrations help",
       actionUrl: "https://livepix.gg/paraseucanal/integracoes",
     },
