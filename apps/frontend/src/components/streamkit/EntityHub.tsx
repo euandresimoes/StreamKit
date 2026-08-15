@@ -34,12 +34,12 @@ export function EntityHub({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             className="h-9 pl-9"
-            placeholder={`Buscar ${label.toLowerCase()}`}
-            aria-label={`Buscar ${label.toLowerCase()}`}
+            placeholder={`Search ${label.toLowerCase()}`}
+            aria-label={`Search ${label.toLowerCase()}`}
           />
         </div>
         <Button size="sm" onClick={onCreate}>
-          <Plus /> Novo {label.toLowerCase()}
+          <Plus /> New {label.toLowerCase()}
         </Button>
       </header>
       <main className="min-h-0 flex-1 overflow-y-auto pt-6">
@@ -68,9 +68,7 @@ export function EntityHub({
           <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 text-muted-foreground">
             <Icon className="size-9" />
             <p className="text-sm">
-              {items.length
-                ? "Nenhum resultado encontrado."
-                : `Nenhum ${label.toLowerCase()} criado.`}
+              {items.length ? "No results found." : `No ${label.toLowerCase()} created.`}
             </p>
             <Button variant="secondary" size="sm" onClick={onCreate}>
               <Plus /> Criar primeiro

@@ -44,9 +44,9 @@ export function CreateWorkspaceDialog({ busy, onOpenChange, onSubmit, open }: Pr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-panel border-border-strong bg-popover/95 sm:rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Novo workspace</DialogTitle>
+          <DialogTitle>New workspace</DialogTitle>
           <DialogDescription>
-            Escolha um emoji e um nome. Tudo será salvo neste computador.
+            Choose an emoji and a name. Everything is saved on this computer.
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2">
@@ -71,7 +71,7 @@ export function CreateWorkspaceDialog({ busy, onOpenChange, onSubmit, open }: Pr
           <Input
             autoFocus
             value={name}
-            placeholder="Ex.: Filmes para assistir"
+            placeholder="e.g. Movies to watch"
             onChange={(event) => setName(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !pickerOpen) void submit();
@@ -80,10 +80,10 @@ export function CreateWorkspaceDialog({ busy, onOpenChange, onSubmit, open }: Pr
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancelar
+            Cancel
           </Button>
           <Button loading={busy} disabled={!name.trim()} onClick={() => void submit()}>
-            Criar workspace
+            Create workspace
           </Button>
         </DialogFooter>
       </DialogContent>

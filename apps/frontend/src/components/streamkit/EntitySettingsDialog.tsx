@@ -61,25 +61,25 @@ export function EntitySettingsDialog(props: Props) {
       <Dialog open={props.open} onOpenChange={props.onOpenChange}>
         <DialogContent className="glass-panel border-border-strong bg-popover/95">
           <DialogHeader>
-            <DialogTitle>Configurar {props.entityLabel}</DialogTitle>
-            <DialogDescription>Altere as informações ou exclua permanentemente.</DialogDescription>
+            <DialogTitle>Configure {props.entityLabel}</DialogTitle>
+            <DialogDescription>Edit the information or delete it permanently.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <Input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Nome"
+              placeholder="Name"
             />
             {props.description !== undefined && (
               <Textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="Descrição"
+                placeholder="Description"
               />
             )}
             {props.maxParticipants !== undefined && (
               <label className="space-y-1.5 text-xs font-medium">
-                <span>Máximo de participantes</span>
+                <span>Maximum participants</span>
                 <Input
                   type="number"
                   min={1}
@@ -91,13 +91,13 @@ export function EntitySettingsDialog(props: Props) {
             )}
             {mode && (
               <BaseSegmentedControl
-                ariaLabel="Tipo de sorteio"
+                ariaLabel="Giveaway type"
                 value={mode}
                 onChange={(value) => setMode(value as "wheel" | "case-opening")}
                 options={
                   [
-                    { label: "Roleta", value: "wheel" },
-                    { label: "Caixa", value: "case-opening" },
+                    { label: "Wheel", value: "wheel" },
+                    { label: "Box", value: "case-opening" },
                   ] as const
                 }
               />
@@ -105,18 +105,18 @@ export function EntitySettingsDialog(props: Props) {
           </div>
           <DialogFooter className="sm:justify-between">
             <Button variant="destructive" onClick={() => setConfirming(true)}>
-              <Trash2 /> Excluir
+              <Trash2 /> Delete
             </Button>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => props.onOpenChange(false)}>
-                Cancelar
+                Cancel
               </Button>
               <Button
                 loading={props.busy}
                 disabled={!name.trim() || maxParticipants < 1 || maxParticipants > 10000}
                 onClick={() => void save()}
               >
-                Salvar
+                Save
               </Button>
             </div>
           </DialogFooter>
@@ -126,8 +126,8 @@ export function EntitySettingsDialog(props: Props) {
         open={confirming}
         onOpenChange={setConfirming}
         busy={props.busy}
-        title={`Excluir ${props.entityLabel}?`}
-        description="Esta ação é permanente e removerá também todo o conteúdo e histórico relacionados."
+        title={`Delete ${props.entityLabel}?`}
+        description="This action is permanent and will also remove all related content and history."
         onConfirm={async () => {
           await props.onDelete();
           setConfirming(false);

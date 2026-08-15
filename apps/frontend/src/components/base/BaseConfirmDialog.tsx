@@ -38,10 +38,10 @@ export function BaseConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <Button variant="ghost" disabled={busy} onClick={() => onOpenChange(false)}>
-            Cancelar
+            Cancel
           </Button>
           <Button variant="destructive" loading={busy} onClick={() => void onConfirm()}>
-            Confirmar exclusão
+            Confirm deletion
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

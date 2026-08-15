@@ -108,8 +108,8 @@ export function GiveawaysTab() {
   const filteredParticipants =
     detail?.participants.filter((participant) =>
       participant.displayName
-        .toLocaleLowerCase("pt-BR")
-        .includes(participantQuery.trim().toLocaleLowerCase("pt-BR")),
+        .toLocaleLowerCase("en-US")
+        .includes(participantQuery.trim().toLocaleLowerCase("en-US")),
     ) ?? [];
   const visibleParticipants = filteredParticipants.slice(0, MAX_VISIBLE_PARTICIPANTS);
 
@@ -120,7 +120,7 @@ export function GiveawaysTab() {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Sair do sorteio"
+            aria-label="Leave giveaway"
             onClick={() => void giveaways.select("")}
           >
             <DoorOpen />
@@ -128,12 +128,12 @@ export function GiveawaysTab() {
           <h2 className="text-lg font-semibold">{detail.giveaway.name}</h2>
           <div className="ml-auto flex items-center gap-1.5">
             <Button size="sm" variant="secondary" onClick={() => setCapturing(true)}>
-              <MessageCircle /> Capturar do chat
+              <MessageCircle /> Capture from chat
             </Button>
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Configurar sorteio"
+              aria-label="Configure giveaway"
               onClick={() => setConfiguring(true)}
             >
               <Settings2 />
@@ -152,7 +152,7 @@ export function GiveawaysTab() {
         <EntityHub
           items={giveaways.items}
           icon={Gift}
-          label="Sorteio"
+          label="Giveaway"
           onCreate={() => setCreating(true)}
           onSelect={(id) => void giveaways.select(id)}
         />
@@ -161,12 +161,12 @@ export function GiveawaysTab() {
           <aside className="glass flex flex-col rounded-3xl p-4">
             <div className="mb-3">
               <BaseSegmentedControl
-                ariaLabel="Tipo de sorteio"
+                ariaLabel="Giveaway type"
                 value={detail.giveaway.mode}
                 disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
                 options={[
-                  { value: "wheel", label: "Roleta", icon: <RotateCw className="size-3.5" /> },
-                  { value: "case-opening", label: "Caixa", icon: <Box className="size-3.5" /> },
+                  { value: "wheel", label: "Wheel", icon: <RotateCw className="size-3.5" /> },
+                  { value: "case-opening", label: "Box", icon: <Box className="size-3.5" /> },
                 ]}
                 onChange={(mode) => {
                   clearCompletedPresentation();
@@ -176,9 +176,9 @@ export function GiveawaysTab() {
             </div>
             <div className="flex items-center gap-2 pb-3">
               <ListPlus className="size-4" />
-              <h3 className="flex-1 text-[13px] font-semibold">Importar participantes</h3>
+              <h3 className="flex-1 text-[13px] font-semibold">Import participants</h3>
               <span className="rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-muted-foreground">
-                {detail.giveaway.status === "completed" ? "Concluído" : "Pronto"}
+                {detail.giveaway.status === "completed" ? "Completed" : "Ready"}
               </span>
             </div>
             <>
@@ -186,7 +186,7 @@ export function GiveawaysTab() {
                 value={input}
                 disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder={"Um nome por linha\nMaria\nJoão\nAna"}
+                placeholder={"One name per line\nMaria\nJohn\nAna"}
                 className="min-h-40 flex-1 resize-none text-[13px]"
               />
               <Button
@@ -203,7 +203,7 @@ export function GiveawaysTab() {
                   if (saved) setInput("");
                 }}
               >
-                <Users /> Salvar participantes
+                <Users /> Save participants
               </Button>
             </>
             <div className="mt-4 min-h-0 rounded-2xl border border-border bg-card/45 p-2">
@@ -213,8 +213,8 @@ export function GiveawaysTab() {
                   className="h-8 pl-8 text-xs"
                   value={participantQuery}
                   onChange={(event) => setParticipantQuery(event.target.value)}
-                  placeholder="Buscar participante"
-                  aria-label="Buscar participante"
+                  placeholder="Search participant"
+                  aria-label="Search participant"
                 />
               </div>
               <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto pr-1">
@@ -228,7 +228,7 @@ export function GiveawaysTab() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Remover ${participant.displayName}`}
+                      aria-label={`Remove ${participant.displayName}`}
                       disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
                       onClick={() =>
                         setRemovingParticipant({
@@ -243,13 +243,13 @@ export function GiveawaysTab() {
                 ))}
                 {!filteredParticipants.length && (
                   <p className="px-2 py-5 text-center text-xs text-muted-foreground">
-                    {participantQuery ? "Nenhum participante encontrado." : "Nenhum participante."}
+                    {participantQuery ? "No participant found." : "No participants."}
                   </p>
                 )}
                 {filteredParticipants.length > MAX_VISIBLE_PARTICIPANTS && (
                   <p className="px-2 pt-2 text-center text-[10px] text-muted-foreground">
-                    Exibindo {MAX_VISIBLE_PARTICIPANTS} de {filteredParticipants.length}. Refine a
-                    busca para ver outros participantes.
+                    Showing {MAX_VISIBLE_PARTICIPANTS} of {filteredParticipants.length}. Refine the
+                    search to see other participants.
                   </p>
                 )}
               </div>
@@ -281,17 +281,15 @@ export function GiveawaysTab() {
                 }
               />
               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Vencedor
+                Winner
               </p>
               <p aria-live="polite" className="mt-2 break-words text-lg font-semibold">
-                {drawPhase === "drawing" ? "Sorteando…" : (winner ?? "Aguardando sorteio")}
+                {drawPhase === "drawing" ? "Drawing…" : (winner ?? "Waiting for draw")}
               </p>
             </div>
             {giveaways.history.length > 0 && (
               <div className="mt-5 min-h-0 flex-1 overflow-y-auto text-left">
-                <p className="pb-2 text-xs font-semibold text-muted-foreground">
-                  Histórico de vencedores
-                </p>
+                <p className="pb-2 text-xs font-semibold text-muted-foreground">Winner history</p>
                 {giveaways.history
                   .slice(drawPhase === "drawing" ? 1 : 0, drawPhase === "drawing" ? 6 : 5)
                   .map((round) => {
@@ -300,8 +298,8 @@ export function GiveawaysTab() {
                     );
                     return (
                       <p key={round.id} className="border-t border-border py-2 text-xs">
-                        {entry?.displayName ?? "Participante"} ·{" "}
-                        {new Date(round.startedAt).toLocaleString("pt-BR")}
+                        {entry?.displayName ?? "Participant"} ·{" "}
+                        {new Date(round.startedAt).toLocaleString("en-US")}
                       </p>
                     );
                   })}
@@ -313,16 +311,16 @@ export function GiveawaysTab() {
       <CreateItemDialog
         open={creating}
         onOpenChange={setCreating}
-        title="Novo sorteio"
-        description="Defina um nome ou o prêmio que será sorteado."
-        placeholder="Ex.: Gift card de R$ 100"
-        label="Criar sorteio"
+        title="New giveaway"
+        description="Define a name or prize to draw."
+        placeholder="e.g. $100 gift card"
+        label="Create giveaway"
         busy={giveaways.busy}
         submitDisabled={newMaxParticipants < 1 || newMaxParticipants > 10000}
         onSubmit={createGiveaway}
       >
         <label className="space-y-1.5 text-xs font-medium">
-          <span>Máximo de participantes</span>
+          <span>Maximum participants</span>
           <Input
             type="number"
             min={1}
@@ -348,7 +346,7 @@ export function GiveawaysTab() {
           open={configuring}
           onOpenChange={setConfiguring}
           busy={giveaways.busy}
-          entityLabel="sorteio"
+          entityLabel="giveaway"
           name={detail.giveaway.name}
           maxParticipants={detail.giveaway.maxParticipants}
           onSave={({ name, maxParticipants }) =>
@@ -363,8 +361,8 @@ export function GiveawaysTab() {
           if (!open) setRemovingParticipant(null);
         }}
         busy={giveaways.busy}
-        title="Remover participante?"
-        description={`“${removingParticipant?.name ?? ""}” será removido das próximas rodadas. O histórico existente será preservado.`}
+        title="Remove participant?"
+        description={`“${removingParticipant?.name ?? ""}” will be removed from future rounds. Existing history will be preserved.`}
         onConfirm={async () => {
           if (!removingParticipant) return;
           clearCompletedPresentation();

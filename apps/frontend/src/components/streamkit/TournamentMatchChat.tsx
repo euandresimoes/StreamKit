@@ -48,7 +48,7 @@ function MatchSideChat({
         }
       } catch (cause) {
         if (active && requestVersion.current === version)
-          setError(cause instanceof Error ? cause.message : "Não foi possível carregar o chat.");
+          setError(cause instanceof Error ? cause.message : "Could not load the chat.");
       }
     };
     void load();
@@ -74,11 +74,11 @@ function MatchSideChat({
     <section className="min-w-0 rounded-xl border border-border bg-background/40 p-3">
       <div className="mb-3 flex items-center gap-2 border-b border-border pb-2">
         <MessageCircle className="size-3.5 text-primary" />
-        <p className="truncate text-[12px] font-semibold">{thread?.subject ?? "Carregando…"}</p>
+        <p className="truncate text-[12px] font-semibold">{thread?.subject ?? "Loading…"}</p>
       </div>
       {!thread?.identities.length && (
         <p className="text-[11px] text-muted-foreground">
-          Participantes manuais não possuem chat vinculado.
+          Manually added participants do not have a linked chat.
         </p>
       )}
       <div className="max-h-44 space-y-2 overflow-y-auto">
@@ -103,7 +103,7 @@ function MatchSideChat({
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           disabled={!writer}
-          placeholder={writer ? "Responder no chat" : "Somente leitura"}
+          placeholder={writer ? "Reply in chat" : "Read-only"}
         />
         <Button
           size="icon"
@@ -118,9 +118,7 @@ function MatchSideChat({
               await integrationApi.sendMessage(writer.id, message.trim());
               setMessage("");
             } catch (cause) {
-              setError(
-                cause instanceof Error ? cause.message : "Não foi possível enviar a mensagem.",
-              );
+              setError(cause instanceof Error ? cause.message : "Could not send the message.");
             } finally {
               setSending(false);
             }

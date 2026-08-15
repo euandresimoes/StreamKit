@@ -69,7 +69,7 @@ export function CreateItemDialog(props: CreateItemDialogProps) {
         )}
         <DialogFooter>
           <Button variant="ghost" onClick={() => props.onOpenChange(false)}>
-            Cancelar
+            Cancel
           </Button>
           <Button
             loading={props.busy ?? false}

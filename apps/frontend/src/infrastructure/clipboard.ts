@@ -4,7 +4,7 @@ export async function copyText(text: string): Promise<void> {
     return;
   }
   if (!navigator.clipboard?.writeText) {
-    throw new Error("A área de transferência não está disponível.");
+    throw new Error("The clipboard is not available.");
   }
   await navigator.clipboard.writeText(text);
 }

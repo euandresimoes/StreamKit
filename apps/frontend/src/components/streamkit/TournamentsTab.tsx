@@ -164,7 +164,7 @@ export function TournamentsTab() {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Sair do torneio"
+            aria-label="Leave tournament"
             onClick={() => void tournaments.select("")}
           >
             <DoorOpen />
@@ -174,7 +174,7 @@ export function TournamentsTab() {
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Configurar torneio"
+              aria-label="Configure tournament"
               onClick={() => setConfiguring(true)}
             >
               <Settings2 />
@@ -182,7 +182,7 @@ export function TournamentsTab() {
           </div>
           {detail && ["draft", "ready"].includes(detail.tournament.status) && (
             <Button variant="secondary" size="sm" onClick={() => setCapturing(true)}>
-              <MessageCircle /> Capturar do chat
+              <MessageCircle /> Capture from chat
             </Button>
           )}
 
@@ -200,7 +200,7 @@ export function TournamentsTab() {
                       )
                     }
                   >
-                    <SelectTrigger className="h-8 w-36" aria-label="Quantidade de participantes">
+                    <SelectTrigger className="h-8 w-36" aria-label="Participant count">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -227,7 +227,7 @@ export function TournamentsTab() {
                           void tournaments.updateStructure("team", nextTeams, total / nextTeams);
                       }}
                     >
-                      <SelectTrigger className="h-8 w-40" aria-label="Total de participantes">
+                      <SelectTrigger className="h-8 w-40" aria-label="Total participants">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -250,7 +250,7 @@ export function TournamentsTab() {
                         );
                       }}
                     >
-                      <SelectTrigger className="h-8 w-28" aria-label="Quantidade de equipes">
+                      <SelectTrigger className="h-8 w-28" aria-label="Team count">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -275,7 +275,7 @@ export function TournamentsTab() {
                           );
                       }}
                     >
-                      <SelectTrigger className="h-8 w-32" aria-label="Participantes por equipe">
+                      <SelectTrigger className="h-8 w-32" aria-label="Participants per team">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -283,7 +283,7 @@ export function TournamentsTab() {
                           const capacity = totalTeamParticipants / count;
                           return (
                             <SelectItem key={capacity} value={String(capacity)}>
-                              {capacity} por equipe
+                              {capacity} per team
                             </SelectItem>
                           );
                         })}
@@ -305,7 +305,7 @@ export function TournamentsTab() {
               {detail.tournament.status === "finished" ||
               detail.tournament.status === "archived" ? (
                 <Button size="sm" onClick={() => setShowingSummary(true)}>
-                  <Trophy /> Ver resultado
+                  <Trophy /> View result
                 </Button>
               ) : (
                 <Button
@@ -319,8 +319,8 @@ export function TournamentsTab() {
                 >
                   <Trophy />{" "}
                   {detail.tournament.status === "in_progress"
-                    ? "Torneio em andamento"
-                    : "Iniciar torneio"}
+                    ? "Tournament in progress"
+                    : "Start tournament"}
                 </Button>
               )}
             </>
@@ -338,7 +338,7 @@ export function TournamentsTab() {
         <EntityHub
           items={tournaments.items}
           icon={Trophy}
-          label="Torneio"
+          label="Tournament"
           onCreate={() => setCreating(true)}
           onSelect={(id) => void tournaments.select(id)}
         />
@@ -388,7 +388,7 @@ export function TournamentsTab() {
                           value={participantName}
                           onChange={(event) => setParticipantName(event.target.value)}
                           className="h-8 text-xs"
-                          placeholder="Adicionar participante"
+                          placeholder="Add participant"
                           disabled={tournaments.busy || detail.matches.length > 0}
                         />
                         <Button
@@ -445,7 +445,7 @@ export function TournamentsTab() {
                       </div>
                       {!queued.length && (
                         <p className="mt-4 text-center text-xs text-muted-foreground">
-                          Adicione participantes manualmente ou capture entradas do chat.
+                          Add participants manually or capture chat entries.
                         </p>
                       )}
                     </>
@@ -458,7 +458,7 @@ export function TournamentsTab() {
                             <TooltipTrigger asChild>
                               <button
                                 type="button"
-                                aria-label={`Expandir participante ${participant.displayName}`}
+                                aria-label={`Expand participant ${participant.displayName}`}
                                 onClick={() => setParticipantsExpanded(true)}
                                 className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                               >
@@ -516,9 +516,7 @@ export function TournamentsTab() {
                   <Input
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    placeholder={
-                      detail.tournament.mode === "team" ? "Adicionar equipe…" : "Adicionar nome…"
-                    }
+                    placeholder={detail.tournament.mode === "team" ? "Add team…" : "Add name…"}
                     disabled={tournaments.busy || detail.matches.length > 0}
                     className="h-8 min-w-0 flex-1 text-[13px]"
                   />
@@ -575,7 +573,7 @@ export function TournamentsTab() {
                                 <PopoverTrigger asChild>
                                   <button
                                     type="button"
-                                    aria-label={`Escolher cor de ${team.name}`}
+                                    aria-label={`Choose color for ${team.name}`}
                                     disabled={tournaments.busy || detail.matches.length > 0}
                                     className="size-7 shrink-0 rounded-full border-2 border-border-strong outline-none transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                                     style={{ backgroundColor: team.color }}
@@ -621,7 +619,7 @@ export function TournamentsTab() {
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                aria-label={`Excluir ${team.name}`}
+                                aria-label={`Delete ${team.name}`}
                                 disabled={tournaments.busy || detail.matches.length > 0}
                                 onClick={() => setDeletingTeam({ id: team.id, name: team.name })}
                               >
@@ -786,7 +784,7 @@ export function TournamentsTab() {
                             className="shrink-0"
                             disabled={tournaments.busy || detail.matches.length > 0}
                             onClick={() => void tournaments.removeParticipant(participant.id)}
-                            aria-label={`Excluir ${participant.displayName}`}
+                            aria-label={`Delete ${participant.displayName}`}
                           >
                             <Trash2 />
                           </Button>
@@ -808,14 +806,14 @@ export function TournamentsTab() {
                     }}
                   >
                     <div className="mb-2 flex items-center justify-between px-1">
-                      <p className="text-[11px] font-semibold">Fora do chaveamento</p>
+                      <p className="text-[11px] font-semibold">Outside the bracket</p>
                       <span className="text-[10px] text-muted-foreground">
                         {overflowParticipants.length}
                       </span>
                     </div>
                     {!overflowParticipants.length && (
                       <p className="px-2 py-2 text-center text-[10px] text-red-300/60">
-                        Arraste uma pessoa do chaveamento para cá
+                        Drag a person from the bracket here
                       </p>
                     )}
                     <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
@@ -847,7 +845,7 @@ export function TournamentsTab() {
                             className="shrink-0"
                             disabled={tournaments.busy || detail.matches.length > 0}
                             onClick={() => void tournaments.removeParticipant(participant.id)}
-                            aria-label={`Excluir ${participant.displayName}`}
+                            aria-label={`Delete ${participant.displayName}`}
                           >
                             <Trash2 />
                           </Button>
@@ -871,7 +869,7 @@ export function TournamentsTab() {
                             <TooltipTrigger asChild>
                               <button
                                 type="button"
-                                aria-label={`Expandir equipe ${team.name}`}
+                                aria-label={`Expand team ${team.name}`}
                                 onClick={() => setTeamsExpanded(true)}
                                 className="size-7 max-w-full shrink-0 rounded-full border-2 border-border-strong outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring"
                                 style={{ backgroundColor: team.color }}
@@ -891,7 +889,7 @@ export function TournamentsTab() {
                                 ))}
                                 {!members.length && (
                                   <span className="text-xs text-muted-foreground">
-                                    Nenhum participante
+                                    No participant
                                   </span>
                                 )}
                               </div>
@@ -904,7 +902,7 @@ export function TournamentsTab() {
                           <TooltipTrigger asChild>
                             <button
                               type="button"
-                              aria-label={`Expandir participante ${participant.displayName}`}
+                              aria-label={`Expand participant ${participant.displayName}`}
                               onClick={() => setTeamsExpanded(true)}
                               className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
@@ -938,7 +936,7 @@ export function TournamentsTab() {
                   ),
                 )}
                 <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Vencedor
+                  Winner
                 </p>
               </div>
             )}
@@ -1010,7 +1008,7 @@ export function TournamentsTab() {
                                           void tournaments.startMatch(match.id);
                                         }}
                                       >
-                                        <Play className="size-3" /> Começar
+                                        <Play className="size-3" /> Start
                                       </Button>
                                     )}
                                   <Button
@@ -1023,7 +1021,7 @@ export function TournamentsTab() {
                                       setOperatingMatchId(match.id);
                                     }}
                                   >
-                                    Abrir partida
+                                    Open match
                                   </Button>
                                   {match.status === "finished" && (
                                     <Button
@@ -1036,7 +1034,7 @@ export function TournamentsTab() {
                                         setCorrectingMatchId(match.id);
                                       }}
                                     >
-                                      Corrigir
+                                      Correct
                                     </Button>
                                   )}
                                 </div>
@@ -1174,12 +1172,12 @@ export function TournamentsTab() {
                         : `Rodada ${selectedMatch.roundNumber}`}{" "}
                       ·{" "}
                       {selectedMatch.status === "in_progress"
-                        ? "Em andamento"
+                        ? "In progress"
                         : selectedMatch.status === "finished"
                           ? "Finalizada"
                           : selectedMatch.status === "ready"
                             ? "Pronta"
-                            : "Aguardando"}
+                            : "Waiting"}
                     </p>
                   </div>
                   {selectedMatch.status === "ready" &&
@@ -1192,7 +1190,7 @@ export function TournamentsTab() {
                         }
                         onClick={() => void tournaments.startMatch(selectedMatch.id)}
                       >
-                        Iniciar partida
+                        Start match
                       </Button>
                     )}
                   {selectedMatch.status === "finished" && (
@@ -1202,7 +1200,7 @@ export function TournamentsTab() {
                       disabled={tournaments.busy}
                       onClick={() => setCorrectingMatchId(selectedMatch.id)}
                     >
-                      Corrigir resultado
+                      Correct result
                     </Button>
                   )}
                 </div>
@@ -1282,7 +1280,7 @@ export function TournamentsTab() {
         <BaseModal
           open={showingSummary}
           onOpenChange={setShowingSummary}
-          title="Resultado do torneio"
+          title="Tournament result"
           description={detail.tournament.name}
         >
           <div className="flex flex-col gap-5">
@@ -1305,10 +1303,10 @@ export function TournamentsTab() {
               )}
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">
-                  Campeão
+                  Champion
                 </p>
                 <p className="truncate text-lg font-semibold">
-                  {champion?.name ?? "Resultado indisponível"}
+                  {champion?.name ?? "Result unavailable"}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
                   {detail.matches.length} partidas · {detail.tournament.bracketSize} vagas
@@ -1332,11 +1330,12 @@ export function TournamentsTab() {
                         #{match.matchNumber}
                       </span>
                       <span className="min-w-0 truncate">
-                        {left?.name ?? "A definir"} <span className="text-muted-foreground">×</span>{" "}
+                        {left?.name ?? "To be decided"}{" "}
+                        <span className="text-muted-foreground">×</span>{" "}
                         {right?.name ?? "A definir"}
                       </span>
                       <span className="max-w-32 truncate font-medium text-primary">
-                        {winner?.name ?? (match.leftResult === "draw" ? "Empate" : "Sem resultado")}
+                        {winner?.name ?? (match.leftResult === "draw" ? "Draw" : "No result")}
                       </span>
                     </div>
                   );
@@ -1349,10 +1348,10 @@ export function TournamentsTab() {
       <CreateItemDialog
         open={creating}
         onOpenChange={setCreating}
-        title="Novo torneio"
-        description="Crie um torneio individual de eliminação simples."
-        placeholder="Ex.: Torneio de sexta"
-        label="Criar torneio"
+        title="New tournament"
+        description="Create an individual single-elimination tournament."
+        placeholder="e.g. Friday tournament"
+        label="Create tournament"
         busy={tournaments.busy}
         onSubmit={createTournament}
         options={[
@@ -1365,7 +1364,7 @@ export function TournamentsTab() {
           open={configuring}
           onOpenChange={setConfiguring}
           busy={tournaments.busy}
-          entityLabel="torneio"
+          entityLabel="tournament"
           name={detail.tournament.name}
           description={detail.tournament.description}
           onSave={({ name, description }) => tournaments.update(name, description)}
@@ -1378,8 +1377,8 @@ export function TournamentsTab() {
           if (!open) setCorrectingMatchId(null);
         }}
         busy={tournaments.busy}
-        title="Corrigir resultado?"
-        description="O resultado será reaberto e toda progressão descendente afetada será invalidada."
+        title="Correct result?"
+        description="The result will be reopened and all affected downstream progress will be invalidated."
         onConfirm={async () => {
           if (!correctingMatchId) return;
           await tournaments.undoMatch(correctingMatchId);
@@ -1392,8 +1391,8 @@ export function TournamentsTab() {
           if (!open) setDeletingTeam(null);
         }}
         busy={tournaments.busy}
-        title="Excluir equipe?"
-        description={`“${deletingTeam?.name ?? ""}” será excluída. Seus participantes voltarão para a fila de participantes.`}
+        title="Delete team?"
+        description={`“${deletingTeam?.name ?? ""}” will be deleted. Its participants will return to the participant queue.`}
         onConfirm={async () => {
           if (!deletingTeam) return;
           await tournaments.removeTeam(deletingTeam.id);

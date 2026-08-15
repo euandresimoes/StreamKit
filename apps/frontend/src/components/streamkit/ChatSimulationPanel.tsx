@@ -57,7 +57,7 @@ export function ChatSimulationPanel({
     <section className="mt-4 rounded-xl border border-dashed border-border-strong p-3">
       <div className="mb-3 flex items-center gap-2">
         <FlaskConical className="size-4 text-primary" />
-        <p className="text-[12px] font-semibold">Simulador de chat (debug)</p>
+        <p className="text-[12px] font-semibold">Chat simulator (debug)</p>
       </div>
       <div className="grid grid-cols-[110px_1fr_auto] gap-2">
         <Select
@@ -70,7 +70,7 @@ export function ChatSimulationPanel({
           <SelectContent>
             {[8, 16, 32, 1000, 10000].map((value) => (
               <SelectItem key={value} value={String(value)}>
-                {value} usuários
+                {value} users
               </SelectItem>
             ))}
           </SelectContent>
@@ -89,9 +89,7 @@ export function ChatSimulationPanel({
               try {
                 setStatus(await integrationApi.stopSimulation());
               } catch (cause) {
-                setError(
-                  cause instanceof Error ? cause.message : "Não foi possível parar a simulação.",
-                );
+                setError(cause instanceof Error ? cause.message : "Could not stop the simulation.");
               }
             }}
           >
@@ -115,7 +113,7 @@ export function ChatSimulationPanel({
                 );
               } catch (cause) {
                 setError(
-                  cause instanceof Error ? cause.message : "Não foi possível iniciar a simulação.",
+                  cause instanceof Error ? cause.message : "Could not start the simulation.",
                 );
               }
             }}
@@ -126,7 +124,7 @@ export function ChatSimulationPanel({
       </div>
       {!enabled && (
         <p className="mt-2 text-[10px] text-muted-foreground">
-          Inicie a captura acima antes de executar a simulação.
+          Start capture above before running the simulation.
         </p>
       )}
       {status && (

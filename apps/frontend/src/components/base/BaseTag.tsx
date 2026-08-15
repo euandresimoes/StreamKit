@@ -20,7 +20,7 @@ export function BaseTag({
     >
       {children}
       {onRemove && (
-        <button type="button" onClick={onRemove} aria-label="Remover etiqueta">
+        <button type="button" onClick={onRemove} aria-label="Remove tag">
           <X className="size-3" />
         </button>
       )}

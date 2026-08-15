@@ -6,15 +6,15 @@ describe("BaseDateTimePicker", () => {
   it("renders an accessible compact dropdown trigger", () => {
     const markup = renderToStaticMarkup(
       <BaseDateTimePicker
-        ariaLabel="Início da coleta"
-        placeholder="Começar agora"
+        ariaLabel="Capture start"
+        placeholder="Start now"
         value=""
         onChange={() => undefined}
       />,
     );
 
-    expect(markup).toContain('aria-label="Início da coleta"');
-    expect(markup).toContain("Começar agora");
+    expect(markup).toContain('aria-label="Capture start"');
+    expect(markup).toContain("Start now");
     expect(markup).toContain('aria-haspopup="dialog"');
   });
 });

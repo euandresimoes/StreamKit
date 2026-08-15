@@ -40,8 +40,7 @@ export function FocusedChatPanel({
         }
       } catch (cause) {
         delay = Math.min(delay * 2, 15_000);
-        if (active)
-          setError(cause instanceof Error ? cause.message : "Não foi possível carregar o chat.");
+        if (active) setError(cause instanceof Error ? cause.message : "Could not load the chat.");
         if (active) setLoading(false);
       }
     };
@@ -80,7 +79,7 @@ export function FocusedChatPanel({
       setCopied(handle);
       setTimeout(() => setCopied(null), 1_500);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível copiar o handle.");
+      setError(cause instanceof Error ? cause.message : "Could not copy the handle.");
     }
   };
   const send = async () => {
@@ -91,7 +90,7 @@ export function FocusedChatPanel({
       await integrationApi.sendMessage(writer.id, message.trim());
       setMessage("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível enviar a mensagem.");
+      setError(cause instanceof Error ? cause.message : "Could not send the message.");
     } finally {
       setSending(false);
     }
@@ -102,8 +101,8 @@ export function FocusedChatPanel({
       <Button
         className="fixed bottom-5 right-5 z-40 rounded-full shadow-2xl"
         size="icon"
-        aria-label="Reabrir chat do vencedor"
-        title="Reabrir chat do vencedor"
+        aria-label="Reopen winner chat"
+        title="Reopen winner chat"
         onClick={() => setOpen(true)}
       >
         <MessageCircle />
@@ -113,7 +112,7 @@ export function FocusedChatPanel({
 
   return (
     <aside
-      aria-label="Chat focado"
+      aria-label="Focused chat"
       className="glass-panel fixed bottom-5 right-5 z-40 flex max-h-[70vh] w-[360px] flex-col overflow-hidden rounded-3xl border border-border-strong bg-popover/95 shadow-2xl"
     >
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
@@ -121,7 +120,7 @@ export function FocusedChatPanel({
           <img
             className="size-9 shrink-0 rounded-full object-cover"
             src={identity.avatarUrl}
-            alt={`Avatar de ${identity.displayName}`}
+            alt={`Avatar of ${identity.displayName}`}
           />
         ) : (
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-2">
@@ -132,16 +131,16 @@ export function FocusedChatPanel({
           <div className="flex min-w-0 items-center gap-1">
             <p className="truncate text-sm font-semibold">
               {isGroup
-                ? (thread?.subject ?? "Chat da equipe")
-                : (identity?.displayName ?? thread?.subject ?? "Chat do vencedor")}
+                ? (thread?.subject ?? "Team chat")
+                : (identity?.displayName ?? thread?.subject ?? "Winner chat")}
             </p>
             {identity && !isGroup && (
               <Button
                 variant="ghost"
                 size="icon-sm"
                 className="shrink-0"
-                aria-label={`Copiar ${identity.handle}`}
-                title={copied === identity.handle ? "Copiado" : "Copiar handle"}
+                aria-label={`Copy ${identity.handle}`}
+                title={copied === identity.handle ? "Copied" : "Copy handle"}
                 onClick={() => void copyHandle(identity.handle)}
               >
                 {copied === identity.handle ? <Check /> : <Copy />}
@@ -158,10 +157,10 @@ export function FocusedChatPanel({
                   key={`${member.provider}:${member.providerUserId}`}
                   type="button"
                   className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[9px] text-muted-foreground hover:text-foreground"
-                  title={`Copiar ${member.handle}`}
+                  title={`Copy ${member.handle}`}
                   onClick={() => void copyHandle(member.handle)}
                 >
-                  {copied === member.handle ? "Copiado" : member.handle}
+                  {copied === member.handle ? "Copied" : member.handle}
                 </button>
               ))}
             </div>
@@ -170,7 +169,7 @@ export function FocusedChatPanel({
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="Fechar chat"
+          aria-label="Close chat"
           onClick={() => setOpen(false)}
         >
           <X />
@@ -179,7 +178,7 @@ export function FocusedChatPanel({
 
       <div role="log" aria-live="polite" className="min-h-32 flex-1 space-y-2 overflow-y-auto p-3">
         {loading && (
-          <p className="py-8 text-center text-xs text-muted-foreground">Carregando mensagens…</p>
+          <p className="py-8 text-center text-xs text-muted-foreground">Loading messages…</p>
         )}
         {visibleMessages.map((item) => (
           <div key={item.id} className="rounded-xl border border-border bg-card p-2.5">
@@ -193,12 +192,12 @@ export function FocusedChatPanel({
         ))}
         {thread && thread.messages.length > MAX_VISIBLE_CHAT_MESSAGES && (
           <p className="text-center text-[10px] text-muted-foreground">
-            Exibindo as {MAX_VISIBLE_CHAT_MESSAGES} mensagens mais recentes.
+            Showing the {MAX_VISIBLE_CHAT_MESSAGES} most recent messages.
           </p>
         )}
         {!loading && thread && !thread.messages.length && (
           <p className="py-8 text-center text-xs text-muted-foreground">
-            Nenhuma mensagem recente deste participante.
+            No recent messages from this participant.
           </p>
         )}
       </div>
@@ -214,15 +213,15 @@ export function FocusedChatPanel({
             }}
             disabled={!writer || sending}
             maxLength={500}
-            placeholder={writer ? "Responder no chat" : "Chat desconectado ou somente leitura"}
-            aria-label="Responder no chat"
+            placeholder={writer ? "Reply in chat" : "Chat disconnected or read-only"}
+            aria-label="Reply in chat"
           />
           <Button
             size="icon"
             className="aspect-square shrink-0 rounded-full p-0"
             loading={sending}
             disabled={!writer || !message.trim()}
-            aria-label="Enviar mensagem"
+            aria-label="Send message"
             onClick={() => void send()}
           >
             <Send />

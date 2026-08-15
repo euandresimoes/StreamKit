@@ -22,7 +22,7 @@ declare global {
 }
 
 export function getDesktopBridge() {
-  if (!window.streamkit) throw new Error("A integração desktop do StreamKit não está disponível.");
+  if (!window.streamkit) throw new Error("The StreamKit desktop integration is not available.");
   return window.streamkit;
 }
 
@@ -30,7 +30,7 @@ let connectionPromise: Promise<BackendConnection> | undefined;
 
 export function getBackendConnection(): Promise<BackendConnection> {
   if (!window.streamkit) {
-    return Promise.reject(new Error("A API do StreamKit está disponível somente no aplicativo."));
+    return Promise.reject(new Error("The StreamKit API is only available in the desktop app."));
   }
   connectionPromise ??= window.streamkit.getBackendConnection().then(BackendConnectionSchema.parse);
   return connectionPromise;

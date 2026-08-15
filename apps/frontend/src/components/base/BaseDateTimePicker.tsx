@@ -48,7 +48,7 @@ export function BaseDateTimePicker({
           <CalendarDays className="size-3.5 shrink-0" />
           <span className="truncate">
             {selected
-              ? selected.toLocaleString("pt-BR", {
+              ? selected.toLocaleString("en-US", {
                   day: "2-digit",
                   hour: "2-digit",
                   minute: "2-digit",
@@ -88,7 +88,7 @@ export function BaseDateTimePicker({
             variant="ghost"
             size="icon-sm"
             className="ml-auto"
-            aria-label={`Limpar ${ariaLabel.toLocaleLowerCase("pt-BR")}`}
+            aria-label={`Clear ${ariaLabel.toLocaleLowerCase("en-US")}`}
             disabled={!value}
             onClick={() => onChange("")}
           >

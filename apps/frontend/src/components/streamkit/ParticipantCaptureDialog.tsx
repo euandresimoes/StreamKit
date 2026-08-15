@@ -22,7 +22,7 @@ export function ParticipantCaptureDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-panel max-h-[85vh] max-w-lg border-border-strong bg-popover/95">
         <DialogHeader>
-          <DialogTitle>Capturar participantes do chat</DialogTitle>
+          <DialogTitle>Capture chat participants</DialogTitle>
         </DialogHeader>
         <div className="min-h-0 overflow-y-auto py-2">
           <ParticipantChatCapturePanel

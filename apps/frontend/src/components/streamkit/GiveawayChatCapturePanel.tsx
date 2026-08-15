@@ -57,12 +57,12 @@ export function ParticipantChatCapturePanel({
     <div className="flex min-h-0 flex-1 flex-col">
       {!captures.connections.length || !currentConnection ? (
         <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-          Conecte e inicie um provider de chat nas configurações para capturar participantes.
+          Connect and start a chat provider in settings to capture participants.
         </div>
       ) : (
         <div className="space-y-2">
           <div className="rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-            Capturando de{" "}
+            Capturing from{" "}
             <span className="font-medium text-foreground">
               {currentConnection.channelDisplayName}
             </span>
@@ -76,10 +76,10 @@ export function ParticipantChatCapturePanel({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="any">Qualquer mensagem</SelectItem>
-                <SelectItem value="exact">Mensagem exata</SelectItem>
+                <SelectItem value="any">Any message</SelectItem>
+                <SelectItem value="exact">Exact message</SelectItem>
                 <SelectItem value="prefix">Prefixo</SelectItem>
-                <SelectItem value="contains">Contém texto</SelectItem>
+                <SelectItem value="contains">Contains text</SelectItem>
               </SelectContent>
             </Select>
             {target === "giveaway" ? (
@@ -91,13 +91,13 @@ export function ParticipantChatCapturePanel({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unique">Uma entrada</SelectItem>
-                  <SelectItem value="tickets">Mensagem vira ticket</SelectItem>
+                  <SelectItem value="unique">One entry</SelectItem>
+                  <SelectItem value="tickets">Message becomes a ticket</SelectItem>
                 </SelectContent>
               </Select>
             ) : (
               <div className="flex h-8 items-center rounded-md border border-border px-3 text-xs text-muted-foreground">
-                Uma entrada por pessoa
+                One entry per person
               </div>
             )}
           </div>
@@ -113,14 +113,14 @@ export function ParticipantChatCapturePanel({
             <BaseDateTimePicker
               value={startsAt}
               onChange={setStartsAt}
-              ariaLabel="Início da coleta"
-              placeholder="Começar agora"
+              ariaLabel="Capture start"
+              placeholder="Start now"
             />
             <BaseDateTimePicker
               value={endsAt}
               onChange={setEndsAt}
-              ariaLabel="Fim da coleta"
-              placeholder="Sem término"
+              ariaLabel="Capture end"
+              placeholder="No end time"
             />
           </div>
           <div className="grid grid-cols-2 gap-x-3 text-[11px]">
@@ -146,7 +146,7 @@ export function ParticipantChatCapturePanel({
               label={
                 <span className="flex items-center gap-2">
                   <BaseBrandIcon provider="livepix" className="size-4" />
-                  Capturar pagamentos recebidos do LivePix
+                  Capture received LivePix payments
                 </span>
               }
               checked={livepixAutoEntry}
@@ -161,8 +161,8 @@ export function ParticipantChatCapturePanel({
                   type="number"
                   value={livepixMinimum}
                   onChange={(event) => setLivepixMinimum(event.target.value)}
-                  placeholder="Valor mínimo"
-                  aria-label="Valor mínimo do LivePix"
+                  placeholder="Minimum amount"
+                  aria-label="LivePix minimum amount"
                 />
                 <Input
                   className="h-8 uppercase"
@@ -170,12 +170,12 @@ export function ParticipantChatCapturePanel({
                   value={livepixCurrency}
                   onChange={(event) => setLivepixCurrency(event.target.value.toUpperCase())}
                   placeholder="BRL"
-                  aria-label="Moeda do LivePix"
+                  aria-label="LivePix currency"
                 />
               </div>
             )}
             <p className="text-[10px] text-muted-foreground">
-              Pagamentos abaixo do mínimo ou sem handle ficam pendentes para resolução manual.
+              Payments below the minimum or without a handle remain pending for manual review.
             </p>
           </div>
           <Button
@@ -219,7 +219,7 @@ export function ParticipantChatCapturePanel({
           {import.meta.env.DEV && currentConnection && (
             <ChatSimulationPanel
               channelId={currentConnection.channelId}
-              defaultMessage={match === "any" ? "mensagem simulada" : matchValue.trim()}
+              defaultMessage={match === "any" ? "simulated message" : matchValue.trim()}
               enabled={Boolean(isCapturing)}
               onProgress={onRefresh}
               provider={currentConnection.provider}

@@ -188,40 +188,49 @@ export function SettingsDialog({
                   {t("settings.systemDescription")}
                 </p>
                 <div className="mt-3 divide-y divide-border">
-                  <Row title="Abrir com o sistema" description="Iniciar o StreamKit no login.">
+                  <Row
+                    title={t("settings.openAtLogin")}
+                    description={t("settings.openAtLoginDescription")}
+                  >
                     <Switch
                       checked={persisted.settings?.openAtLogin ?? false}
                       onCheckedChange={(value) => void persisted.update({ openAtLogin: value })}
                     />
                   </Row>
-                  <Row title="Manter na bandeja" description="Fechar minimiza para a tray.">
+                  <Row
+                    title={t("settings.minimizeToTray")}
+                    description={t("settings.minimizeToTrayDescription")}
+                  >
                     <Switch
                       checked={persisted.settings?.minimizeToTray ?? false}
                       onCheckedChange={(value) => void persisted.update({ minimizeToTray: value })}
                     />
                   </Row>
-                  <Row title="Aceleração por hardware" description="Requer reiniciar o aplicativo.">
+                  <Row
+                    title={t("settings.hardwareAcceleration")}
+                    description={t("settings.restartRequired")}
+                  >
                     <Switch checked={hardware} onCheckedChange={setHardware} />
                   </Row>
                 </div>
                 <Separator className="my-4" />
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" onClick={() => void persisted.exportDiagnostics()}>
-                    Exportar diagnóstico
+                    {t("settings.exportDiagnostics")}
                   </Button>
                   <Button variant="ghost" onClick={() => void persisted.openLogsDirectory()}>
-                    Abrir pasta de logs
+                    {t("settings.openLogs")}
                   </Button>
-                  <Button variant="danger">Resetar preferências</Button>
+                  <Button variant="danger">{t("settings.resetPreferences")}</Button>
                 </div>
               </div>
             )}
 
             {section === "integrations" && (
               <div>
-                <h3 className="text-[15px] font-semibold">Integrações</h3>
+                <h3 className="text-[15px] font-semibold">{t("settings.integrationsHeading")}</h3>
                 <p className="text-[12px] text-muted-foreground">
-                  Cadastre canais que poderão fornecer participantes para sorteios e torneios.
+                  {t("settings.integrationsDescription")}
                 </p>
 
                 <div className="mt-4 rounded-2xl border border-border bg-surface-2/40 p-4">
@@ -232,18 +241,18 @@ export function SettingsDialog({
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-semibold">Transporte externo opcional</p>
                       <p className="text-[11.5px] text-muted-foreground">
-                        Ativado apenas quando uma integração precisar receber eventos externos.
+                        {t("settings.externalTransportDescription")}
                       </p>
                     </div>
                     <span className="text-[11px] font-medium capitalize text-muted-foreground">
-                      {integrations.externalTransport?.state ?? "indisponível"}
+                      {integrations.externalTransport?.state ?? t("settings.unavailable")}
                     </span>
                   </div>
                   {integrations.externalTransport && (
                     <p className="mt-2 text-[10.5px] text-muted-foreground">
                       {integrations.externalTransport.mode === "tunnel"
-                        ? "Túnel automático protegido e temporário"
-                        : "Nenhum endpoint externo ativo"}
+                        ? t("settings.protectedTemporaryTunnel")
+                        : t("settings.noActiveExternalEndpoint")}
                       {` · ${integrations.externalTransport.endpointCount} endpoint(s)`}
                     </p>
                   )}
@@ -257,8 +266,7 @@ export function SettingsDialog({
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-semibold">LivePix Payments</p>
                       <p className="text-[11.5px] text-muted-foreground">
-                        Recebe somente pagamentos confirmados e mantém pendências para revisão
-                        manual.
+                        {t("settings.livepixDescription")}
                       </p>
                     </div>
                     <span className="text-[11px] font-medium text-muted-foreground">
@@ -289,7 +297,7 @@ export function SettingsDialog({
                             void settingsApi.disconnectLivepix().then(setLivepixStatus)
                           }
                         >
-                          Desconectar
+                          {t("settings.disconnect")}
                         </Button>
                       )}
                       <Button
@@ -298,7 +306,7 @@ export function SettingsDialog({
                         disabled={!livepixClientId.trim() || !livepixClientSecret}
                         onClick={() => void saveLivepix()}
                       >
-                        Conectar LivePix
+                        {t("settings.connectLivepix")}
                       </Button>
                     </div>
                   </div>
@@ -312,14 +320,14 @@ export function SettingsDialog({
                     <p className="text-[13px] font-semibold">Twitch Chat</p>
                     <p className="truncate text-[11.5px] text-muted-foreground">
                       {integrations.twitchAuth?.configured
-                        ? `Conectado como ${integrations.twitchAuth.login}`
+                        ? t("settings.connectedAs", { login: integrations.twitchAuth.login })
                         : integrations.twitchAuth?.available
-                          ? "Pronto para conectar"
-                          : "Client ID da Twitch não configurado no build"}
+                          ? t("settings.readyToConnect")
+                          : t("settings.twitchClientMissing")}
                     </p>
                     {integrations.twitchDevice && (
                       <p className="mt-1 text-xs font-semibold tracking-widest text-primary">
-                        Código: {integrations.twitchDevice.userCode}
+                        {t("settings.code", { code: integrations.twitchDevice.userCode })}
                       </p>
                     )}
                   </div>
@@ -330,7 +338,7 @@ export function SettingsDialog({
                       loading={integrations.busy}
                       onClick={() => void integrations.disconnectTwitch()}
                     >
-                      Desconectar
+                      {t("settings.disconnect")}
                     </Button>
                   ) : (
                     <Button
@@ -339,7 +347,7 @@ export function SettingsDialog({
                       disabled={!integrations.twitchAuth?.available}
                       onClick={() => void integrations.connectTwitch()}
                     >
-                      Conectar
+                      {t("settings.connect")}
                     </Button>
                   )}
                 </div>
@@ -353,10 +361,10 @@ export function SettingsDialog({
                       <p className="text-[13px] font-semibold">YouTube Live Chat</p>
                       <p className="truncate text-[11.5px] text-muted-foreground">
                         {integrations.youtubeAuth?.configured
-                          ? "Autorizado · selecione uma transmissão ativa"
+                          ? t("settings.authorizedSelectActiveStream")
                           : integrations.youtubeAuth?.available
-                            ? "Pronto para conectar"
-                            : "Client ID do YouTube não configurado no build"}
+                            ? t("settings.readyToConnect")
+                            : t("settings.youtubeClientMissing")}
                       </p>
                     </div>
                     {integrations.youtubeAuth?.configured ? (
@@ -367,7 +375,7 @@ export function SettingsDialog({
                           loading={integrations.busy}
                           onClick={() => void integrations.disconnectYouTube()}
                         >
-                          Desconectar
+                          {t("settings.disconnect")}
                         </Button>
                       </>
                     ) : (
@@ -377,7 +385,7 @@ export function SettingsDialog({
                         disabled={!integrations.youtubeAuth?.available}
                         onClick={() => void integrations.connectYouTube()}
                       >
-                        Conectar
+                        {t("settings.connect")}
                       </Button>
                     )}
                   </div>
@@ -390,10 +398,12 @@ export function SettingsDialog({
                         >
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-xs font-medium">{broadcast.title}</p>
-                            <p className="text-[10px] text-muted-foreground">Transmissão ativa</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {t("settings.activeStream")}
+                            </p>
                           </div>
                           <span className="text-[10px] text-muted-foreground">
-                            Disponível na aba Live
+                            {t("settings.availableInLiveTab")}
                           </span>
                         </div>
                       ))}
@@ -410,7 +420,7 @@ export function SettingsDialog({
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-semibold">Kick Chat</p>
                         <p className="text-[11.5px] text-muted-foreground">
-                          Indisponível no modo local com a API oficial atual
+                          {t("settings.kickUnavailable")}
                         </p>
                         {integrations.kickSupport?.limitations.map((limitation) => (
                           <p key={limitation} className="mt-1 text-[10px] text-muted-foreground">
@@ -419,7 +429,7 @@ export function SettingsDialog({
                         ))}
                       </div>
                       <Button size="sm" variant="secondary" disabled>
-                        Sem suporte local
+                        {t("settings.noLocalSupport")}
                       </Button>
                     </div>
                   </div>
@@ -439,9 +449,9 @@ export function SettingsDialog({
                         {connection.lastErrorCode && (
                           <p className="text-[10px] text-destructive">
                             {connection.lastErrorCode === "YOUTUBE_QUOTA_OR_PERMISSION_ERROR"
-                              ? "Quota esgotada ou permissão insuficiente no YouTube"
+                              ? t("settings.quotaError")
                               : connection.lastErrorCode === "YOUTUBE_CHAT_ENDED"
-                                ? "O chat desta transmissão foi encerrado"
+                                ? t("settings.chatEnded")
                                 : connection.lastErrorCode}
                           </p>
                         )}
@@ -449,7 +459,7 @@ export function SettingsDialog({
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label={`Remover ${connection.channelDisplayName}`}
+                        aria-label={`Remove ${connection.channelDisplayName}`}
                         onClick={() => void integrations.remove(connection.id)}
                       >
                         <Trash2 />
@@ -458,7 +468,7 @@ export function SettingsDialog({
                   ))}
                   {!integrations.connections.length && (
                     <p className="py-6 text-center text-xs text-muted-foreground">
-                      Nenhum canal cadastrado.
+                      {t("settings.noChannelsRegistered")}
                     </p>
                   )}
                   {integrations.error && (
@@ -470,9 +480,9 @@ export function SettingsDialog({
 
             {section === "updates" && (
               <div>
-                <h3 className="text-[15px] font-semibold">Atualizações</h3>
+                <h3 className="text-[15px] font-semibold">{t("settings.updates")}</h3>
                 <p className="text-[12px] text-muted-foreground">
-                  Mantenha o StreamKit sempre na última versão.
+                  {t("settings.updatesDescription")}
                 </p>
 
                 <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-surface-2/60 p-4">
@@ -480,9 +490,9 @@ export function SettingsDialog({
                     <Download className="size-5 text-primary-foreground" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[13px] font-semibold">Versão 0.4.0</p>
+                    <p className="text-[13px] font-semibold">{t("settings.version040")}</p>
                     <p className="text-[11.5px] text-muted-foreground">
-                      {checked ? "Você está atualizado." : "Última verificação: há 2 dias"}
+                      {checked ? t("settings.upToDate") : t("settings.lastChecked")}
                     </p>
                   </div>
                   <Button
@@ -496,30 +506,33 @@ export function SettingsDialog({
                         .finally(() => setChecking(false));
                     }}
                   >
-                    Verificar agora
+                    {t("settings.checkNow")}
                   </Button>
                 </div>
 
                 <div className="mt-3 divide-y divide-border">
                   <Row
-                    title="Atualizar automaticamente"
-                    description="Baixa e instala em segundo plano."
+                    title={t("settings.automaticUpdates")}
+                    description={t("settings.automaticUpdatesDescription")}
                   >
                     <Switch checked disabled />
                   </Row>
-                  <Row title="Canal beta" description="Receber versões de teste antes de todos.">
+                  <Row
+                    title={t("settings.betaChannel")}
+                    description={t("settings.betaChannelDescription")}
+                  >
                     <Switch checked={beta} onCheckedChange={setBeta} />
                   </Row>
                 </div>
 
                 <Separator className="my-4" />
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Novidades
+                  {t("settings.whatsNew")}
                 </p>
                 <ul className="mt-2 space-y-1.5 text-[12px] text-muted-foreground">
-                  <li>• Chaveamento adaptativo em torneios de equipe.</li>
-                  <li>• Modo caixa nos sorteios com animação de física.</li>
-                  <li>• Tema preto neutro para lives longas.</li>
+                  <li>• {t("settings.adaptiveTeamBracket")}</li>
+                  <li>• {t("settings.physicsBoxMode")}</li>
+                  <li>• {t("settings.neutralBlackTheme")}</li>
                 </ul>
               </div>
             )}

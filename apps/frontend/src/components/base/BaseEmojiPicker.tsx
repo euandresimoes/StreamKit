@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const EMOJI_GROUPS = [
   {
-    label: "Organização",
+    label: "Organization",
     emojis: ["📋", "✅", "📝", "📌", "📁", "🗂️", "📅", "⏰", "💡", "🎯", "⭐", "🔥"],
   },
   {
@@ -39,7 +39,7 @@ export function BaseEmojiPicker({ onSelect, value }: Props) {
       <div
         className="flex gap-1 overflow-x-auto border-b border-border p-2"
         role="tablist"
-        aria-label="Categorias de emoji"
+        aria-label="Emoji categories"
       >
         {EMOJI_GROUPS.map((item, index) => (
           <button

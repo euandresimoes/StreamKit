@@ -10,14 +10,14 @@ describe("FocusedChatPanel accessibility", () => {
       <FocusedChatPanel target="giveaways" targetId="00000000-0000-4000-8000-000000000001" />,
     );
 
-    expect(markup).toContain('aria-label="Chat focado"');
+    expect(markup).toContain('aria-label="Focused chat"');
     expect(markup).toContain('role="log"');
     expect(markup).toContain('aria-live="polite"');
-    expect(markup).toContain('aria-label="Fechar chat"');
-    expect(markup).toContain('aria-label="Responder no chat"');
-    expect(markup).toContain('aria-label="Enviar mensagem"');
-    expect(markup).toContain("Carregando mensagens");
-    expect(markup).not.toContain("Tempo real · histórico local das últimas 24h");
+    expect(markup).toContain('aria-label="Close chat"');
+    expect(markup).toContain('aria-label="Reply in chat"');
+    expect(markup).toContain('aria-label="Send message"');
+    expect(markup).toContain("Loading messages");
+    expect(markup).not.toContain("Real-time · local history from the last 24 hours");
   });
 
   it("supports both system and persisted reduced-motion preferences", async () => {

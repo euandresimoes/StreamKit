@@ -3,6 +3,6 @@ export function captureButtonLabel(
   participantCount: number,
   temporarilyPaused = false,
 ): string {
-  if (active && temporarilyPaused) return "Captura pausada";
-  return active ? `Capturando (${participantCount} participantes)` : "Iniciar captura";
+  if (active && temporarilyPaused) return "Capture paused";
+  return active ? `Capturing (${participantCount} participants)` : "Start capture";
 }

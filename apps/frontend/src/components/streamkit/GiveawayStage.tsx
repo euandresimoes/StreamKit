@@ -41,7 +41,7 @@ export function GiveawayStage({
       type="button"
       disabled={disabled}
       onClick={onDraw}
-      aria-label={phase === "drawing" ? "Sorteio em andamento" : "Iniciar sorteio"}
+      aria-label={phase === "drawing" ? "Giveaway in progress" : "Start giveaway"}
       className="relative flex h-full min-h-[430px] w-full items-center justify-center overflow-hidden rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait"
     >
       {mode === "wheel" ? (
@@ -60,12 +60,12 @@ export function GiveawayStage({
       {phase === "idle" && participants.length === 0 && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/55 text-muted-foreground backdrop-blur-sm">
           <Gift className="size-10" />
-          <span className="text-sm">Adicione participantes para começar</span>
+          <span className="text-sm">Add participants to begin</span>
         </div>
       )}
       {phase !== "drawing" && participants.length > 0 && (
         <span className="pointer-events-none absolute bottom-5 rounded-full bg-background/75 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-sm">
-          Clique na roleta para sortear
+          Click the wheel to draw
         </span>
       )}
     </button>
@@ -143,7 +143,7 @@ function WheelStage({
       <svg
         viewBox="0 0 240 240"
         className="giveaway-wheel size-[min(48vw,52vh,430px)] min-h-72 min-w-72 overflow-visible rounded-full drop-shadow-[0_10px_28px_rgba(0,0,0,.3)]"
-        aria-label={`Roleta com ${labels.length} participantes`}
+        aria-label={`Wheel with ${labels.length} participants`}
       >
         <g
           ref={wheelRef}

@@ -54,16 +54,16 @@ const PRIORITY_LABELS: Record<TodoPriority, string> = {
   urgent: "Urgente",
 };
 const TODO_TEXT = {
-  addCard: "Adicionar card",
-  addColumn: "Nova coluna",
+  addCard: "Add card",
+  addColumn: "New column",
   boardHint: "Planeje, priorize e acompanhe o trabalho",
-  cardDetails: "Detalhes do card",
-  cardTitle: "Titulo do card",
-  columnTitle: "Titulo da coluna",
+  cardDetails: "Card details",
+  cardTitle: "Card title",
+  columnTitle: "Column title",
   description: "Descricao",
   notes: "Notas",
   priority: "Prioridade",
-  searchWorkspace: "Buscar workspace",
+  searchWorkspace: "Search workspace",
   templates: "Templates",
   workspaces: "Workspaces",
 };
@@ -410,7 +410,7 @@ export function TodoTab() {
                       void todo.updateWorkspace(workspace.id, { isPinned: !workspace.isPinned })
                     }
                   >
-                    <Pin /> {workspace.isPinned ? "Desfixar" : "Fixar"}
+                    <Pin /> {workspace.isPinned ? "Unpin" : "Pin"}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive"
@@ -422,7 +422,7 @@ export function TodoTab() {
                       })
                     }
                   >
-                    <Trash2 /> Excluir
+                    <Trash2 /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -435,7 +435,7 @@ export function TodoTab() {
           className="mt-3"
           onClick={() => setCreatingWorkspace(true)}
         >
-          <Plus /> Novo workspace
+          <Plus /> New workspace
         </Button>
       </aside>
 
@@ -476,7 +476,7 @@ export function TodoTab() {
           <Popover>
             <PopoverTrigger asChild>
               <button
-                aria-label="Cor do workspace"
+                aria-label="Workspace color"
                 className="size-5 rounded-full border border-border"
                 style={{ backgroundColor: todo.board?.workspace.accentColor ?? "var(--muted)" }}
               />
@@ -503,7 +503,7 @@ export function TodoTab() {
         {!todo.board ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
             <Folder className="size-10" />
-            Crie um workspace para comecar.
+            Create a workspace to get started.
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto p-5">
@@ -537,7 +537,7 @@ export function TodoTab() {
                     <button
                       className="cursor-grab rounded-md p-1 text-muted-foreground transition active:cursor-grabbing active:scale-95"
                       onPointerDown={(event) => beginColumnDrag(event, column)}
-                      aria-label="Arrastar coluna"
+                      aria-label="Drag column"
                     >
                       <GripVertical className="size-3.5" />
                     </button>
@@ -592,7 +592,7 @@ export function TodoTab() {
                             void todo.updateColumn(column.id, { isPinned: !column.isPinned })
                           }
                         >
-                          <Star /> {column.isPinned ? "Desfixar" : "Fixar"}
+                          <Star /> {column.isPinned ? "Unpin" : "Pin"}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
@@ -600,7 +600,7 @@ export function TodoTab() {
                             setPendingDelete({ id: column.id, kind: "column", name: column.name })
                           }
                         >
-                          <Trash2 /> Excluir coluna
+                          <Trash2 /> Delete column
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -706,7 +706,7 @@ export function TodoTab() {
         open={pendingDelete !== null}
         onOpenChange={(open) => !open && setPendingDelete(null)}
         busy={todo.busy}
-        title={`Excluir ${pendingDelete?.kind ?? "item"}?`}
+        title={`Delete ${pendingDelete?.kind ?? "item"}?`}
         description={`"${pendingDelete?.name ?? ""}" sera removido permanentemente.`}
         onConfirm={async () => {
           if (!pendingDelete) return;
@@ -720,14 +720,14 @@ export function TodoTab() {
         open={templatesOpen}
         onOpenChange={setTemplatesOpen}
         title="Templates globais"
-        description="Salve e reutilize estruturas em qualquer workspace."
+        description="Save and reuse structures in any workspace."
       >
         <div className="space-y-3">
           <div className="flex gap-2">
             <Input
               value={templateName}
               onChange={(event) => setTemplateName(event.target.value)}
-              placeholder="Nome do template"
+              placeholder="Template name"
             />
             <Button
               disabled={!templateName.trim()}
@@ -736,7 +736,7 @@ export function TodoTab() {
                 setTemplateName("");
               }}
             >
-              Salvar board
+              Save board
             </Button>
           </div>
           {todo.templates.map((template) => (
@@ -831,7 +831,7 @@ function TodoCardContent({
             <Popover>
               <PopoverTrigger asChild>
                 <button
-                  aria-label="Cor do card"
+                  aria-label="Card color"
                   className="mt-0.5 size-3.5 shrink-0 rounded-full border border-border"
                   style={{ backgroundColor: card.accentColor ?? "var(--muted)" }}
                   onClick={(event) => event.stopPropagation()}
@@ -987,7 +987,7 @@ function CardInspector({
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {TODO_TEXT.cardDetails}
         </span>
-        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Fechar detalhes">
+        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close details">
           <X />
         </Button>
       </div>
@@ -1022,7 +1022,7 @@ function CardInspector({
                 className="size-5 rounded-full border border-border"
                 style={{ backgroundColor: color ?? "var(--muted)" }}
               />{" "}
-              Cor do card
+              Card color
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
@@ -1042,7 +1042,7 @@ function CardInspector({
               })
             }
           >
-            Salvar
+            Save
           </Button>
           <Button variant="destructive" size="icon" onClick={onDelete}>
             <Trash2 />

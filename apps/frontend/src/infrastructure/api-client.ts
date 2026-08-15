@@ -54,7 +54,7 @@ export class ApiClient {
           parsed.data.error.details,
         );
       }
-      throw new StreamKitApiError(`A API respondeu com status ${response.status}.`, "HTTP_ERROR");
+      throw new StreamKitApiError(`The API returned status ${response.status}.`, "HTTP_ERROR");
     }
 
     if (response.status === 204 || !options.schema) return undefined as T;

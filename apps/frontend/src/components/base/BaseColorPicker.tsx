@@ -29,7 +29,7 @@ export function BaseColorPicker({ onChange, value }: Props) {
         <button
           key={color}
           type="button"
-          aria-label={`Selecionar cor ${color}`}
+          aria-label={`Select color ${color}`}
           aria-pressed={normalized === color}
           onClick={() => onChange(color)}
           className={cn(
@@ -41,7 +41,7 @@ export function BaseColorPicker({ onChange, value }: Props) {
       ))}
       <button
         type="button"
-        aria-label="Escolher cor personalizada"
+        aria-label="Choose custom color"
         aria-pressed={customSelected}
         onClick={() => inputRef.current?.click()}
         className={cn(
