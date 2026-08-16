@@ -252,31 +252,6 @@ export function SettingsDialog({
                 </p>
 
                 <div className="mt-4 rounded-2xl border border-border bg-surface-2/40 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-primary/15">
-                      <Plug className="size-5 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-semibold">Transporte externo opcional</p>
-                      <p className="text-[11.5px] text-muted-foreground">
-                        {t("settings.externalTransportDescription")}
-                      </p>
-                    </div>
-                    <span className="text-[11px] font-medium capitalize text-muted-foreground">
-                      {integrations.externalTransport?.state ?? t("settings.unavailable")}
-                    </span>
-                  </div>
-                  {integrations.externalTransport && (
-                    <p className="mt-2 text-[10.5px] text-muted-foreground">
-                      {integrations.externalTransport.mode === "tunnel"
-                        ? t("settings.protectedTemporaryTunnel")
-                        : t("settings.noActiveExternalEndpoint")}
-                      {` · ${integrations.externalTransport.endpointCount} endpoint(s)`}
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-4 rounded-2xl border border-border bg-surface-2/40 p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
                       <BaseBrandIcon provider="livepix" className="size-5" />
@@ -285,7 +260,7 @@ export function SettingsDialog({
                       <p className="text-[13px] font-semibold">LivePix Payments</p>
                       <p className="text-[11.5px] text-muted-foreground">
                         {livepixStatus?.configured
-                          ? t("settings.readyToConnect")
+                          ? t("settings.connected")
                           : t("settings.configureProvider")}
                       </p>
                     </div>
@@ -419,7 +394,7 @@ export function SettingsDialog({
                         <p className="text-[13px] font-semibold">Kick Chat</p>
                         <p className="text-[11.5px] text-muted-foreground">
                           {integrations.kickAuth?.configured
-                            ? t("settings.readyToConnect")
+                            ? t("settings.connected")
                             : t("settings.configureProvider")}
                         </p>
                       </div>
@@ -476,11 +451,6 @@ export function SettingsDialog({
                       </Button>
                     </div>
                   ))}
-                  {!integrations.connections.length && (
-                    <p className="py-6 text-center text-xs text-muted-foreground">
-                      {t("settings.noChannelsRegistered")}
-                    </p>
-                  )}
                   {integrations.error && (
                     <p className="text-xs text-destructive">{integrations.error}</p>
                   )}

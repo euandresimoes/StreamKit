@@ -141,6 +141,7 @@ const enUS = {
     livepixPayments: "LivePix Payments",
     connect: "Connect",
     connectedAs: "Connected as {{login}}",
+    connected: "Connected",
     disconnect: "Disconnect",
     connectButton: "Connect",
     code: "Code: {{code}}",

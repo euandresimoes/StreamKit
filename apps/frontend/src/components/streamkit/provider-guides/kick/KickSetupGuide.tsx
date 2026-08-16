@@ -11,16 +11,12 @@ export const kickSetupGuide: ProviderGuide = {
   docsUrl: "https://kick.com/settings/developer",
   steps: [
     {
-      title: "Create a Kick developer application",
+      title: "Create and configure the Kick application",
       description:
-        "Open Settings > Developer and create a new application. Add the Redirect URL and Webhook URL provided by StreamKit, enable the required scopes, create the application, and copy the Client ID and Client Secret.",
+        "Inside Settings > Developer, create a new application, add the Redirect URL and Webhook URL provided by StreamKit, enable all scopes, create the application, and copy the Client ID and Client Secret.",
       actionLabel: "Open Kick developer portal",
       actionUrl: "https://kick.com/settings/developer",
-    },
-    {
-      title: "Enter the application credentials",
-      description:
-        "Copy the Client ID and Client Secret into the secure fields below. StreamKit will reuse the URLs already registered in Kick and open the official authorization page.",
+      imageUrl: "/assets/provider-guides/kick-step-1.png",
     },
   ],
 };
