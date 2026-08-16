@@ -11,7 +11,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[0_1px_0_0_oklch(1_0_0/25%)_inset,0_8px_20px_-10px_oklch(0_0_0/70%)] hover:brightness-108",
+          "bg-primary text-primary-foreground shadow-[0_0_18px_-8px_var(--primary)] hover:brightness-110",
         secondary:
           "bg-white/[0.045] text-secondary-foreground shadow-[0_1px_0_0_oklch(1_0_0/4%)_inset] hover:bg-white/[0.09]",
         ghost: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",

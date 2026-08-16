@@ -6,14 +6,22 @@ directories:
 files:
   - out/**/*
   - package.json
+extraResources:
+  - from: resources/icons
+    to: icons
 asar: true
 asarUnpack:
   - '**/node_modules/better-sqlite3/**/*'
 win:
+  icon: resources/icons/windows.ico
   target:
     - target: nsis
       arch: [x64]
   signExecutable: false
+mac:
+  icon: resources/icons/macos.icns
+linux:
+  icon: resources/icons/linux.png
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true

@@ -57,6 +57,11 @@ const LocalRendererUrlSchema = z
     'Renderer URL must use HTTP loopback',
   )
 
+function getAppAssetPath(fileName: string): string {
+  const basePath = app.isPackaged ? process.resourcesPath : join(__dirname, '../../resources')
+  return join(basePath, 'icons', fileName)
+}
+
 function applyDesktopSettings(settings: UpdateAppSettingsRequest): void {
   desktopSettings = settings
   if (process.platform !== 'darwin' && mainWindow) {
@@ -71,8 +76,8 @@ function applyDesktopSettings(settings: UpdateAppSettingsRequest): void {
   }
   app.setLoginItemSettings({ openAtLogin: settings.openAtLogin })
   if (settings.minimizeToTray && !tray) {
-    const icon = nativeImage.createFromDataURL(
-      `data:image/svg+xml;base64,${Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16" rx="3" fill="#1668c7"/><path d="M4 5h8v2H7v2h5v2H4V9h3V7H4z" fill="white"/></svg>').toString('base64')}`,
+    const icon = nativeImage.createFromPath(
+      getAppAssetPath(process.platform === 'win32' ? 'windows.ico' : 'linux.png'),
     )
     tray = new Tray(icon)
     tray.setToolTip(STREAMKIT_APP_NAME)
@@ -113,6 +118,9 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
     minHeight: 640,
     minWidth: 960,
     show: false,
+    ...(process.platform === 'win32' || process.platform === 'linux'
+      ? { icon: getAppAssetPath(process.platform === 'win32' ? 'windows.ico' : 'linux.png') }
+      : {}),
     title: STREAMKIT_APP_NAME,
     titleBarOverlay:
       process.platform === 'darwin'

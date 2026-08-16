@@ -90,7 +90,7 @@ function AppShellContent() {
         <header className="streamkit-titlebar h-10 shrink-0 border-b border-border">
           <div
             className={cn(
-              "streamkit-titlebar__content flex h-full items-center gap-4",
+              "streamkit-titlebar__content relative flex h-full items-center gap-4",
               fullscreen && "streamkit-titlebar__content--fullscreen",
             )}
           >
@@ -103,6 +103,11 @@ function AppShellContent() {
             >
               <LayoutGrid />
             </Button>
+
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-2">
+              <img src="/assets/streamkit-icon.png" alt="" className="size-5 object-contain" />
+              <span className="text-xs font-semibold tracking-wide text-foreground">StreamKit</span>
+            </div>
 
             <div className="streamkit-titlebar__interactive ml-auto flex h-full items-center gap-1.5">
               <LivePlatformSelector
