@@ -10,6 +10,7 @@ import {
   Settings2,
   Trash2,
   Trophy,
+  UserX,
   Users,
 } from "lucide-react";
 
@@ -39,6 +40,7 @@ export function GiveawaysTab() {
   const [creating, setCreating] = useState(false);
   const [newMaxParticipants, setNewMaxParticipants] = useState(1000);
   const [participantQuery, setParticipantQuery] = useState("");
+  const [overflowParticipants, setOverflowParticipants] = useState<string[]>([]);
   const [configuring, setConfiguring] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [removingParticipant, setRemovingParticipant] = useState<{
@@ -60,6 +62,7 @@ export function GiveawaysTab() {
     setWinner(null);
     setTargetWinner(null);
     setDrawPhase("idle");
+    setOverflowParticipants([]);
   }, [detail?.giveaway.id]);
 
   const createGiveaway = async (name: string) => {
@@ -142,12 +145,6 @@ export function GiveawaysTab() {
         </header>
       )}
 
-      {giveaways.error && (
-        <p className="mb-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
-          {giveaways.error}
-        </p>
-      )}
-
       {!detail ? (
         <EntityHub
           items={giveaways.items}
@@ -200,7 +197,25 @@ export function GiveawaysTab() {
                     live.selected?.provider ?? null,
                     live.selected?.channelId ?? null,
                   );
-                  if (saved) setInput("");
+                  if (saved) {
+                    setInput("");
+                    setOverflowParticipants([]);
+                  } else {
+                    const existing = new Set(
+                      detail.participants.map((participant) => participant.normalizedName),
+                    );
+                    const incoming = input
+                      .split(/\r?\n/)
+                      .map((value) => value.trim())
+                      .filter(Boolean)
+                      .filter((value, index, values) => values.indexOf(value) === index)
+                      .filter((value) => !existing.has(value.toLocaleLowerCase("en-US")));
+                    const capacity = Math.max(
+                      0,
+                      detail.giveaway.maxParticipants - detail.participants.length,
+                    );
+                    setOverflowParticipants(incoming.slice(capacity));
+                  }
                 }}
               >
                 <Users /> Save participants
@@ -254,6 +269,29 @@ export function GiveawaysTab() {
                 )}
               </div>
             </div>
+            {overflowParticipants.length > 0 && (
+              <section className="mt-3 min-h-0 rounded-xl border border-red-400/25 bg-red-500/[0.06] p-2">
+                <div className="mb-2 flex items-center justify-between px-1">
+                  <p className="text-[11px] font-semibold">Outside the giveaway</p>
+                  <span className="text-[10px] text-muted-foreground">
+                    {overflowParticipants.length}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {overflowParticipants.map((participant, index) => (
+                    <div
+                      key={`${participant}-${index}`}
+                      className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-xs"
+                    >
+                      <UserX className="size-3.5 shrink-0 text-red-400/70" />
+                      <span className="min-w-0 flex-1 truncate text-muted-foreground line-through decoration-red-400/60">
+                        {participant}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </aside>
 
           <section className="min-h-[430px] rounded-3xl p-3 text-center">

@@ -1,6 +1,7 @@
 import { ApiErrorSchema } from "@streamkit/contracts";
 
 import { getBackendConnection } from "./desktop-bridge";
+import { publishNotification } from "@/modules/notifications/notifications";
 
 export class StreamKitApiError extends Error {
   public constructor(
@@ -40,6 +41,14 @@ export class ApiClient {
       const payload: unknown = await response.json().catch(() => undefined);
       const parsed = ApiErrorSchema.safeParse(payload);
       if (parsed.success) {
+        publishNotification({
+          level: "error",
+          message: `${parsed.data.error.message} · Request ID: ${parsed.data.error.requestId}`,
+          title: parsed.data.error.code,
+          ...(parsed.data.error.details
+            ? { details: JSON.stringify(parsed.data.error.details, null, 2) }
+            : {}),
+        });
         throw new StreamKitApiError(
           formatApiError(
             parsed.data.error.code,
@@ -54,6 +63,11 @@ export class ApiClient {
           parsed.data.error.details,
         );
       }
+      publishNotification({
+        level: "error",
+        message: `The API returned status ${response.status}.`,
+        title: "Request failed",
+      });
       throw new StreamKitApiError(`The API returned status ${response.status}.`, "HTTP_ERROR");
     }
 

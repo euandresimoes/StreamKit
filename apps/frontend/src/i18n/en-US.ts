@@ -31,6 +31,14 @@ const enUS = {
     openModules: "Open modules",
     openSettings: "Open settings",
   },
+  notifications: {
+    title: "Notifications",
+    empty: "No notifications.",
+    back: "Back to notifications",
+    close: "Close notifications",
+    applicationError: "Application error",
+    unexpectedOperation: "Unexpected operation error",
+  },
   errors: {
     rootNotFound: "The StreamKit root element was not found.",
     desktopUnavailable: "The StreamKit desktop integration is not available.",

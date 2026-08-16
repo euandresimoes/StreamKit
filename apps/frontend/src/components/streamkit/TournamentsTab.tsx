@@ -1106,7 +1106,12 @@ export function TournamentsTab() {
                                       {entry?.name ?? "TBD"}
                                     </span>
                                     {result !== "pending" && (
-                                      <span className="text-[9px] uppercase text-muted-foreground">
+                                      <span
+                                        className={cn(
+                                          "text-[9px] uppercase",
+                                          result === "won" ? "text-emerald-400" : "text-red-400",
+                                        )}
+                                      >
                                         {result === "won"
                                           ? "Won"
                                           : result === "lost"
@@ -1223,6 +1228,8 @@ export function TournamentsTab() {
                           <div className="flex flex-wrap gap-2">
                             <Button
                               size="sm"
+                              variant="secondary"
+                              className="text-emerald-400 hover:text-emerald-300"
                               disabled={tournaments.busy}
                               onClick={() =>
                                 void tournaments.completeMatch(
@@ -1237,6 +1244,7 @@ export function TournamentsTab() {
                             <Button
                               size="sm"
                               variant="outline"
+                              className="text-red-400 hover:text-red-300"
                               disabled={tournaments.busy}
                               onClick={() =>
                                 void tournaments.completeMatch(

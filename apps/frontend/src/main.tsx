@@ -6,6 +6,7 @@ import { I18nextProvider } from "react-i18next";
 import { getRouter } from "./router";
 import i18n from "./i18n";
 import "./styles.css";
+import { publishNotification } from "./modules/notifications/notifications";
 
 const rootElement = document.getElementById("root");
 
@@ -14,6 +15,21 @@ if (!rootElement) {
 }
 
 const router = getRouter();
+
+window.addEventListener("error", (event) => {
+  publishNotification({
+    level: "error",
+    message: event.message || "An unexpected application error occurred.",
+    title: i18n.t("notifications.applicationError"),
+  });
+});
+window.addEventListener("unhandledrejection", (event) => {
+  publishNotification({
+    level: "error",
+    message: event.reason instanceof Error ? event.reason.message : String(event.reason),
+    title: i18n.t("notifications.unexpectedOperation"),
+  });
+});
 
 declare module "@tanstack/react-router" {
   interface Register {
