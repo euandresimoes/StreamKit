@@ -5,12 +5,19 @@ import { KickIntegrationSupportSchema } from '@streamkit/contracts'
 export class KickSupportService {
   public status() {
     return KickIntegrationSupportSchema.parse({
-      available: false,
-      capabilities: [],
+      available: true,
+      capabilities: [
+        'chat.read',
+        'chat.write',
+        'chat.message.delete',
+        'chat.user.ban',
+        'chat.user.unban',
+        'live.read',
+        'user.identity',
+      ],
       limitations: [
-        'A API oficial exige client_secret na troca e renovação OAuth; um segredo de aplicativo não pode ser distribuído com segurança no desktop.',
-        'A leitura oficial de chat.message.sent exige um webhook público HTTPS; o StreamKit local não expõe um servidor público.',
-        'Nenhum endpoint privado, reverso ou WebSocket não documentado será utilizado.',
+        'Kick requires the optional local HTTPS tunnel to deliver official webhook events.',
+        'Pinning messages and moderator role changes are not available in the documented API.',
       ],
       provider: 'kick',
       verifiedAt: '2026-08-13',

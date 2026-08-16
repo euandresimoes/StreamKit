@@ -205,8 +205,8 @@ export const SelectYouTubeBroadcastRequestSchema = z.object({
   videoId: z.string().min(1),
 })
 export const KickIntegrationSupportSchema = z.object({
-  available: z.literal(false),
-  capabilities: z.array(IntegrationCapabilitySchema).length(0),
+  available: z.boolean(),
+  capabilities: z.array(IntegrationCapabilitySchema).max(15),
   limitations: z.array(z.string().min(1)).min(1),
   provider: z.literal('kick'),
   verifiedAt: z.iso.date(),

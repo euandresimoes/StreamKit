@@ -12,6 +12,7 @@ import { IntegrationRepository } from './integration.repository'
 import { TwitchLiveControlAdapter } from './twitch/twitch-live-control.adapter'
 import { TwitchChatAdapter } from './twitch/twitch-chat.adapter'
 import { YouTubeBroadcastService } from './youtube/youtube-broadcast.service'
+import { KickChatAdapter } from './kick/kick-chat.adapter'
 
 type ProviderLive = {
   channel?: string
@@ -28,6 +29,7 @@ export class LiveControlService {
     @Inject(TwitchLiveControlAdapter) private readonly twitch: TwitchLiveControlAdapter,
     @Inject(TwitchChatAdapter) private readonly twitchChat: TwitchChatAdapter,
     @Inject(YouTubeBroadcastService) private readonly youtube: YouTubeBroadcastService,
+    @Inject(KickChatAdapter) private readonly kick: KickChatAdapter,
   ) {}
 
   public async list() {
@@ -138,10 +140,17 @@ export class LiveControlService {
         await this.youtube.addModerator(connection.channelId, request.providerUserId)
       if (request.action === 'remove_moderator')
         await this.youtube.removeModerator(connection.channelId, request.providerUserId)
+    } else if (connection.provider === 'kick') {
+      if (request.action === 'delete_message')
+        await this.kick.deleteMessage(connection.channelId, request.externalMessageId)
+      if (request.action === 'ban_user')
+        await this.kick.banUser(connection.channelId, request.providerUserId)
+      if (request.action === 'unban_user')
+        await this.kick.unbanUser(connection.channelId, request.providerUserId)
     } else {
       throw new ApiApplicationError(
         'INTEGRATION_CAPABILITY_UNAVAILABLE',
-        'Kick moderation actions are not available in the current integration',
+        'This provider does not support this action',
         409,
       )
     }

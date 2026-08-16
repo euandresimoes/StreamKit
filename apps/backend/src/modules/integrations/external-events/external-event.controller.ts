@@ -4,6 +4,7 @@ import {
   ExternalEventProviderSchema,
   LivePixWebhookEnvelopeSchema,
 } from '@streamkit/contracts'
+import { z } from 'zod'
 
 import { LocalPublic } from '../../../application/local-public.decorator'
 import { ExternalTransportService } from './external-transport.service'
@@ -24,22 +25,33 @@ export class ExternalEventController {
     @Param('provider') provider: unknown,
     @Param('endpointId') endpointId: string,
     @Headers('x-streamkit-ingress-key') secret: string | undefined,
+    @Headers('kick-event-type') kickEventType: string | undefined,
     @Query('token') token: string | undefined,
     @Body() body: unknown,
   ) {
     const parsedProvider = ExternalEventProviderSchema.parse(provider)
     const ingress =
-      parsedProvider === 'livepix'
+      parsedProvider === 'kick'
         ? (() => {
-            const webhook = LivePixWebhookEnvelopeSchema.parse(body)
+            const messageId = z.object({ message_id: z.string().min(1) }).parse(body).message_id
             return ExternalEventIngressSchema.parse({
-              eventId: webhook.resource.id,
-              eventType: 'payment',
-              payload: webhook,
+              eventId: messageId,
+              eventType: kickEventType ?? 'chat.message.sent',
+              payload: body,
               timestamp: new Date().toISOString(),
             })
           })()
-        : body
+        : parsedProvider === 'livepix'
+          ? (() => {
+              const webhook = LivePixWebhookEnvelopeSchema.parse(body)
+              return ExternalEventIngressSchema.parse({
+                eventId: webhook.resource.id,
+                eventType: 'payment',
+                payload: webhook,
+                timestamp: new Date().toISOString(),
+              })
+            })()
+          : body
     return this.transport.receive(parsedProvider, endpointId, secret ?? token ?? '', ingress)
   }
 }
