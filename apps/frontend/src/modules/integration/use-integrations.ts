@@ -170,7 +170,6 @@ export function useIntegrations(active: boolean) {
           if (result.status === "failed") throw new Error(result.error);
           if (result.status === "expired") throw new Error("Kick authorization expired.");
           setKickAuth(result.authorization);
-          setKickFlow(null);
           await load();
           return;
         }

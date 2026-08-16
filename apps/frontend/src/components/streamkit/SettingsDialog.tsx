@@ -550,12 +550,15 @@ export function SettingsDialog({
             open
             provider={setupProvider}
             busy={setupProvider === "livepix" ? livepixBusy : integrations.busy}
-            error={setupProvider === "livepix" ? livepixError : null}
+            error={setupProvider === "livepix" ? livepixError : integrations.error}
             onOpenChange={(open) => {
               if (!open) setSetupProvider(null);
             }}
             webhookUrl={
               setupProvider === "kick" ? (integrations.kickFlow?.webhookUrl ?? null) : null
+            }
+            redirectUrl={
+              setupProvider === "kick" ? (integrations.kickFlow?.redirectUrl ?? null) : null
             }
             onConnect={(credentials) => {
               if (setupProvider === "livepix" && credentials) {
@@ -584,9 +587,7 @@ export function SettingsDialog({
                 void Promise.all([
                   settingsApi.saveKickClientId(credentials.clientId),
                   settingsApi.saveKickClientSecret(credentials.clientSecret),
-                ])
-                  .then(() => integrations.connectKick())
-                  .finally(() => setSetupProvider(null));
+                ]).then(() => integrations.connectKick());
                 return;
               }
               if (setupProvider === "youtube") void integrations.connectYouTube();

@@ -98,6 +98,7 @@ export class KickAuthService implements OnModuleDestroy {
       authorizationUrl: url.toString(),
       expiresAt: new Date(expiresAt).toISOString(),
       flowId,
+      redirectUrl: redirectUri,
       webhookUrl: endpoint.callbackUrl,
     })
   }

@@ -185,6 +185,7 @@ export const KickAuthorizationStartSchema = z.object({
   authorizationUrl: z.url(),
   expiresAt: z.iso.datetime(),
   flowId: z.uuid(),
+  redirectUrl: z.url(),
   webhookUrl: z.url(),
 })
 export const KickAuthorizationPollSchema = z.discriminatedUnion('status', [
