@@ -1,5 +1,5 @@
 import { Bell, ChevronLeft, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,16 @@ export function NotificationsCenter() {
   const { notifications, unreadCount, markRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<NotificationRecord | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
 
   const openNotification = (notification: NotificationRecord) => {
     markRead(notification.id);
@@ -30,7 +40,7 @@ export function NotificationsCenter() {
   };
 
   return (
-    <div className="relative h-full">
+    <div ref={containerRef} className="relative h-full">
       <Button
         variant="ghost"
         size="icon-sm"
@@ -50,7 +60,7 @@ export function NotificationsCenter() {
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 top-full z-50 w-[min(360px,calc(100vw-1rem))] origin-top-right animate-in slide-in-from-top-2 zoom-in-95 border border-border-strong bg-popover/95 p-2 text-popover-foreground shadow-[var(--shadow-float)] backdrop-blur-2xl">
+        <div className="glass-panel absolute right-0 top-full z-50 w-[min(360px,calc(100vw-1rem))] origin-top-right animate-in slide-in-from-top-2 zoom-in-95 rounded-3xl border-border-strong bg-popover/95 p-2 text-popover-foreground">
           {selected ? (
             <div className="animate-in slide-in-from-right-2 duration-200">
               <div className="flex items-center gap-2 border-b border-border px-1 pb-2">
