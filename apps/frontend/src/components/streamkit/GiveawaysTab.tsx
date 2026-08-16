@@ -277,7 +277,7 @@ export function GiveawaysTab() {
             <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl border border-border bg-card/60 p-4 text-center">
               <Trophy
                 className={
-                  winner ? "mb-3 size-6 text-primary" : "mb-3 size-6 text-muted-foreground"
+                  winner ? "mb-3 size-6 text-yellow-400" : "mb-3 size-6 text-muted-foreground"
                 }
               />
               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

@@ -276,7 +276,7 @@ function CaseStage({
 
   return (
     <div ref={viewportRef} className="relative w-full overflow-hidden py-8">
-      <div className="pointer-events-none absolute inset-y-3 left-1/2 z-10 w-px bg-primary" />
+      <div className="pointer-events-none absolute inset-y-3 left-1/2 z-10 w-px bg-border-strong" />
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-background to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-background to-transparent" />
       <div
@@ -291,7 +291,7 @@ function CaseStage({
             key={`${participant.id}-${index}`}
             className="flex h-28 w-36 shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card px-3 shadow-lg"
           >
-            <CircleUserRound className="size-8 text-primary" />
+            <CircleUserRound className="size-8 text-yellow-400" />
             <span className="w-full truncate text-center text-xs font-semibold">
               {participant.displayName}
             </span>

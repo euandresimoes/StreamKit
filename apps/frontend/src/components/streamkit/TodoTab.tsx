@@ -391,7 +391,7 @@ export function TodoTab() {
                 <span>{workspace.icon}</span>
                 <span className="truncate">{workspace.name}</span>
                 {workspace.isPinned && (
-                  <Pin className="size-3 shrink-0 fill-current text-primary" />
+                  <Pin className="size-3 shrink-0 fill-current text-muted-foreground" />
                 )}
               </button>
               <DropdownMenu>
@@ -452,7 +452,7 @@ export function TodoTab() {
                 {EMOJIS.map((emoji) => (
                   <button
                     key={emoji}
-                    className="grid size-8 place-items-center rounded-lg hover:bg-accent"
+                    className="grid size-8 place-items-center rounded-lg hover:bg-white/[0.08]"
                     onClick={() =>
                       todo.board &&
                       void todo.updateWorkspace(todo.board.workspace.id, { icon: emoji })
@@ -744,7 +744,7 @@ export function TodoTab() {
               key={template.id}
               className="flex items-center gap-2 rounded-xl border border-border p-3"
             >
-              <LayoutTemplate className="size-4 text-primary" />
+              <LayoutTemplate className="size-4 text-muted-foreground" />
               <span className="flex-1 text-sm">{template.name}</span>
               <Button size="sm" onClick={() => void todo.applyTemplate(template.id)}>
                 Aplicar
@@ -826,7 +826,7 @@ function TodoCardContent({
       <div className="min-w-0 flex-1">
         <div className="flex items-start gap-1">
           <p className="min-w-0 flex-1 truncate text-sm font-medium">{card.title}</p>
-          {card.isPinned && <Pin className="size-3 shrink-0 fill-current text-primary" />}
+          {card.isPinned && <Pin className="size-3 shrink-0 fill-current text-muted-foreground" />}
           {onColorChange && (
             <Popover>
               <PopoverTrigger asChild>

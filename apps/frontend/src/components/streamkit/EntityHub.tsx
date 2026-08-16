@@ -50,9 +50,9 @@ export function EntityHub({
                 type="button"
                 key={item.id}
                 onClick={() => onSelect(item.id)}
-                className="raise group flex min-h-28 flex-col items-start rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-border-strong hover:bg-accent/40"
+                className="raise group flex min-h-28 flex-col items-start rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-border-strong hover:bg-white/[0.05]"
               >
-                <span className="flex size-9 items-center justify-center rounded-xl bg-surface-2 text-primary">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
                   <Icon className="size-4" />
                 </span>
                 <span className="mt-4 line-clamp-2 text-sm font-semibold">{item.name}</span>

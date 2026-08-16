@@ -459,7 +459,7 @@ export function TournamentsTab() {
                                 type="button"
                                 aria-label={`Expand participant ${participant.displayName}`}
                                 onClick={() => setParticipantsExpanded(true)}
-                                className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                               >
                                 {getParticipantInitials(participant.displayName)}
                               </button>
@@ -903,7 +903,7 @@ export function TournamentsTab() {
                               type="button"
                               aria-label={`Expand participant ${participant.displayName}`}
                               onClick={() => setTeamsExpanded(true)}
-                              className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                               {getParticipantInitials(participant.displayName)}
                             </button>
@@ -985,8 +985,10 @@ export function TournamentsTab() {
                                 }
                               }}
                               className={cn(
-                                "bracket-match group relative rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-accent/40",
-                                active ? "border-primary ring-2 ring-primary/25" : "border-border",
+                                "bracket-match group relative rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-white/[0.05]",
+                                active
+                                  ? "border-border-strong ring-2 ring-white/15"
+                                  : "border-border",
                               )}
                             >
                               {!!detail.matches.length && (
@@ -1097,7 +1099,7 @@ export function TournamentsTab() {
                                     <span
                                       className={cn(
                                         "min-w-0 flex-1 truncate",
-                                        result === "won" && "text-primary",
+                                        result === "won" && "text-yellow-400",
                                         ["lost", "forfeit"].includes(result) && "opacity-50",
                                       )}
                                     >
@@ -1283,7 +1285,7 @@ export function TournamentsTab() {
           description={detail.tournament.name}
         >
           <div className="flex flex-col gap-5">
-            <section className="flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/[0.06] p-4">
+            <section className="flex items-center gap-4 rounded-2xl border border-yellow-400/25 bg-yellow-400/[0.06] p-4">
               {champion?.avatarUrl ? (
                 <img
                   src={champion.avatarUrl}
@@ -1301,7 +1303,7 @@ export function TournamentsTab() {
                 </span>
               )}
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-yellow-400">
                   Champion
                 </p>
                 <p className="truncate text-lg font-semibold">
@@ -1332,7 +1334,7 @@ export function TournamentsTab() {
                         {left?.name ?? "To be decided"}{" "}
                         <span className="text-muted-foreground">×</span> {right?.name ?? "TBD"}
                       </span>
-                      <span className="max-w-32 truncate font-medium text-primary">
+                      <span className="max-w-32 truncate font-medium text-yellow-400">
                         {winner?.name ?? (match.leftResult === "draw" ? "Draw" : "No result")}
                       </span>
                     </div>

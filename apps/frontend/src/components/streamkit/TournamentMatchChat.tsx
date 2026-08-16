@@ -73,7 +73,7 @@ function MatchSideChat({
   return (
     <section className="min-w-0 rounded-xl border border-border bg-background/40 p-3">
       <div className="mb-3 flex items-center gap-2 border-b border-border pb-2">
-        <MessageCircle className="size-3.5 text-primary" />
+        <MessageCircle className="size-3.5 text-muted-foreground" />
         <p className="truncate text-[12px] font-semibold">{thread?.subject ?? "Loading…"}</p>
       </div>
       {!thread?.identities.length && (
