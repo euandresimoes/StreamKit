@@ -85,6 +85,13 @@ describe('Kick OAuth', () => {
         response.on('end', resolve)
       }).on('error', reject)
     })
+    await new Promise<void>((resolve, reject) => {
+      get(callback, (response) => {
+        expect(response.statusCode).toBe(200)
+        response.resume()
+        response.on('end', resolve)
+      }).on('error', reject)
+    })
 
     const result = await service.poll(flow.flowId)
 

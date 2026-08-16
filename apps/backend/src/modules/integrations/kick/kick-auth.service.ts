@@ -162,12 +162,25 @@ export class KickAuthService implements OnModuleDestroy {
 
   private async handleCallback(flow: Pending, requestUrl: string, response: ServerResponse) {
     const url = new URL(requestUrl, flow.redirectUri)
+    if (url.pathname !== '/oauth/kick/callback') {
+      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' })
+      response.end('Not found')
+      return
+    }
+    if (flow.token) {
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+      response.end(
+        '<h1>Kick authorization complete</h1><p>You can close this tab and return to StreamKit.</p>',
+      )
+      return
+    }
+    if (flow.error) {
+      response.writeHead(400, { 'content-type': 'text/html; charset=utf-8' })
+      response.end('<h1>Kick authorization failed</h1><p>Return to StreamKit and try again.</p>')
+      return
+    }
     const code = url.searchParams.get('code')
-    if (
-      url.pathname !== '/oauth/kick/callback' ||
-      url.searchParams.get('state') !== flow.state ||
-      !code
-    ) {
+    if (url.searchParams.get('state') !== flow.state || !code) {
       flow.error = url.searchParams.get('error') ?? 'Invalid Kick OAuth callback or state'
     } else {
       try {
