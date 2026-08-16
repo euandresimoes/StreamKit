@@ -322,9 +322,7 @@ export function SettingsDialog({
                     <p className="truncate text-[11.5px] text-muted-foreground">
                       {integrations.twitchAuth?.configured
                         ? t("settings.connectedAs", { login: integrations.twitchAuth.login })
-                        : integrations.twitchAuth?.available
-                          ? t("settings.readyToConnect")
-                          : t("settings.configureProvider")}
+                        : t("settings.configureProvider")}
                     </p>
                     {integrations.twitchDevice && (
                       <p className="mt-1 text-xs font-semibold tracking-widest text-primary">
@@ -362,9 +360,7 @@ export function SettingsDialog({
                       <p className="truncate text-[11.5px] text-muted-foreground">
                         {integrations.youtubeAuth?.configured
                           ? t("settings.authorizedSelectActiveStream")
-                          : integrations.youtubeAuth?.available
-                            ? t("settings.readyToConnect")
-                            : t("settings.configureProvider")}
+                          : t("settings.configureProvider")}
                       </p>
                     </div>
                     {integrations.youtubeAuth?.configured ? (
