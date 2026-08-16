@@ -1,6 +1,11 @@
 import { useSyncExternalStore } from "react";
 
-import { getNotifications, markNotificationRead, subscribeNotifications } from "./notifications";
+import {
+  clearNotifications,
+  getNotifications,
+  markNotificationRead,
+  subscribeNotifications,
+} from "./notifications";
 
 export function useNotifications() {
   const notifications = useSyncExternalStore(
@@ -12,5 +17,6 @@ export function useNotifications() {
     notifications,
     unreadCount: notifications.filter((notification) => !notification.read).length,
     markRead: markNotificationRead,
+    clear: clearNotifications,
   };
 }

@@ -1,4 +1,4 @@
-import { Bell, ChevronLeft, X } from "lucide-react";
+import { Bell, CheckCheck, ChevronLeft, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -20,7 +20,7 @@ function levelClass(level: NotificationRecord["level"]) {
 
 export function NotificationsCenter() {
   const { t } = useTranslation();
-  const { notifications, unreadCount, markRead } = useNotifications();
+  const { clear, notifications, unreadCount, markRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<NotificationRecord | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -99,6 +99,18 @@ export function NotificationsCenter() {
               <div className="flex items-center gap-2 border-b border-border px-2 pb-2">
                 <Bell className="size-3.5 text-muted-foreground" />
                 <p className="flex-1 text-xs font-semibold">{t("notifications.title")}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={!notifications.length}
+                  onClick={() => {
+                    clear();
+                    setSelected(null);
+                  }}
+                >
+                  <CheckCheck />
+                  {t("notifications.markAllRead")}
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon-sm"

@@ -12,9 +12,11 @@ import { MAX_VISIBLE_CHAT_MESSAGES } from "@/modules/performance/bounded-render-
 export function FocusedChatPanel({
   target,
   targetId,
+  visible = true,
 }: {
   target: "giveaways" | "tournaments";
   targetId: string;
+  visible?: boolean;
 }) {
   const [thread, setThread] = useState<FocusedChatThread | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,16 @@ export function FocusedChatPanel({
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [rendered, setRendered] = useState(visible && open);
+
+  useEffect(() => {
+    if (visible && open) {
+      setRendered(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setRendered(false), 180);
+    return () => window.clearTimeout(timer);
+  }, [visible]);
 
   useEffect(() => {
     setOpen(true);
@@ -96,10 +108,14 @@ export function FocusedChatPanel({
     }
   };
 
-  if (!open) {
+  const panelVisible = visible && open;
+
+  if (!rendered && !visible) return null;
+
+  if (!rendered && visible && !open) {
     return (
       <Button
-        className="fixed bottom-5 right-5 z-40 rounded-full shadow-2xl"
+        className="fixed bottom-5 right-5 z-40 rounded-none shadow-2xl"
         size="icon"
         aria-label="Reopen winner chat"
         title="Reopen winner chat"
@@ -113,7 +129,7 @@ export function FocusedChatPanel({
   return (
     <aside
       aria-label="Focused chat"
-      className="glass-panel fixed bottom-5 right-5 z-40 flex max-h-[70vh] w-[360px] flex-col overflow-hidden rounded-3xl border border-border-strong bg-popover/95 shadow-2xl"
+      className={`glass-panel fixed bottom-5 right-5 z-40 flex max-h-[70vh] w-[360px] flex-col overflow-hidden rounded-3xl border border-border-strong bg-popover/95 shadow-2xl ${panelVisible ? "motion-safe:animate-in motion-safe:slide-in-from-right-4" : "motion-safe:animate-out motion-safe:slide-out-to-right-4"}`}
     >
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         {identity?.avatarUrl ? (
@@ -218,7 +234,7 @@ export function FocusedChatPanel({
           />
           <Button
             size="icon"
-            className="aspect-square shrink-0 rounded-full p-0"
+            className="aspect-square shrink-0 rounded-none p-0"
             loading={sending}
             disabled={!writer || !message.trim()}
             aria-label="Send message"

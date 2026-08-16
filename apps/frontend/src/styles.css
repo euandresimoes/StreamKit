@@ -61,19 +61,19 @@
 .dark {
   --radius: 0;
 
-  --background: oklch(18.674% 0.00002 271.152);
-  --foreground: oklch(0.945 0.004 85);
+  --background: #19191a;
+  --foreground: #f2edf8;
 
   --surface: oklch(18.674% 0.00002 271.152);
   --surface-2: oklch(25.197% 0.00003 271.152);
 
   --card: oklch(20.463% 0.00002 271.152);
-  --card-foreground: oklch(0.945 0.004 85);
+  --card-foreground: #f2edf8;
   --popover: oklch(25.197% 0.00003 271.152);
-  --popover-foreground: oklch(0.945 0.004 85);
+  --popover-foreground: #f2edf8;
 
   --primary: #9746ee;
-  --primary-foreground: #ffffff;
+  --primary-foreground: #f2edf8;
 
   --secondary: oklch(0% 0 0 / 0);
   --secondary-foreground: oklch(0.93 0.004 85);

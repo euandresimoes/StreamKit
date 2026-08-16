@@ -36,6 +36,7 @@ const enUS = {
     empty: "No notifications.",
     back: "Back to notifications",
     close: "Close notifications",
+    markAllRead: "Mark all as read",
     applicationError: "Application error",
     unexpectedOperation: "Unexpected operation error",
   },

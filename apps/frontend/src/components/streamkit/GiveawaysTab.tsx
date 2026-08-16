@@ -408,14 +408,18 @@ export function GiveawaysTab() {
           setRemovingParticipant(null);
         }}
       />
-      {detail &&
-        shouldShowGiveawayFocusedChat(drawPhase, winner, detail.activeRound?.completedAt) && (
-          <FocusedChatPanel
-            key={detail.activeRound?.id}
-            target="giveaways"
-            targetId={detail.giveaway.id}
-          />
-        )}
+      {detail && (
+        <FocusedChatPanel
+          key={detail.activeRound?.id}
+          target="giveaways"
+          targetId={detail.giveaway.id}
+          visible={shouldShowGiveawayFocusedChat(
+            drawPhase,
+            winner,
+            detail.activeRound?.completedAt,
+          )}
+        />
+      )}
     </div>
   );
 }
