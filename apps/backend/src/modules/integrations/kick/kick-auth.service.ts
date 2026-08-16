@@ -4,6 +4,7 @@ import { createServer, type Server, type ServerResponse } from 'node:http'
 import { Inject, Injectable, type OnModuleDestroy } from '@nestjs/common'
 import {
   KickAuthorizationPollSchema,
+  KickAuthorizationSetupSchema,
   KickAuthorizationStartSchema,
   KickAuthorizationStatusSchema,
 } from '@streamkit/contracts'
@@ -46,6 +47,7 @@ type Pending = {
 @Injectable()
 export class KickAuthService implements OnModuleDestroy {
   private readonly pending = new Map<string, Pending>()
+  private preparedFlowId: string | null = null
   private refreshPromise: Promise<z.infer<typeof StoredSchema>> | null = null
 
   public constructor(
@@ -57,48 +59,49 @@ export class KickAuthService implements OnModuleDestroy {
     const clientId = await this.requireClientId()
     const endpoint = await this.transport.register('kick')
     if (!endpoint.callbackUrl) throw new Error('KICK_WEBHOOK_URL_UNAVAILABLE')
-    const flowId = randomUUID()
-    const state = randomBytes(32).toString('base64url')
-    const codeVerifier = randomBytes(64).toString('base64url')
-    const challenge = createHash('sha256').update(codeVerifier).digest('base64url')
-    const expiresAt = Date.now() + 10 * 60_000
-    const server = createServer()
-    await new Promise<void>((resolve, reject) => {
-      server.once('error', reject)
-      server.listen(0, '127.0.0.1', resolve)
-    })
-    const address = server.address()
-    if (!address || typeof address === 'string') throw new Error('KICK_LOOPBACK_FAILED')
-    const redirectUri = `http://127.0.0.1:${address.port}/oauth/kick/callback`
-    const flow: Pending = {
-      codeVerifier,
-      expiresAt,
-      redirectUri,
-      server,
-      state,
-      error: null,
-      token: null,
+    const prepared = this.preparedFlowId ? this.pending.get(this.preparedFlowId) : undefined
+    const flowId = prepared && prepared.expiresAt > Date.now() ? this.preparedFlowId! : randomUUID()
+    if (!prepared) {
+      if (this.preparedFlowId) this.finish(this.preparedFlowId)
+      this.preparedFlowId = null
     }
-    this.pending.set(flowId, flow)
-    server.on(
-      'request',
-      (request, response) => void this.handleCallback(flow, request.url ?? '/', response),
-    )
+    const flow = prepared ?? (await this.createFlow(flowId)).flow
+    this.preparedFlowId = null
+    const challenge = createHash('sha256').update(flow.codeVerifier).digest('base64url')
     const url = new URL('https://id.kick.com/oauth/authorize')
     url.search = new URLSearchParams({
       client_id: clientId,
       code_challenge: challenge,
       code_challenge_method: 'S256',
-      redirect_uri: redirectUri,
+      redirect_uri: flow.redirectUri,
       response_type: 'code',
       scope: SCOPES,
-      state,
+      state: flow.state,
     }).toString()
     return KickAuthorizationStartSchema.parse({
       authorizationUrl: url.toString(),
-      expiresAt: new Date(expiresAt).toISOString(),
+      expiresAt: new Date(flow.expiresAt).toISOString(),
       flowId,
-      redirectUrl: redirectUri,
+      redirectUrl: flow.redirectUri,
+      webhookUrl: endpoint.callbackUrl,
+    })
+  }
+
+  public async prepare() {
+    const endpoint = await this.transport.register('kick')
+    if (!endpoint.callbackUrl) throw new Error('KICK_WEBHOOK_URL_UNAVAILABLE')
+    const existing = this.preparedFlowId ? this.pending.get(this.preparedFlowId) : undefined
+    const prepared =
+      existing && existing.expiresAt > Date.now()
+        ? { flowId: this.preparedFlowId!, flow: existing }
+        : await this.createFlow(randomUUID())
+    if (existing) this.preparedFlowId = prepared.flowId
+    else {
+      if (this.preparedFlowId) this.finish(this.preparedFlowId)
+      this.preparedFlowId = prepared.flowId
+    }
+    return KickAuthorizationSetupSchema.parse({
+      redirectUrl: prepared.flow.redirectUri,
       webhookUrl: endpoint.callbackUrl,
     })
   }
@@ -187,6 +190,34 @@ export class KickAuthService implements OnModuleDestroy {
     }
     response.writeHead(flow.error ? 400 : 200, { 'content-type': 'text/plain; charset=utf-8' })
     response.end(flow.error ?? 'Authorization received. Return to StreamKit.')
+  }
+
+  private async createFlow(flowId: string) {
+    const state = randomBytes(32).toString('base64url')
+    const codeVerifier = randomBytes(64).toString('base64url')
+    const expiresAt = Date.now() + 10 * 60_000
+    const server = createServer()
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject)
+      server.listen(0, '127.0.0.1', resolve)
+    })
+    const address = server.address()
+    if (!address || typeof address === 'string') throw new Error('KICK_LOOPBACK_FAILED')
+    const flow: Pending = {
+      codeVerifier,
+      expiresAt,
+      redirectUri: `http://127.0.0.1:${address.port}/oauth/kick/callback`,
+      server,
+      state,
+      error: null,
+      token: null,
+    }
+    this.pending.set(flowId, flow)
+    server.on(
+      'request',
+      (request, response) => void this.handleCallback(flow, request.url ?? '/', response),
+    )
+    return { flowId, flow }
   }
 
   private async refresh(current: z.infer<typeof StoredSchema>) {

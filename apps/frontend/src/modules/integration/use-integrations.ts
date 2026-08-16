@@ -1,6 +1,7 @@
 import type {
   ExternalTransportSnapshot,
   IntegrationConnection,
+  KickAuthorizationSetup,
   KickAuthorizationStart,
   KickAuthorizationStatus,
   KickIntegrationSupport,
@@ -27,6 +28,7 @@ export function useIntegrations(active: boolean) {
   const [kickSupport, setKickSupport] = useState<KickIntegrationSupport | null>(null);
   const [kickAuth, setKickAuth] = useState<KickAuthorizationStatus | null>(null);
   const [kickFlow, setKickFlow] = useState<KickAuthorizationStart | null>(null);
+  const [kickSetup, setKickSetup] = useState<KickAuthorizationSetup | null>(null);
   const [externalTransport, setExternalTransport] = useState<ExternalTransportSnapshot | null>(
     null,
   );
@@ -82,6 +84,17 @@ export function useIntegrations(active: boolean) {
       setBusy(false);
     }
   };
+  const prepareKickAuth = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setKickSetup(await integrationApi.prepareKickAuth());
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not prepare Kick connection.");
+    } finally {
+      setBusy(false);
+    }
+  }, []);
   return {
     busy,
     connections,
@@ -93,7 +106,9 @@ export function useIntegrations(active: boolean) {
     kickSupport,
     kickAuth,
     kickFlow,
+    kickSetup,
     externalTransport,
+    prepareKickAuth,
     connectTwitch: async () => {
       setBusy(true);
       setError(null);

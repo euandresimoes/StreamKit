@@ -126,6 +126,20 @@ export function ProviderSetupWizard({
                 ))}
               </div>
             </div>
+            {provider === "kick" && (redirectUrl || webhookUrl) && (
+              <div className="mt-6 space-y-2 border-t border-border pt-4">
+                <div className="flex items-center gap-2 text-xs font-semibold">
+                  <ShieldCheck className="size-3.5" /> Kick connection URLs
+                </div>
+                <p className="text-[10px] leading-4 text-muted-foreground">
+                  Use the redirect URL in the OAuth Redirect URL field and the webhook URL in the
+                  Webhook URL field of your Kick developer application. The webhook URL is temporary
+                  and must be updated after restarting StreamKit.
+                </p>
+                {redirectUrl && <BaseCopyField label="OAuth Redirect URL" value={redirectUrl} />}
+                {webhookUrl && <BaseCopyField label="Webhook URL" value={webhookUrl} />}
+              </div>
+            )}
             {needsClientId && (
               <div className="mt-6 space-y-2 border-t border-border pt-4">
                 <div className="flex items-center gap-2 text-xs font-semibold">
@@ -152,20 +166,6 @@ export function ProviderSetupWizard({
                   <ShieldCheck className="size-3" /> Stored with the operating system secure
                   storage.
                 </p>
-              </div>
-            )}
-            {provider === "kick" && (redirectUrl || webhookUrl) && (
-              <div className="mt-6 space-y-2 border-t border-border pt-4">
-                <div className="flex items-center gap-2 text-xs font-semibold">
-                  <ShieldCheck className="size-3.5" /> Kick connection URLs
-                </div>
-                <p className="text-[10px] leading-4 text-muted-foreground">
-                  Use the redirect URL in the OAuth Redirect URL field and the webhook URL in the
-                  Webhook URL field of your Kick developer application. The webhook URL is temporary
-                  and must be updated after restarting StreamKit.
-                </p>
-                {redirectUrl && <BaseCopyField label="OAuth Redirect URL" value={redirectUrl} />}
-                {webhookUrl && <BaseCopyField label="Webhook URL" value={webhookUrl} />}
               </div>
             )}
             <div className="mt-8 flex justify-between gap-2">

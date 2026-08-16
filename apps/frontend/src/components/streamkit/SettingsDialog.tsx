@@ -88,6 +88,9 @@ export function SettingsDialog({
         .then(setLivepixStatus)
         .catch(() => undefined);
   }, [open, section]);
+  useEffect(() => {
+    if (setupProvider === "kick") void integrations.prepareKickAuth();
+  }, [integrations.prepareKickAuth, setupProvider]);
 
   const saveLivepix = async (credentials: { clientId: string; clientSecret: string }) => {
     setLivepixBusy(true);
@@ -555,10 +558,16 @@ export function SettingsDialog({
               if (!open) setSetupProvider(null);
             }}
             webhookUrl={
-              setupProvider === "kick" ? (integrations.kickFlow?.webhookUrl ?? null) : null
+              setupProvider === "kick"
+                ? (integrations.kickFlow?.webhookUrl ?? integrations.kickSetup?.webhookUrl ?? null)
+                : null
             }
             redirectUrl={
-              setupProvider === "kick" ? (integrations.kickFlow?.redirectUrl ?? null) : null
+              setupProvider === "kick"
+                ? (integrations.kickFlow?.redirectUrl ??
+                  integrations.kickSetup?.redirectUrl ??
+                  null)
+                : null
             }
             onConnect={(credentials) => {
               if (setupProvider === "livepix" && credentials) {

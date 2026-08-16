@@ -4,6 +4,7 @@ import {
   FocusedChatThreadSchema,
   IntegrationConnectionSchema,
   KickAuthorizationPollSchema,
+  KickAuthorizationSetupSchema,
   KickAuthorizationStartSchema,
   KickAuthorizationStatusSchema,
   KickIntegrationSupportSchema,
@@ -42,6 +43,11 @@ export const integrationApi = {
   kickAuthStatus: () =>
     apiClient.request("/api/v1/integrations/kick/auth/status", {
       schema: KickAuthorizationStatusSchema,
+    }),
+  prepareKickAuth: () =>
+    apiClient.request("/api/v1/integrations/kick/auth/setup", {
+      method: "POST",
+      schema: KickAuthorizationSetupSchema,
     }),
   beginKickAuth: () =>
     apiClient.request("/api/v1/integrations/kick/auth", {

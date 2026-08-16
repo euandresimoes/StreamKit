@@ -181,6 +181,10 @@ export const KickAuthorizationStatusSchema = z.object({
   expiresAt: z.iso.datetime().nullable(),
   scopes: z.array(z.string()),
 })
+export const KickAuthorizationSetupSchema = z.object({
+  redirectUrl: z.url(),
+  webhookUrl: z.url(),
+})
 export const KickAuthorizationStartSchema = z.object({
   authorizationUrl: z.url(),
   expiresAt: z.iso.datetime(),
@@ -234,5 +238,6 @@ export type TwitchDeviceAuthorization = z.infer<typeof TwitchDeviceAuthorization
 export type YouTubeAuthorizationStatus = z.infer<typeof YouTubeAuthorizationStatusSchema>
 export type YouTubeLiveBroadcast = z.infer<typeof YouTubeLiveBroadcastSchema>
 export type KickAuthorizationStatus = z.infer<typeof KickAuthorizationStatusSchema>
+export type KickAuthorizationSetup = z.infer<typeof KickAuthorizationSetupSchema>
 export type KickAuthorizationStart = z.infer<typeof KickAuthorizationStartSchema>
 export type KickAuthorizationPoll = z.infer<typeof KickAuthorizationPollSchema>

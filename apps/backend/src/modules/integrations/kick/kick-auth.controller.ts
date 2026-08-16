@@ -8,6 +8,9 @@ export class KickAuthController {
   @Post() public begin() {
     return this.auth.begin()
   }
+  @Post('setup') public setup() {
+    return this.auth.prepare()
+  }
   @Delete() public disconnect() {
     return this.auth.disconnect()
   }

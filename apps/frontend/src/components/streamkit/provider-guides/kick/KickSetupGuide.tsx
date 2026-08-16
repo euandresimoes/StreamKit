@@ -13,14 +13,14 @@ export const kickSetupGuide: ProviderGuide = {
     {
       title: "Create a Kick developer application",
       description:
-        "Open the Kick developer portal and create an application. The OAuth redirect is handled locally by StreamKit. The temporary HTTPS webhook URL will appear in this guide after you continue and must be registered in Kick's Webhook URL field.",
+        "Open the Kick developer portal and create an application. The Redirect URL and temporary HTTPS Webhook URL are shown in this guide as soon as it opens. Register both values in the application before copying credentials.",
       actionLabel: "Open Kick developer portal",
       actionUrl: "https://dev.kick.com/",
     },
     {
       title: "Enter the application credentials",
       description:
-        "Copy the Client ID and Client Secret into the secure fields below. After you continue, copy the generated webhook URL into Kick, save the application, and authorize StreamKit. Request only user:read, channel:read, chat:write, events:subscribe, moderation:ban, and chat moderation permissions.",
+        "Copy the Client ID and Client Secret into the secure fields below. StreamKit will reuse the URLs already registered in Kick and open the official authorization page. Request only user:read, channel:read, chat:write, events:subscribe, moderation:ban, and chat moderation permissions.",
     },
   ],
 };
