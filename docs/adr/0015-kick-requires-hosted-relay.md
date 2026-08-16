@@ -1,6 +1,6 @@
 # ADR 0015 — Kick exige relay hospedado para integração segura
 
-- Status: aceito
+- Status: superseded by ADR 0030
 - Data: 2026-08-13
 - Referências: especificação seções 8, 10, 17 e 21; ADR 0014; Batch 18
 
@@ -17,7 +17,7 @@ O StreamKit é um desktop local-first e não possui backend público. A API ofic
 3. Criar agora um relay hospedado do StreamKit.
 4. Expor a ausência de capacidades e adiar o relay para uma decisão de produto/infraestrutura.
 
-## Decisão
+## Decisão histórica
 
 Adotar a opção 4. O provider Kick declara zero capacidades no modo local. A UI explica as limitações
 e os domínios de participantes continuam dependendo apenas das capacidades normalizadas. Não serão

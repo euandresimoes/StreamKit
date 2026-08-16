@@ -60,16 +60,16 @@ campeonatos manuais não dependem dos providers e permanecem disponíveis offlin
 
 ## Kick
 
-A documentação oficial foi revalidada em 2026-08-13. Atualmente, a Kick exige `client_secret` tanto
-na troca do authorization code quanto no refresh OAuth. Esse segredo pertence ao aplicativo e não
-pode ser embutido com segurança em um desktop distribuído. Além disso, `chat.message.sent` é entregue
-exclusivamente por webhook público HTTPS; não há WebSocket oficial para um aplicativo totalmente
-local.
+A API pública atual da Kick oferece OAuth 2.1 com PKCE, subscriptions oficiais por webhook HTTPS,
+envio e exclusão de mensagens, além de endpoints de moderação. O StreamKit utiliza o túnel HTTPS
+temporário local para cumprir o requisito de webhook público sem criar um backend hospedado.
 
-Por isso, o StreamKit mostra a Kick como indisponível no modo local e não anuncia `chat.read` nem
-`chat.write`. Não são usados endpoints privados, engenharia reversa ou transportes não documentados.
-Uma integração futura exigirá um relay hospedado e uma decisão explícita de arquitetura, privacidade,
-custo e operação — não apenas um Client ID.
+O `client_secret` é informado pelo usuário no guia da Kick e armazenado apenas no cofre seguro do
+sistema operacional. Nenhum endpoint privado, engenharia reversa ou transporte não documentado é
+utilizado.
+
+Quando o túnel estiver indisponível, a conexão ficará degradada e as capacidades dependentes de
+eventos externos não serão anunciadas como disponíveis.
 
 Referências oficiais consultadas:
 

@@ -1,6 +1,8 @@
 import type {
   ExternalTransportSnapshot,
   IntegrationConnection,
+  KickAuthorizationStart,
+  KickAuthorizationStatus,
   KickIntegrationSupport,
   SaveIntegrationConnectionRequest,
   TwitchAuthorizationStatus,
@@ -23,6 +25,8 @@ export function useIntegrations(active: boolean) {
   const [youtubeAuth, setYouTubeAuth] = useState<YouTubeAuthorizationStatus | null>(null);
   const [youtubeBroadcasts, setYouTubeBroadcasts] = useState<YouTubeLiveBroadcast[]>([]);
   const [kickSupport, setKickSupport] = useState<KickIntegrationSupport | null>(null);
+  const [kickAuth, setKickAuth] = useState<KickAuthorizationStatus | null>(null);
+  const [kickFlow, setKickFlow] = useState<KickAuthorizationStart | null>(null);
   const [externalTransport, setExternalTransport] = useState<ExternalTransportSnapshot | null>(
     null,
   );
@@ -34,18 +38,21 @@ export function useIntegrations(active: boolean) {
         nextTwitchAuth,
         nextYouTubeAuth,
         nextKickSupport,
+        nextKickAuth,
         nextExternalTransport,
       ] = await Promise.all([
         integrationApi.listConnections(),
         integrationApi.twitchAuthStatus(),
         integrationApi.youtubeAuthStatus(),
         integrationApi.kickSupport(),
+        integrationApi.kickAuthStatus(),
         integrationApi.externalTransportStatus(),
       ]);
       setConnections(nextConnections);
       setTwitchAuth(nextTwitchAuth);
       setYouTubeAuth(nextYouTubeAuth);
       setKickSupport(nextKickSupport);
+      setKickAuth(nextKickAuth);
       setExternalTransport(nextExternalTransport);
       if (!nextYouTubeAuth.configured) {
         setYouTubeBroadcasts([]);
@@ -84,6 +91,8 @@ export function useIntegrations(active: boolean) {
     youtubeAuth,
     youtubeBroadcasts,
     kickSupport,
+    kickAuth,
+    kickFlow,
     externalTransport,
     connectTwitch: async () => {
       setBusy(true);
@@ -146,6 +155,36 @@ export function useIntegrations(active: boolean) {
       execute(async () => {
         setYouTubeAuth(await integrationApi.disconnectYouTube());
         setYouTubeBroadcasts([]);
+      }),
+    connectKick: async () => {
+      setBusy(true);
+      setError(null);
+      try {
+        const flow = await integrationApi.beginKickAuth();
+        setKickFlow(flow);
+        await getDesktopBridge().openExternalAuth(flow.authorizationUrl);
+        while (Date.parse(flow.expiresAt) > Date.now()) {
+          await new Promise((resolve) => setTimeout(resolve, 1_500));
+          const result = await integrationApi.pollKickAuth(flow.flowId);
+          if (result.status === "pending") continue;
+          if (result.status === "failed") throw new Error(result.error);
+          if (result.status === "expired") throw new Error("Kick authorization expired.");
+          setKickAuth(result.authorization);
+          setKickFlow(null);
+          await load();
+          return;
+        }
+        throw new Error("Kick authorization expired.");
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Could not connect Kick.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    disconnectKick: () =>
+      execute(async () => {
+        setKickAuth(await integrationApi.disconnectKick());
+        setKickFlow(null);
       }),
     discoverYouTubeBroadcasts: () =>
       execute(async () => setYouTubeBroadcasts(await integrationApi.listYouTubeBroadcasts())),

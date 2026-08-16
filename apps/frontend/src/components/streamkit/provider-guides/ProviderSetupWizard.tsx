@@ -39,8 +39,7 @@ export function ProviderSetupWizard({
   const [clientSecret, setClientSecret] = useState("");
   const isLivePix = provider === "livepix";
   const isYouTube = provider === "youtube";
-  const needsClientId = isLivePix || provider === "twitch" || isYouTube;
-  const isKick = provider === "kick";
+  const needsClientId = isLivePix || provider === "twitch" || isYouTube || provider === "kick";
 
   const close = (value: boolean) => {
     if (!value) {
@@ -135,11 +134,11 @@ export function ProviderSetupWizard({
                     autoComplete="off"
                   />
                 )}
-                {(isLivePix || isYouTube) && (
+                {(isLivePix || isYouTube || provider === "kick") && (
                   <Input
                     value={clientSecret}
                     onChange={(event) => setClientSecret(event.target.value)}
-                    placeholder="Client Secret (optional for Desktop OAuth)"
+                    placeholder="Client Secret"
                     type="password"
                     autoComplete="new-password"
                   />
@@ -164,7 +163,11 @@ export function ProviderSetupWizard({
                   <Button onClick={() => setStep((value) => value + 1)}>Next</Button>
                 ) : (
                   <Button
-                    disabled={busy || isKick || !clientId.trim() || (isLivePix && !clientSecret)}
+                    disabled={
+                      busy ||
+                      !clientId.trim() ||
+                      ((isLivePix || provider === "kick") && !clientSecret)
+                    }
                     loading={busy}
                     onClick={() =>
                       onConnect(
@@ -172,7 +175,7 @@ export function ProviderSetupWizard({
                       )
                     }
                   >
-                    {isKick ? "Unavailable" : "Continue"}
+                    Continue
                   </Button>
                 )}
               </div>

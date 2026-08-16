@@ -420,7 +420,9 @@ export function SettingsDialog({
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-semibold">Kick Chat</p>
                         <p className="text-[11.5px] text-muted-foreground">
-                          {t("settings.kickUnavailable")}
+                          {integrations.kickAuth?.configured
+                            ? t("settings.connected")
+                            : "Configure credentials to connect"}
                         </p>
                         {integrations.kickSupport?.limitations.map((limitation) => (
                           <p key={limitation} className="mt-1 text-[10px] text-muted-foreground">
@@ -428,8 +430,12 @@ export function SettingsDialog({
                           </p>
                         ))}
                       </div>
-                      <Button size="sm" variant="secondary" disabled>
-                        {t("settings.noLocalSupport")}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setSetupProvider("kick")}
+                      >
+                        {integrations.kickAuth?.configured ? "Reconnect" : "Connect Kick"}
                       </Button>
                     </div>
                   </div>
@@ -567,6 +573,15 @@ export function SettingsDialog({
                 void settingsApi
                   .saveTwitchClientId(credentials.clientId)
                   .then(() => integrations.connectTwitch())
+                  .finally(() => setSetupProvider(null));
+                return;
+              }
+              if (setupProvider === "kick" && credentials) {
+                void Promise.all([
+                  settingsApi.saveKickClientId(credentials.clientId),
+                  settingsApi.saveKickClientSecret(credentials.clientSecret),
+                ])
+                  .then(() => integrations.connectKick())
                   .finally(() => setSetupProvider(null));
                 return;
               }

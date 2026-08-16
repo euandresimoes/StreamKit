@@ -918,6 +918,20 @@ Games e Torneios deve continuar funcionando sem rede, LivePix ou qualquer outro 
 - [ ] Executar ambiente real somente com conta autorizada, credenciais de teste e webhook controlado.
 - [ ] Executar gate completo e marcar tasks apenas após todos os critérios e decisões estarem fechados.
 
+## Batch 28 — Kick Official Local Integration
+
+**Escopo:** substituir a indisponibilidade histórica da Kick por uma integração oficial local,
+reutilizando o cofre seguro, o transporte HTTPS temporário e os contratos normalizados existentes.
+
+- [ ] Atualizar OAuth 2.1 com PKCE, client secret no cofre e renovação single-flight.
+- [ ] Implementar subscription oficial `chat.message.sent` e validar payloads com Zod.
+- [ ] Implementar adapter de chat, envio de mensagens e capabilities oficiais suportadas.
+- [ ] Implementar ações oficiais de excluir mensagem, banir e desbanir quando autorizadas.
+- [ ] Recriar subscriptions quando o túnel mudar e reconciliar após restart sem duplicação.
+- [ ] Integrar guia, estados de conexão e credenciais no frontend em inglês.
+- [ ] Cobrir OAuth, webhook, duplicatas, retries, capabilities, restart e falhas do túnel.
+- [ ] Executar gate completo de qualidade e teste real autorizado da Kick.
+
 ## Matriz de cobertura da especificação
 
 | Seção | Assunto                      | Batches principais                    |

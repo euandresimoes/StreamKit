@@ -31,6 +31,12 @@ export class SettingsService {
   public youtubeClientIdStatus() {
     return this.credentials.status('youtube.client-id')
   }
+  public kickClientIdStatus() {
+    return this.credentials.status('kick.client-id')
+  }
+  public kickClientSecretStatus() {
+    return this.credentials.status('kick.client-secret')
+  }
   public async saveCredential(value: string) {
     try {
       await this.credentials.save('livepix', value)
@@ -69,10 +75,29 @@ export class SettingsService {
     }
   }
 
-  public async saveProviderClientId(name: 'twitch.client-id' | 'youtube.client-id', value: string) {
+  public async saveProviderClientId(
+    name: 'twitch.client-id' | 'youtube.client-id' | 'kick.client-id',
+    value: string,
+  ) {
     try {
       await this.credentials.save(name, value)
       return this.credentials.status(name)
+    } catch {
+      throw new ApiApplicationError(
+        'SECURE_STORAGE_UNAVAILABLE',
+        'Secure credential storage is unavailable',
+        503,
+      )
+    }
+  }
+
+  public async saveKickClientId(value: string) {
+    return this.saveProviderClientId('kick.client-id', value)
+  }
+  public async saveKickClientSecret(value: string) {
+    try {
+      await this.credentials.save('kick.client-secret', value)
+      return this.credentials.status('kick.client-secret')
     } catch {
       throw new ApiApplicationError(
         'SECURE_STORAGE_UNAVAILABLE',

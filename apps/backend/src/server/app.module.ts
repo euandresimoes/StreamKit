@@ -36,7 +36,9 @@ import { SettingsRepository } from '../modules/settings/settings.repository'
 import { SettingsService } from '../modules/settings/settings.service'
 import { IntegrationController } from '../modules/integrations/integration.controller'
 import { KickController } from '../modules/integrations/kick/kick.controller'
+import { KickAuthController } from '../modules/integrations/kick/kick-auth.controller'
 import { KickSupportService } from '../modules/integrations/kick/kick-support.service'
+import { KickAuthService } from '../modules/integrations/kick/kick-auth.service'
 import { FocusedChatRepository } from '../modules/integrations/focused-chat.repository'
 import { FocusedChatService } from '../modules/integrations/focused-chat.service'
 import { ChatProviderRegistry } from '../modules/integrations/chat-provider.registry'
@@ -92,6 +94,7 @@ export class AppModule {
         ExternalEventController,
         PaymentController,
         KickController,
+        KickAuthController,
         TwitchAuthController,
         YouTubeController,
         WorkspaceController,
@@ -135,6 +138,7 @@ export class AppModule {
         IntegrationService,
         LiveControlService,
         KickSupportService,
+        KickAuthService,
         { provide: INTEGRATION_RUNTIME_CONFIG, useValue: integrationConfig },
         TwitchAuthService,
         TwitchChatAdapter,

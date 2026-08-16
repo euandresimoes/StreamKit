@@ -50,6 +50,18 @@ export const settingsApi = {
       method: "PUT",
       schema: CredentialStatusSchema,
     }),
+  saveKickClientId: (credential: string) =>
+    apiClient.request("/api/v1/settings/credentials/kick-client-id", {
+      body: { credential },
+      method: "PUT",
+      schema: CredentialStatusSchema,
+    }),
+  saveKickClientSecret: (credential: string) =>
+    apiClient.request("/api/v1/settings/credentials/kick-client-secret", {
+      body: { credential },
+      method: "PUT",
+      schema: CredentialStatusSchema,
+    }),
   livepixStatus: () =>
     apiClient.request("/api/v1/payments/livepix/status", { schema: PaymentConnectionStatusSchema }),
   connectLivepix: () =>

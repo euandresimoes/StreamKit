@@ -175,6 +175,23 @@ export const YouTubeAuthorizationPollSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('expired') }),
   z.object({ status: z.literal('failed'), error: z.string() }),
 ])
+export const KickAuthorizationStatusSchema = z.object({
+  available: z.boolean(),
+  configured: z.boolean(),
+  expiresAt: z.iso.datetime().nullable(),
+  scopes: z.array(z.string()),
+})
+export const KickAuthorizationStartSchema = z.object({
+  authorizationUrl: z.url(),
+  expiresAt: z.iso.datetime(),
+  flowId: z.uuid(),
+})
+export const KickAuthorizationPollSchema = z.discriminatedUnion('status', [
+  z.object({ status: z.literal('pending') }),
+  z.object({ status: z.literal('authorized'), authorization: KickAuthorizationStatusSchema }),
+  z.object({ status: z.literal('expired') }),
+  z.object({ status: z.literal('failed'), error: z.string() }),
+])
 export const YouTubeLiveBroadcastSchema = z.object({
   channelId: z.string().min(1),
   liveChatId: z.string().min(1),
@@ -214,3 +231,6 @@ export type TwitchAuthorizationStatus = z.infer<typeof TwitchAuthorizationStatus
 export type TwitchDeviceAuthorization = z.infer<typeof TwitchDeviceAuthorizationSchema>
 export type YouTubeAuthorizationStatus = z.infer<typeof YouTubeAuthorizationStatusSchema>
 export type YouTubeLiveBroadcast = z.infer<typeof YouTubeLiveBroadcastSchema>
+export type KickAuthorizationStatus = z.infer<typeof KickAuthorizationStatusSchema>
+export type KickAuthorizationStart = z.infer<typeof KickAuthorizationStartSchema>
+export type KickAuthorizationPoll = z.infer<typeof KickAuthorizationPollSchema>

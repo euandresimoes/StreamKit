@@ -3,6 +3,9 @@ import {
   ExternalTransportSnapshotSchema,
   FocusedChatThreadSchema,
   IntegrationConnectionSchema,
+  KickAuthorizationPollSchema,
+  KickAuthorizationStartSchema,
+  KickAuthorizationStatusSchema,
   KickIntegrationSupportSchema,
   type SaveIntegrationConnectionRequest,
   TwitchAuthorizationStatusSchema,
@@ -35,6 +38,25 @@ export const integrationApi = {
   kickSupport: () =>
     apiClient.request("/api/v1/integrations/kick/support", {
       schema: KickIntegrationSupportSchema,
+    }),
+  kickAuthStatus: () =>
+    apiClient.request("/api/v1/integrations/kick/auth/status", {
+      schema: KickAuthorizationStatusSchema,
+    }),
+  beginKickAuth: () =>
+    apiClient.request("/api/v1/integrations/kick/auth", {
+      method: "POST",
+      schema: KickAuthorizationStartSchema,
+    }),
+  pollKickAuth: (flowId: string) =>
+    apiClient.request(`/api/v1/integrations/kick/auth/${flowId}/poll`, {
+      method: "POST",
+      schema: KickAuthorizationPollSchema,
+    }),
+  disconnectKick: () =>
+    apiClient.request("/api/v1/integrations/kick/auth", {
+      method: "DELETE",
+      schema: KickAuthorizationStatusSchema,
     }),
   simulationStatus: () =>
     apiClient.request("/api/v1/integrations/debug/simulation", {

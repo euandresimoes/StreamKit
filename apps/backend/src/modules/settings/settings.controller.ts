@@ -44,4 +44,16 @@ export class SettingsController {
       SaveCredentialRequestSchema.parse(body).credential,
     )
   }
+  @Get('credentials/kick-client-id') public kickClientIdStatus() {
+    return this.service.kickClientIdStatus()
+  }
+  @Put('credentials/kick-client-id') public saveKickClientId(@Body() body: unknown) {
+    return this.service.saveKickClientId(SaveCredentialRequestSchema.parse(body).credential)
+  }
+  @Get('credentials/kick-client-secret') public kickClientSecretStatus() {
+    return this.service.kickClientSecretStatus()
+  }
+  @Put('credentials/kick-client-secret') public saveKickClientSecret(@Body() body: unknown) {
+    return this.service.saveKickClientSecret(SaveCredentialRequestSchema.parse(body).credential)
+  }
 }
