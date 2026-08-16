@@ -126,8 +126,16 @@ export class LivePixPaymentProvider
             : 'degraded',
         webhookUrl: current?.webhookUrl ?? null,
       })
-      if (!(cause instanceof ApiApplicationError && cause.code === 'RATE_LIMITED'))
+      if (cause instanceof ApiApplicationError && cause.code === 'RATE_LIMITED') {
+        this.stopped = true
+        if (this.retryTimer) {
+          clearTimeout(this.retryTimer)
+          this.retryTimer = null
+        }
+        await this.transport.unregister('livepix').catch(() => undefined)
+      } else {
         this.scheduleRetry()
+      }
       throw cause
     }
   }
