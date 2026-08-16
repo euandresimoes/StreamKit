@@ -276,6 +276,7 @@ export function SettingsDialog({
                         </Button>
                       )}
                       <Button
+                        variant="secondary"
                         size="sm"
                         loading={livepixBusy}
                         onClick={() => {
@@ -319,6 +320,7 @@ export function SettingsDialog({
                     </Button>
                   ) : (
                     <Button
+                      variant="secondary"
                       size="sm"
                       loading={integrations.busy}
                       onClick={() => setSetupProvider("twitch")}
@@ -354,6 +356,7 @@ export function SettingsDialog({
                       </>
                     ) : (
                       <Button
+                        variant="secondary"
                         size="sm"
                         loading={integrations.busy}
                         onClick={() => setSetupProvider("youtube")}
@@ -409,6 +412,7 @@ export function SettingsDialog({
                         </Button>
                       ) : (
                         <Button
+                          variant="secondary"
                           size="sm"
                           loading={integrations.busy}
                           onClick={() => setSetupProvider("kick")}
