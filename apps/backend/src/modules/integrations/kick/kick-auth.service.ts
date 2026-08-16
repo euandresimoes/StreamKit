@@ -73,6 +73,7 @@ export class KickAuthService implements OnModuleDestroy {
       client_id: clientId,
       code_challenge: challenge,
       code_challenge_method: 'S256',
+      redirect: '127.0.0.1',
       redirect_uri: flow.redirectUri,
       response_type: 'code',
       scope: SCOPES,
@@ -188,8 +189,12 @@ export class KickAuthService implements OnModuleDestroy {
         flow.error = cause instanceof Error ? cause.message : 'Kick authorization failed'
       }
     }
-    response.writeHead(flow.error ? 400 : 200, { 'content-type': 'text/plain; charset=utf-8' })
-    response.end(flow.error ?? 'Authorization received. Return to StreamKit.')
+    response.writeHead(flow.error ? 400 : 200, { 'content-type': 'text/html; charset=utf-8' })
+    response.end(
+      flow.error
+        ? '<h1>Kick authorization failed</h1><p>Return to StreamKit and try again.</p>'
+        : '<h1>Kick authorization complete</h1><p>You can close this tab and return to StreamKit.</p>',
+    )
   }
 
   private async createFlow(flowId: string) {
