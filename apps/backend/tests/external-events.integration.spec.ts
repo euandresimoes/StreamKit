@@ -82,6 +82,7 @@ describe('optional external event infrastructure', () => {
 
     const endpoint = await transport.register('livepix')
     expect(endpoint.callbackUrl).toContain('https://example.trycloudflare.com')
+    expect(endpoint.callbackUrl).toContain(`token=${encodeURIComponent(endpoint.secret)}`)
     await expect(
       transport.receive('livepix', 'unknown', endpoint.secret, envelope),
     ).rejects.toThrow('Invalid external event credentials')
@@ -96,7 +97,14 @@ describe('optional external event infrastructure', () => {
       ),
     ).resolves.toEqual({ accepted: true, duplicate: false })
 
+    const kickEndpoint = await transport.register('kick')
+    expect(kickEndpoint.callbackUrl).not.toContain('token=')
+    await expect(
+      transport.receive('kick', kickEndpoint.callbackPath.split('/').at(-1)!, '', envelope),
+    ).resolves.toEqual({ accepted: true, duplicate: false })
+
     await transport.unregister('livepix')
+    await transport.unregister('kick')
     events.onModuleDestroy()
     database.close()
     await environment.cleanup()

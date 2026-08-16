@@ -554,6 +554,9 @@ export function SettingsDialog({
             onOpenChange={(open) => {
               if (!open) setSetupProvider(null);
             }}
+            webhookUrl={
+              setupProvider === "kick" ? (integrations.kickFlow?.webhookUrl ?? null) : null
+            }
             onConnect={(credentials) => {
               if (setupProvider === "livepix" && credentials) {
                 void saveLivepix(credentials);

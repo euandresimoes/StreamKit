@@ -14,11 +14,12 @@ import {
   SECURE_CREDENTIAL_REPOSITORY,
   type SecureCredentialRepository,
 } from '../../settings/secure-credential.repository'
+import { ExternalTransportService } from '../external-events/external-transport.service'
 
 const CLIENT_ID = 'kick.client-id'
 const CLIENT_SECRET = 'kick.client-secret'
 const TOKEN = 'kick.oauth'
-const SCOPES = 'user:read channel:read channel:write chat:write events:subscribe moderation:ban'
+const SCOPES = 'user:read channel:read chat:write events:subscribe moderation:ban'
 const TokenSchema = z.object({
   access_token: z.string().min(1),
   expires_in: z.number().int().positive(),
@@ -49,10 +50,13 @@ export class KickAuthService implements OnModuleDestroy {
 
   public constructor(
     @Inject(SECURE_CREDENTIAL_REPOSITORY) private readonly credentials: SecureCredentialRepository,
+    @Inject(ExternalTransportService) private readonly transport: ExternalTransportService,
   ) {}
 
   public async begin() {
     const clientId = await this.requireClientId()
+    const endpoint = await this.transport.register('kick')
+    if (!endpoint.callbackUrl) throw new Error('KICK_WEBHOOK_URL_UNAVAILABLE')
     const flowId = randomUUID()
     const state = randomBytes(32).toString('base64url')
     const codeVerifier = randomBytes(64).toString('base64url')
@@ -94,6 +98,7 @@ export class KickAuthService implements OnModuleDestroy {
       authorizationUrl: url.toString(),
       expiresAt: new Date(expiresAt).toISOString(),
       flowId,
+      webhookUrl: endpoint.callbackUrl,
     })
   }
 
@@ -101,11 +106,13 @@ export class KickAuthService implements OnModuleDestroy {
     const flow = this.pending.get(flowId)
     if (!flow || flow.expiresAt <= Date.now()) {
       this.finish(flowId)
+      await this.transport.unregister('kick')
       return KickAuthorizationPollSchema.parse({ status: 'expired' })
     }
     if (flow.error) {
       const error = flow.error
       this.finish(flowId)
+      await this.transport.unregister('kick')
       return KickAuthorizationPollSchema.parse({ error, status: 'failed' })
     }
     if (!flow.token) return KickAuthorizationPollSchema.parse({ status: 'pending' })
@@ -139,6 +146,7 @@ export class KickAuthService implements OnModuleDestroy {
 
   public async disconnect() {
     await this.credentials.remove(TOKEN)
+    await this.transport.unregister('kick')
     return this.status()
   }
 

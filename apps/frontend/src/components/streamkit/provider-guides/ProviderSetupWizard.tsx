@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, KeyRound, ShieldCheck } from "lucide-react";
+import { Check, Copy, ExternalLink, KeyRound, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ export function ProviderSetupWizard({
   busy = false,
   error,
   onConnect,
+  webhookUrl,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,6 +33,7 @@ export function ProviderSetupWizard({
   busy?: boolean;
   error?: string | null;
   onConnect: (credentials?: { clientId: string; clientSecret: string }) => void;
+  webhookUrl?: string | null;
 }) {
   const guide = guides[provider];
   const [step, setStep] = useState(0);
@@ -40,6 +42,7 @@ export function ProviderSetupWizard({
   const isLivePix = provider === "livepix";
   const isYouTube = provider === "youtube";
   const needsClientId = isLivePix || provider === "twitch" || isYouTube || provider === "kick";
+  const [copiedWebhook, setCopiedWebhook] = useState(false);
 
   const close = (value: boolean) => {
     if (!value) {
@@ -147,6 +150,33 @@ export function ProviderSetupWizard({
                   <ShieldCheck className="size-3" /> Stored with the operating system secure
                   storage.
                 </p>
+              </div>
+            )}
+            {provider === "kick" && webhookUrl && (
+              <div className="mt-6 space-y-2 border-t border-border pt-4">
+                <div className="flex items-center gap-2 text-xs font-semibold">
+                  <ShieldCheck className="size-3.5" /> Kick webhook URL
+                </div>
+                <p className="text-[10px] leading-4 text-muted-foreground">
+                  Copy this URL into the Webhook URL field of your Kick developer application. It is
+                  temporary and must be updated after restarting StreamKit.
+                </p>
+                <div className="flex gap-2">
+                  <Input value={webhookUrl} readOnly className="min-w-0 font-mono text-[10px]" />
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    aria-label="Copy Kick webhook URL"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(webhookUrl).then(() => {
+                        setCopiedWebhook(true);
+                        window.setTimeout(() => setCopiedWebhook(false), 1500);
+                      });
+                    }}
+                  >
+                    {copiedWebhook ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  </Button>
+                </div>
               </div>
             )}
             <div className="mt-8 flex justify-between gap-2">
