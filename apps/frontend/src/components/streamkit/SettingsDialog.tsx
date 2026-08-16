@@ -421,21 +421,12 @@ export function SettingsDialog({
                         <p className="text-[13px] font-semibold">Kick Chat</p>
                         <p className="text-[11.5px] text-muted-foreground">
                           {integrations.kickAuth?.configured
-                            ? t("settings.connected")
-                            : "Configure credentials to connect"}
+                            ? t("settings.readyToConnect")
+                            : t("settings.configureProvider")}
                         </p>
-                        {integrations.kickSupport?.limitations.map((limitation) => (
-                          <p key={limitation} className="mt-1 text-[10px] text-muted-foreground">
-                            · {limitation}
-                          </p>
-                        ))}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setSetupProvider("kick")}
-                      >
-                        {integrations.kickAuth?.configured ? "Reconnect" : "Connect Kick"}
+                      <Button size="sm" onClick={() => setSetupProvider("kick")}>
+                        Connect
                       </Button>
                     </div>
                   </div>
