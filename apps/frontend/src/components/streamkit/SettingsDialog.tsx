@@ -249,7 +249,7 @@ export function SettingsDialog({
                 </p>
 
                 <div className="mt-4 rounded-2xl border border-border bg-surface-2/40 p-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3">
                     <div className="flex size-9 items-center justify-center rounded-xl bg-primary/15">
                       <Plug className="size-5 text-primary" />
                     </div>
@@ -281,36 +281,35 @@ export function SettingsDialog({
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-semibold">LivePix Payments</p>
                       <p className="text-[11.5px] text-muted-foreground">
-                        {t("settings.livepixDescription")}
+                        {livepixStatus?.configured
+                          ? t("settings.readyToConnect")
+                          : t("settings.configureProvider")}
                       </p>
                     </div>
-                    <span className="text-[11px] font-medium text-muted-foreground">
-                      {livepixStatus?.state ?? t("settings.disconnected")}
-                    </span>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    {livepixStatus?.configured && (
+                    <div className="flex shrink-0 gap-2">
+                      {livepixStatus?.configured && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          loading={livepixBusy}
+                          onClick={() => void disconnectLivepix()}
+                        >
+                          {t("settings.disconnect")}
+                        </Button>
+                      )}
                       <Button
-                        variant="danger"
                         size="sm"
                         loading={livepixBusy}
-                        onClick={() => void disconnectLivepix()}
+                        onClick={() => {
+                          setLivepixError(null);
+                          setSetupProvider("livepix");
+                        }}
                       >
-                        {t("settings.disconnect")}
+                        {livepixStatus?.configured
+                          ? t("settings.retryLivepix")
+                          : t("settings.connect")}
                       </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      loading={livepixBusy}
-                      onClick={() => {
-                        setLivepixError(null);
-                        setSetupProvider("livepix");
-                      }}
-                    >
-                      {livepixStatus?.configured
-                        ? t("settings.retryLivepix")
-                        : t("settings.connectLivepix")}
-                    </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -425,9 +424,24 @@ export function SettingsDialog({
                             : t("settings.configureProvider")}
                         </p>
                       </div>
-                      <Button size="sm" onClick={() => setSetupProvider("kick")}>
-                        Connect
-                      </Button>
+                      {integrations.kickAuth?.configured ? (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          loading={integrations.busy}
+                          onClick={() => void integrations.disconnectKick()}
+                        >
+                          {t("settings.disconnect")}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          loading={integrations.busy}
+                          onClick={() => setSetupProvider("kick")}
+                        >
+                          {t("settings.connect")}
+                        </Button>
+                      )}
                     </div>
                   </div>
                   {integrations.connections.map((connection) => (
