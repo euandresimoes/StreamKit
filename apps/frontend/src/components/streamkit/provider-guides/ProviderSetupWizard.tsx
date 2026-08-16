@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ExternalLink, KeyRound, ShieldCheck } from "lucide-react";
+import { ExternalLink, KeyRound, LoaderCircle, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { livePixSetupGuide } from "./livepix/LivePixSetupGuide";
 import { twitchSetupGuide } from "./twitch/TwitchSetupGuide";
 import { youtubeSetupGuide } from "./youtube/YouTubeSetupGuide";
 import { kickSetupGuide } from "./kick/KickSetupGuide";
+import i18n from "@/i18n";
 import type { ProviderGuide, ProviderGuideId } from "./types";
 
 const guides: Record<ProviderGuideId, ProviderGuide> = {
@@ -39,12 +41,14 @@ export function ProviderSetupWizard({
   redirectUrl?: string | null;
 }) {
   const guide = guides[provider];
+  const { t } = useTranslation(undefined, { i18n });
   const [step, setStep] = useState(0);
   const [clientId, setClientId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
   const isLivePix = provider === "livepix";
   const isYouTube = provider === "youtube";
   const needsClientId = isLivePix || provider === "twitch" || isYouTube || provider === "kick";
+  const preparingKickTunnel = provider === "kick" && busy && !redirectUrl && !webhookUrl;
 
   const close = (value: boolean) => {
     if (!value) {
@@ -138,6 +142,16 @@ export function ProviderSetupWizard({
                 </p>
                 {redirectUrl && <BaseCopyField label="OAuth Redirect URL" value={redirectUrl} />}
                 {webhookUrl && <BaseCopyField label="Webhook URL" value={webhookUrl} />}
+              </div>
+            )}
+            {preparingKickTunnel && (
+              <div
+                className="mt-6 flex items-center gap-3 rounded-md border border-border bg-surface-2/30 px-3 py-3 text-xs text-muted-foreground"
+                role="status"
+                aria-live="polite"
+              >
+                <LoaderCircle className="size-4 animate-spin text-primary" />
+                <span>{t("settings.preparingKickTunnel")}</span>
               </div>
             )}
             {needsClientId && (

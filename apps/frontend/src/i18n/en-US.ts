@@ -136,6 +136,7 @@ const enUS = {
     integrationsHeading: "Integrations",
     unavailable: "unavailable",
     protectedTemporaryTunnel: "Protected temporary tunnel",
+    preparingKickTunnel: "Preparing the local Kick tunnel…",
     noActiveExternalEndpoint: "No active external endpoint",
     livepixPayments: "LivePix Payments",
     connect: "Connect",

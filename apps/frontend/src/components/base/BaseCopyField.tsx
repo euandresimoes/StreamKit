@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { copyText } from "@/infrastructure/clipboard";
 
 export function BaseCopyField({
   label,
@@ -17,7 +18,7 @@ export function BaseCopyField({
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(value);
+      await copyText(value);
     } catch {
       const input = document.createElement("input");
       input.value = value;
