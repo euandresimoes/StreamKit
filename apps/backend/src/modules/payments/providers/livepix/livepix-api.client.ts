@@ -57,8 +57,17 @@ export class LivePixApiClient {
         'LivePix authorization expired',
         401,
       )
-    if (response.status === 429)
-      throw new ApiApplicationError('RATE_LIMITED', 'LivePix rate limit exceeded', 429)
+    if (response.status === 429) {
+      const reset = response.headers.get('x-ratelimit-reset')
+      const remaining = response.headers.get('x-ratelimit-remaining')
+      const limit = response.headers.get('x-ratelimit-limit')
+      throw new ApiApplicationError(
+        'RATE_LIMITED',
+        `LivePix rate limit exceeded for ${init.method ?? 'GET'} ${path}${reset ? ` (resets at ${reset})` : ''}`,
+        429,
+        { limit, remaining, reset },
+      )
+    }
     if (!response.ok)
       throw new ApiApplicationError(
         'INTEGRATION_PROVIDER_ERROR',

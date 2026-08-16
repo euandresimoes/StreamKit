@@ -92,7 +92,6 @@ export class LivePixPaymentProvider
       webhookUrl: current?.webhookUrl ?? null,
     })
     try {
-      const account = await this.api.account()
       const endpoint = await this.transport.register('livepix')
       if (!endpoint.callbackUrl) throw new Error('LIVEPIX_CALLBACK_URL_UNAVAILABLE')
       const previous = await this.repository.connection()
@@ -103,8 +102,8 @@ export class LivePixPaymentProvider
       if (previous?.remoteWebhookId && previous.remoteWebhookId !== remoteWebhookId && !sameWebhook)
         await this.api.deleteWebhook(previous.remoteWebhookId).catch(() => undefined)
       await this.repository.saveConnection({
-        accountId: account.data.id ?? null,
-        accountUsername: account.data.username ?? null,
+        accountId: previous?.accountId ?? null,
+        accountUsername: previous?.accountUsername ?? null,
         generation: (previous?.generation ?? 0) + 1,
         lastErrorCode: null,
         remoteWebhookId,

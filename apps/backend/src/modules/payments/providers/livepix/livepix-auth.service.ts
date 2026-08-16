@@ -79,6 +79,15 @@ export class LivePixAuthService {
       method: 'POST',
       signal: AbortSignal.timeout(LIVEPIX_REQUEST_TIMEOUT_MS),
     })
+    if (response.status === 429) {
+      const reset = response.headers.get('x-ratelimit-reset')
+      throw new ApiApplicationError(
+        'RATE_LIMITED',
+        `LivePix OAuth rate limit exceeded${reset ? ` (resets at ${reset})` : ''}`,
+        429,
+        { reset },
+      )
+    }
     if (!response.ok)
       throw new ApiApplicationError('INTEGRATION_AUTH_REVOKED', 'LivePix authorization failed', 401)
     const token = LivePixTokenResponseSchema.parse(await response.json())
