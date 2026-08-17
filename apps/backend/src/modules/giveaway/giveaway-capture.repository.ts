@@ -24,6 +24,26 @@ import { normalizeCaptureText } from './domain/chat-capture-rule'
 export class GiveawayCaptureRepository {
   public constructor(@Inject(SQLITE_DATABASE) private readonly database: SqliteDatabase) {}
 
+  public async linkIdentity(event: ChatMessageReceived): Promise<void> {
+    const identity = normalizeCaptureText(event.author.handle)
+    await this.database.orm
+      .update(giveawayParticipants)
+      .set({
+        avatarUrl: event.author.avatarUrl,
+        channelId: event.channelId,
+        displayName: event.author.handle,
+        providerUserId: event.author.providerUserId,
+      })
+      .where(
+        and(
+          eq(giveawayParticipants.active, true),
+          eq(giveawayParticipants.provider, event.provider),
+          eq(giveawayParticipants.normalizedName, identity),
+          isNull(giveawayParticipants.providerUserId),
+        ),
+      )
+  }
+
   public async capture(rule: GiveawayCaptureRule, event: ChatMessageReceived): Promise<boolean> {
     return this.database.transaction(() => {
       const identity = normalizeCaptureText(event.author.handle)
@@ -62,6 +82,7 @@ export class GiveawayCaptureRepository {
         this.database.orm
           .update(giveawayParticipants)
           .set({
+            avatarUrl: event.author.avatarUrl,
             channelId: event.channelId,
             displayName: event.author.handle,
             provider: event.provider,
@@ -108,6 +129,7 @@ export class GiveawayCaptureRepository {
           .update(giveawayParticipants)
           .set({
             active: true,
+            avatarUrl: event.author.avatarUrl,
             channelId: event.channelId,
             displayName: event.author.handle,
             normalizedName: identity,
@@ -121,6 +143,7 @@ export class GiveawayCaptureRepository {
           .insert(giveawayParticipants)
           .values({
             active: true,
+            avatarUrl: event.author.avatarUrl,
             channelId: event.channelId,
             createdAt: now,
             displayName: event.author.handle,

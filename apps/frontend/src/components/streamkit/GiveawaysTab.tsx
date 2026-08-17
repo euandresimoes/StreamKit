@@ -2,13 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import {
   Box,
   ChevronLeft,
+  DollarSign,
   Gift,
   ListPlus,
   MessageCircle,
   RotateCw,
-  Search,
   Settings2,
-  Trash2,
   Trophy,
   Users,
 } from "lucide-react";
@@ -18,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { BaseSegmentedControl } from "@/components/base/BaseSegmentedControl";
 import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
+import { BaseModal } from "@/components/base/BaseModal";
 import { useGiveaways } from "@/modules/giveaway/use-giveaways";
 import { useLiveSelection } from "@/modules/live-control/use-live-control";
 import { shouldShowGiveawayFocusedChat } from "@/modules/giveaway/giveaway-presentation";
@@ -27,10 +27,9 @@ import { GiveawayStage, GIVEAWAY_WHEEL_SPIN_DURATION_MS } from "./GiveawayStage"
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { FocusedChatPanel } from "./FocusedChatPanel";
 import { ParticipantCaptureDialog } from "./ParticipantCaptureDialog";
+import { PaymentCaptureDialog } from "./PaymentCaptureDialog";
 import { DebugChatSimulationButton } from "./DebugChatSimulationButton";
-import { MAX_VISIBLE_PARTICIPANTS } from "@/modules/performance/bounded-render-window";
-
-type GiveawayAsideView = "import" | "participants";
+import { ParticipantPanel } from "./ParticipantPanel";
 
 export function GiveawaysTab() {
   const giveaways = useGiveaways(false);
@@ -41,10 +40,12 @@ export function GiveawaysTab() {
   const [drawPhase, setDrawPhase] = useState<"idle" | "drawing" | "revealed">("idle");
   const [creating, setCreating] = useState(false);
   const [newMaxParticipants, setNewMaxParticipants] = useState(1000);
-  const [participantQuery, setParticipantQuery] = useState("");
-  const [asideView, setAsideView] = useState<GiveawayAsideView>("import");
+  const [participantName, setParticipantName] = useState("");
+  const [participantsExpanded, setParticipantsExpanded] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [configuring, setConfiguring] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [capturingPayment, setCapturingPayment] = useState(false);
   const [removingParticipant, setRemovingParticipant] = useState<{
     id: string;
     name: string;
@@ -64,7 +65,6 @@ export function GiveawaysTab() {
     setWinner(null);
     setTargetWinnerId(null);
     setDrawPhase("idle");
-    setAsideView("import");
   }, [detail?.giveaway.id]);
 
   const createGiveaway = async (name: string) => {
@@ -111,14 +111,6 @@ export function GiveawaysTab() {
     setTargetWinnerId(null);
     setDrawPhase("idle");
   };
-  const filteredParticipants =
-    detail?.participants.filter((participant) =>
-      participant.displayName
-        .toLocaleLowerCase("en-US")
-        .includes(participantQuery.trim().toLocaleLowerCase("en-US")),
-    ) ?? [];
-  const visibleParticipants = filteredParticipants.slice(0, MAX_VISIBLE_PARTICIPANTS);
-
   return (
     <div className="flex h-full min-h-0 flex-col overflow-auto">
       {detail && (
@@ -155,6 +147,9 @@ export function GiveawaysTab() {
             <Button size="sm" variant="secondary" onClick={() => setCapturing(true)}>
               <MessageCircle /> Capture from chat
             </Button>
+            <Button size="sm" variant="secondary" onClick={() => setCapturingPayment(true)}>
+              <DollarSign /> Capture from payment
+            </Button>
             <DebugChatSimulationButton
               target="giveaway"
               targetId={detail.giveaway.id}
@@ -183,105 +178,47 @@ export function GiveawaysTab() {
           onSelect={(id) => void giveaways.select(id)}
         />
       ) : (
-        <div className="grid min-h-0 flex-1 xl:grid-cols-[300px_minmax(400px,1fr)_280px]">
-          <aside className="flex min-h-0 flex-col rounded-3xl border-r border-border p-4">
-            <BaseSegmentedControl
-              ariaLabel="Participant management view"
-              value={asideView}
-              options={[
-                { value: "import", label: "Import", icon: <ListPlus className="size-3.5" /> },
-                { value: "participants", label: "Participants", icon: <Users className="size-3.5" /> },
-              ]}
-              onChange={(value) => setAsideView(value as GiveawayAsideView)}
-            />
-            {asideView === "import" ? (
-              <div className="mt-4 flex min-h-0 flex-1 flex-col">
-                <div className="flex items-center gap-2 pb-3">
-                  <ListPlus className="size-4" />
-                  <h3 className="flex-1 text-[13px] font-semibold">Import participants</h3>
-                  <span className="rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-muted-foreground">
-                    {detail.giveaway.status === "completed" ? "Completed" : "Ready"}
-                  </span>
-                </div>
-              <Textarea
-                value={input}
-                disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
-                onChange={(event) => setInput(event.target.value)}
-                placeholder={"One name per line\nMaria\nJohn\nAna"}
-                className="min-h-40 flex-1 resize-none text-[13px]"
-              />
+        <div className="flex min-h-0 flex-1">
+          <ParticipantPanel
+            actions={
               <Button
-                className="mt-3"
-                disabled={!input.trim() || giveaways.busy || !canModify || drawPhase === "drawing"}
-                onClick={async () => {
-                  if (!input.trim()) return;
-                  clearCompletedPresentation();
-                  const saved = await giveaways.importParticipants(
-                    input,
-                    live.selected?.provider ?? null,
-                    live.selected?.channelId ?? null,
-                  );
-                  if (saved) {
-                    setInput("");
-                  }
-                }}
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Import participants"
+                disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
+                onClick={() => setImporting(true)}
               >
-                <Users /> Save participants
+                <ListPlus />
               </Button>
-              </div>
-            ) : (
-            <div className="mt-4 flex min-h-0 flex-1 flex-col rounded-2xl border border-border bg-card/45 p-2">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  className="h-8 pl-8 text-xs"
-                  value={participantQuery}
-                  onChange={(event) => setParticipantQuery(event.target.value)}
-                  placeholder="Search participant"
-                  aria-label="Search participant"
-                />
-              </div>
-              <div className="mt-2 min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1">
-                {visibleParticipants.map((participant) => (
-                  <div
-                    key={participant.id}
-                    className="flex items-center rounded-xl border border-border bg-card py-1.5 pl-3 pr-1.5 text-[13px]"
-                  >
-                    <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
-                    <span className="text-muted-foreground">×{participant.ticketCount}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Remove ${participant.displayName}`}
-                      disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
-                      onClick={() =>
-                        setRemovingParticipant({
-                          id: participant.id,
-                          name: participant.displayName,
-                        })
-                      }
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                ))}
-                {!filteredParticipants.length && (
-                  <p className="px-2 py-5 text-center text-xs text-muted-foreground">
-                    {participantQuery ? "No participant found." : "No participants."}
-                  </p>
-                )}
-                {filteredParticipants.length > MAX_VISIBLE_PARTICIPANTS && (
-                  <p className="px-2 pt-2 text-center text-[10px] text-muted-foreground">
-                    Showing {MAX_VISIBLE_PARTICIPANTS} of {filteredParticipants.length}. Refine the
-                    search to see other participants.
-                  </p>
-                )}
-              </div>
-            </div>
-            )}
-          </aside>
+            }
+            participants={detail.participants}
+            expanded={participantsExpanded}
+            onToggle={() => setParticipantsExpanded((value) => !value)}
+            participantName={participantName}
+            onParticipantNameChange={setParticipantName}
+            onAddParticipant={() => {
+              if (!participantName.trim()) return;
+              clearCompletedPresentation();
+              const saved = giveaways.importParticipants(
+                participantName.trim(),
+                live.selected?.provider ?? null,
+                live.selected?.channelId ?? null,
+              );
+              if (saved)
+                void saved.then((result) => {
+                  if (result) setParticipantName("");
+                });
+            }}
+            onRemoveParticipant={(participantId) => {
+              const participant = detail.participants.find((item) => item.id === participantId);
+              if (!participant) return;
+              setRemovingParticipant({ id: participant.id, name: participant.displayName });
+            }}
+            busy={giveaways.busy}
+            locked={!canModify || drawPhase === "drawing"}
+          />
 
-          <section className="min-h-[430px] rounded-3xl p-3 text-center">
+          <section className="min-h-[430px] min-w-0 flex-1 rounded-3xl p-3 text-center">
             <GiveawayStage
               disabled={
                 giveaways.busy ||
@@ -297,7 +234,7 @@ export function GiveawaysTab() {
             />
           </section>
 
-          <aside className="flex min-h-0 flex-col rounded-3xl p-4 border-l border-border">
+          <aside className="flex min-h-0 w-[280px] shrink-0 flex-col rounded-3xl border-l border-border p-4">
             <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl border border-border bg-card/60 p-4 text-center">
               <Trophy
                 className={
@@ -355,6 +292,42 @@ export function GiveawaysTab() {
         </label>
       </CreateItemDialog>
       {detail && (
+        <BaseModal
+          open={importing}
+          onOpenChange={setImporting}
+          title="Import participants"
+          description="Add one participant per line."
+        >
+          <Textarea
+            value={input}
+            disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
+            onChange={(event) => setInput(event.target.value)}
+            placeholder={"Maria\nJohn\nAna"}
+            className="min-h-56 resize-none text-[13px]"
+          />
+          <div className="mt-4 flex justify-end">
+            <Button
+              disabled={!input.trim() || giveaways.busy || !canModify || drawPhase === "drawing"}
+              onClick={async () => {
+                if (!input.trim()) return;
+                clearCompletedPresentation();
+                const saved = await giveaways.importParticipants(
+                  input,
+                  live.selected?.provider ?? null,
+                  live.selected?.channelId ?? null,
+                );
+                if (saved) {
+                  setInput("");
+                  setImporting(false);
+                }
+              }}
+            >
+              <Users /> Import participants
+            </Button>
+          </div>
+        </BaseModal>
+      )}
+      {detail && (
         <ParticipantCaptureDialog
           open={capturing}
           onOpenChange={setCapturing}
@@ -362,6 +335,15 @@ export function GiveawaysTab() {
           targetId={detail.giveaway.id}
           participantCount={detail.participants.length}
           temporarilyPaused={drawPhase === "drawing"}
+          onRefresh={giveaways.refresh}
+        />
+      )}
+      {detail && (
+        <PaymentCaptureDialog
+          open={capturingPayment}
+          onOpenChange={setCapturingPayment}
+          target="giveaway"
+          targetId={detail.giveaway.id}
           onRefresh={giveaways.refresh}
         />
       )}

@@ -9,9 +9,10 @@ import {
   TournamentSchema,
   type UpdateTournamentRequest,
 } from '@streamkit/contracts'
-import { and, asc, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {
+  paymentContributions,
   tournamentAuditLog,
   tournamentEntries,
   tournamentMatches,
@@ -260,6 +261,7 @@ export class TournamentRepository {
               createdAt: tournamentParticipants.createdAt,
               displayName: tournamentParticipants.displayName,
               entryId: tournamentEntries.id,
+              externalRef: tournamentParticipants.externalRef,
               id: tournamentParticipants.id,
               provider: tournamentParticipants.provider,
               providerUserId: tournamentParticipants.providerUserId,
@@ -286,6 +288,7 @@ export class TournamentRepository {
             createdAt: row.createdAt,
             displayName: row.displayName,
             entryId: null,
+            externalRef: row.externalRef,
             id: row.id,
             provider: row.provider,
             providerUserId: row.providerUserId,
@@ -293,6 +296,9 @@ export class TournamentRepository {
             source: row.source,
             tournamentId: row.tournamentId,
           }))
+    const contributionMetadata = await this.livepixContributionMetadata(
+      participantRows.map((participant) => participant.externalRef),
+    )
     const teamRows = await this.database.orm
       .select({
         capacity: tournamentTeams.capacity,
@@ -343,11 +349,41 @@ export class TournamentRepository {
       })),
       championEntryId: tournament.status === 'finished' ? (final?.winnerEntryId ?? null) : null,
       matches,
-      participants: participantRows,
+      participants: participantRows.map((participant) => ({
+        ...participant,
+        ...(participant.externalRef
+          ? (contributionMetadata.get(participant.externalRef) ?? {
+              livepixAmountInCents: null,
+              livepixCurrency: null,
+            })
+          : { livepixAmountInCents: null, livepixCurrency: null }),
+      })),
       teamMembers: memberRows,
       teams: teamRows,
       tournament,
     })
+  }
+
+  private async livepixContributionMetadata(externalRefs: Array<string | null>) {
+    const resourceIds = externalRefs
+      .filter((value): value is string => Boolean(value?.startsWith('livepix:')))
+      .map((value) => value.slice('livepix:'.length))
+    if (!resourceIds.length)
+      return new Map<string, { livepixAmountInCents: number; livepixCurrency: string }>()
+    const rows = await this.database.orm
+      .select({
+        amountInCents: paymentContributions.amountInCents,
+        currency: paymentContributions.currency,
+        providerResourceId: paymentContributions.providerResourceId,
+      })
+      .from(paymentContributions)
+      .where(inArray(paymentContributions.providerResourceId, resourceIds))
+    return new Map(
+      rows.map((row) => [
+        `livepix:${row.providerResourceId}`,
+        { livepixAmountInCents: row.amountInCents, livepixCurrency: row.currency },
+      ]),
+    )
   }
   public async addTeam(id: string, name: string, color: string, capacity?: number) {
     const tournament = await this.mutableDraft(id)
@@ -748,8 +784,8 @@ export class TournamentRepository {
           provider,
           source: 'manual',
           tournamentId: id,
-      })
-      .run()
+        })
+        .run()
       const nextSize = getNextBracketSize(participantCount + 1)
       const nextBracketSize = Math.max(tournament.bracketSize, nextSize)
       if (nextBracketSize !== tournament.bracketSize)
@@ -1073,17 +1109,19 @@ export class TournamentRepository {
       const rightChild = childDefinitions.find((child) => child.nextSlot === 'right')
       const leftEntryId =
         definition.leftSeed !== null
-          ? entries[definition.leftSeed - 1]?.id ?? null
+          ? (entries[definition.leftSeed - 1]?.id ?? null)
           : leftChild
-            ? states.get(leftChild.matchNumber)?.winnerEntryId ?? null
+            ? (states.get(leftChild.matchNumber)?.winnerEntryId ?? null)
             : null
       const rightEntryId =
         definition.rightSeed !== null
-          ? entries[definition.rightSeed - 1]?.id ?? null
+          ? (entries[definition.rightSeed - 1]?.id ?? null)
           : rightChild
-            ? states.get(rightChild.matchNumber)?.winnerEntryId ?? null
+            ? (states.get(rightChild.matchNumber)?.winnerEntryId ?? null)
             : null
-      const leftResolved = leftChild ? states.get(leftChild.matchNumber)?.status === 'finished' : true
+      const leftResolved = leftChild
+        ? states.get(leftChild.matchNumber)?.status === 'finished'
+        : true
       const rightResolved = rightChild
         ? states.get(rightChild.matchNumber)?.status === 'finished'
         : true
@@ -1102,7 +1140,7 @@ export class TournamentRepository {
         leftEntryId,
         rightEntryId,
         status,
-        winnerEntryId: status === 'finished' ? leftEntryId ?? rightEntryId : null,
+        winnerEntryId: status === 'finished' ? (leftEntryId ?? rightEntryId) : null,
       })
     }
     const now = new Date().toISOString()
@@ -1110,24 +1148,30 @@ export class TournamentRepository {
       for (const definition of [...definitions].reverse())
         (() => {
           const state = states.get(definition.matchNumber)!
-          this.database.orm.insert(tournamentMatches).values({
-            id: ids.get(definition.matchNumber)!,
-            finishedAt: state.status === 'finished' ? now : null,
-            leftEntryId: state.leftEntryId,
-            leftResult: state.winnerEntryId === state.leftEntryId && state.leftEntryId ? 'won' : 'pending',
-            matchNumber: definition.matchNumber,
-            nextMatchId: definition.nextMatchNumber ? ids.get(definition.nextMatchNumber)! : null,
-            nextSlot: definition.nextSlot,
-            rightEntryId: state.rightEntryId,
-            rightResult: state.winnerEntryId === state.rightEntryId && state.rightEntryId ? 'won' : 'pending',
-            roundNumber: definition.roundNumber,
-            status: state.status,
-            startedAt: null,
-            tournamentId: id,
-            updatedAt: now,
-            winnerEntryId: state.winnerEntryId,
-          })
-          .run()
+          this.database.orm
+            .insert(tournamentMatches)
+            .values({
+              id: ids.get(definition.matchNumber)!,
+              finishedAt: state.status === 'finished' ? now : null,
+              leftEntryId: state.leftEntryId,
+              leftResult:
+                state.winnerEntryId === state.leftEntryId && state.leftEntryId ? 'won' : 'pending',
+              matchNumber: definition.matchNumber,
+              nextMatchId: definition.nextMatchNumber ? ids.get(definition.nextMatchNumber)! : null,
+              nextSlot: definition.nextSlot,
+              rightEntryId: state.rightEntryId,
+              rightResult:
+                state.winnerEntryId === state.rightEntryId && state.rightEntryId
+                  ? 'won'
+                  : 'pending',
+              roundNumber: definition.roundNumber,
+              status: state.status,
+              startedAt: null,
+              tournamentId: id,
+              updatedAt: now,
+              winnerEntryId: state.winnerEntryId,
+            })
+            .run()
         })()
       this.database.orm
         .update(tournaments)

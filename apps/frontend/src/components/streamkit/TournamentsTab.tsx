@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleCheck,
+  DollarSign,
   GripVertical,
   MessageCircle,
   Play,
@@ -16,8 +17,6 @@ import {
   UserX,
   Users,
 } from "lucide-react";
-import type { TournamentParticipant } from "@streamkit/contracts";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BaseConfirmDialog } from "@/components/base/BaseConfirmDialog";
@@ -44,207 +43,10 @@ import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { FocusedChatPanel } from "./FocusedChatPanel";
 import { TournamentMatchChat } from "./TournamentMatchChat";
 import { ParticipantCaptureDialog } from "./ParticipantCaptureDialog";
+import { PaymentCaptureDialog } from "./PaymentCaptureDialog";
 import { DebugChatSimulationButton } from "./DebugChatSimulationButton";
 import { MAX_VISIBLE_PARTICIPANTS } from "@/modules/performance/bounded-render-window";
-
-function getParticipantInitials(displayName: string) {
-  return Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
-}
-
-function ParticipantAvatar({
-  displayName,
-  avatarUrl,
-  className = "size-6",
-}: {
-  displayName: string;
-  avatarUrl: string | null;
-  className?: string;
-}) {
-  return avatarUrl ? (
-    <img src={avatarUrl} alt="" className={`${className} shrink-0 rounded-full object-cover`} />
-  ) : (
-    <span
-      className={`flex ${className} shrink-0 items-center justify-center rounded-lg bg-surface-2 text-[10px] font-semibold`}
-    >
-      {getParticipantInitials(displayName)}
-    </span>
-  );
-}
-
-function TournamentParticipantsPanel({
-  participants,
-  expanded,
-  onToggle,
-  participantName,
-  onParticipantNameChange,
-  onAddParticipant,
-  onRemoveParticipant,
-  busy,
-  locked,
-  onDragStart,
-  onDragEnd,
-}: {
-  participants: TournamentParticipant[];
-  expanded: boolean;
-  onToggle(): void;
-  participantName: string;
-  onParticipantNameChange(value: string): void;
-  onAddParticipant(): void;
-  onRemoveParticipant(participantId: string): void;
-  busy: boolean;
-  locked: boolean;
-  onDragStart(participantId: string): void;
-  onDragEnd(): void;
-}) {
-  const visibleParticipants = participants.slice(0, MAX_VISIBLE_PARTICIPANTS);
-  const addParticipant = () => {
-    if (!participantName.trim()) return;
-    onAddParticipant();
-  };
-
-  return (
-    <aside
-      className={cn(
-        "flex shrink-0 flex-col overflow-x-hidden rounded-3xl border-r border-border p-3 transition-[width] duration-300",
-        expanded ? "w-72" : "w-14",
-      )}
-    >
-      <div className={cn("flex gap-2 pb-3", expanded ? "items-center" : "flex-col items-center")}>
-        <User className="size-4" />
-        {expanded && (
-          <>
-            <h3 className="flex-1 text-[13px] font-semibold">Participants</h3>
-            <span className="text-xs text-muted-foreground">
-              {participants.length}
-            </span>
-          </>
-        )}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={expanded ? "Collapse participants" : "Expand participants"}
-          onClick={onToggle}
-        >
-          {expanded ? <ChevronLeft /> : <ChevronRight />}
-        </Button>
-      </div>
-      {expanded ? (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex gap-1.5 pb-3">
-            <Input
-              value={participantName}
-              onChange={(event) => onParticipantNameChange(event.target.value)}
-              className="h-8 text-xs"
-              placeholder="Add participant"
-              disabled={busy || locked}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") addParticipant();
-              }}
-            />
-            <Button
-              size="icon-sm"
-              disabled={!participantName.trim() || busy || locked}
-              onClick={addParticipant}
-            >
-              <Plus />
-            </Button>
-          </div>
-          <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
-            {visibleParticipants.map((participant) => (
-              <ParticipantPanelRow
-                key={participant.id}
-                participant={participant}
-                busy={busy}
-                locked={locked}
-                onRemove={onRemoveParticipant}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-              />
-            ))}
-            {!participants.length && (
-              <p className="mt-4 text-center text-xs text-muted-foreground">
-                Add participants manually or capture chat entries.
-              </p>
-            )}
-          </div>
-        </div>
-      ) : (
-        <TooltipProvider delayDuration={250}>
-          <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1">
-            {visibleParticipants.map((participant) => (
-              <Tooltip key={participant.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label={`Expand participant ${participant.displayName}`}
-                    onClick={onToggle}
-                    className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <ParticipantAvatar
-                      displayName={participant.displayName}
-                      avatarUrl={participant.avatarUrl}
-                      className="size-6"
-                    />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">{participant.displayName}</TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-        </TooltipProvider>
-      )}
-    </aside>
-  );
-}
-
-function ParticipantPanelRow({
-  participant,
-  busy,
-  locked,
-  onRemove,
-  onDragStart,
-  onDragEnd,
-  muted = false,
-}: {
-  participant: TournamentParticipant;
-  busy: boolean;
-  locked: boolean;
-  onRemove(participantId: string): void;
-  onDragStart(participantId: string): void;
-  onDragEnd(): void;
-  muted?: boolean;
-}) {
-  return (
-    <div
-      draggable={!busy && !locked}
-      onDragStart={(event) => {
-        event.dataTransfer.setData("text/plain", participant.id);
-        event.dataTransfer.effectAllowed = "move";
-        onDragStart(participant.id);
-      }}
-      onDragEnd={onDragEnd}
-      className={cn(
-        "raise flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[13px]",
-        muted && "text-muted-foreground",
-      )}
-    >
-      <GripVertical className="size-3 cursor-grab text-muted-foreground" />
-      <ParticipantAvatar displayName={participant.displayName} avatarUrl={participant.avatarUrl} />
-      <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
-      {participant.provider && <BaseBrandIcon provider={participant.provider} className="size-3" />}
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        className="shrink-0"
-        disabled={busy || locked}
-        onClick={() => onRemove(participant.id)}
-        aria-label={`Delete ${participant.displayName}`}
-      >
-        <Trash2 />
-      </Button>
-    </div>
-  );
-}
+import { ParticipantAvatar, ParticipantPanel } from "./ParticipantPanel";
 
 function isTournamentSize(value: number): boolean {
   return Number.isInteger(value) && value >= 2 && value <= 8192;
@@ -274,6 +76,7 @@ export function TournamentsTab() {
   const [creating, setCreating] = useState(false);
   const [configuring, setConfiguring] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [capturingPayment, setCapturingPayment] = useState(false);
   const [draggedParticipantId, setDraggedParticipantId] = useState<string | null>(null);
   const [draggedMemberId, setDraggedMemberId] = useState<string | null>(null);
   const [teamNames, setTeamNames] = useState<Record<string, string>>({});
@@ -340,23 +143,26 @@ export function TournamentsTab() {
   );
   const previewMatches =
     detail && !detail.matches.length
-      ? Array.from({ length: Math.ceil(Math.log2(detail.tournament.bracketSize)) }, (_, roundIndex) => {
-          const roundNumber = roundIndex + 1;
-          const bracketSlots = 2 ** Math.ceil(Math.log2(detail.tournament.bracketSize));
-          const count = bracketSlots / 2 ** roundNumber;
-          return Array.from({ length: count }, (_, matchIndex) => ({
-            id: `preview-${roundNumber}-${matchIndex + 1}`,
-            leftEntryId:
-              roundNumber === 1 ? (orderedBracketEntries[matchIndex * 2]?.id ?? null) : null,
-            leftResult: "pending" as const,
-            matchNumber: matchIndex + 1,
-            rightEntryId:
-              roundNumber === 1 ? (orderedBracketEntries[matchIndex * 2 + 1]?.id ?? null) : null,
-            rightResult: "pending" as const,
-            roundNumber,
-            status: "waiting" as const,
-          }));
-        }).flat()
+      ? Array.from(
+          { length: Math.ceil(Math.log2(detail.tournament.bracketSize)) },
+          (_, roundIndex) => {
+            const roundNumber = roundIndex + 1;
+            const bracketSlots = 2 ** Math.ceil(Math.log2(detail.tournament.bracketSize));
+            const count = bracketSlots / 2 ** roundNumber;
+            return Array.from({ length: count }, (_, matchIndex) => ({
+              id: `preview-${roundNumber}-${matchIndex + 1}`,
+              leftEntryId:
+                roundNumber === 1 ? (orderedBracketEntries[matchIndex * 2]?.id ?? null) : null,
+              leftResult: "pending" as const,
+              matchNumber: matchIndex + 1,
+              rightEntryId:
+                roundNumber === 1 ? (orderedBracketEntries[matchIndex * 2 + 1]?.id ?? null) : null,
+              rightResult: "pending" as const,
+              roundNumber,
+              status: "waiting" as const,
+            }));
+          },
+        ).flat()
       : [];
   const bracketMatches = detail?.matches.length ? detail.matches : previewMatches;
   const maxRound = detail?.matches.length
@@ -406,6 +212,11 @@ export function TournamentsTab() {
               <MessageCircle /> Capture from chat
             </Button>
           )}
+          {detail && ["draft", "ready"].includes(detail.tournament.status) && (
+            <Button variant="secondary" size="sm" onClick={() => setCapturingPayment(true)}>
+              <DollarSign /> Capture from payment
+            </Button>
+          )}
           <DebugChatSimulationButton
             target="tournament"
             targetId={detail.tournament.id}
@@ -420,7 +231,7 @@ export function TournamentsTab() {
                 detail.tournament.mode === "individual" && (
                   <Select
                     value={
-                        [4, 8, 16, 32, 64].includes(detail.tournament.bracketSize)
+                      [4, 8, 16, 32, 64].includes(detail.tournament.bracketSize)
                         ? String(detail.tournament.bracketSize)
                         : "custom"
                     }
@@ -491,11 +302,11 @@ export function TournamentsTab() {
                       }}
                     >
                       <SelectTrigger className="h-8 w-40" aria-label="Total participants">
-                      <SelectValue>
-                        {!presetTotalParticipantOptions.includes(totalTeamParticipants)
-                          ? `${totalTeamParticipants} Custom participants`
-                          : undefined}
-                      </SelectValue>
+                        <SelectValue>
+                          {!presetTotalParticipantOptions.includes(totalTeamParticipants)
+                            ? `${totalTeamParticipants} Custom participants`
+                            : undefined}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {totalParticipantOptions.map((total) => (
@@ -532,7 +343,10 @@ export function TournamentsTab() {
                                   total % count === 0 &&
                                   total / count <= 16,
                               )
-                              .sort((left, right) => Math.abs(left - teamCount) - Math.abs(right - teamCount))[0];
+                              .sort(
+                                (left, right) =>
+                                  Math.abs(left - teamCount) - Math.abs(right - teamCount),
+                              )[0];
                             if (!nextTeams) {
                               notifyInvalidTournamentSize(value);
                               return;
@@ -557,7 +371,7 @@ export function TournamentsTab() {
                     >
                       <SelectTrigger className="h-8 w-28" aria-label="Team count">
                         <SelectValue>
-                          {!([4, 8, 16, 32, 64].includes(teamCount))
+                          {![4, 8, 16, 32, 64].includes(teamCount)
                             ? `${teamCount} Custom teams`
                             : undefined}
                         </SelectValue>
@@ -579,7 +393,7 @@ export function TournamentsTab() {
                           min={2}
                           max={8192}
                           step={1}
-                          value={!([4, 8, 16, 32, 64].includes(teamCount)) ? String(teamCount) : ""}
+                          value={![4, 8, 16, 32, 64].includes(teamCount) ? String(teamCount) : ""}
                           onValueChange={(value) => {
                             const count = Number(value);
                             if (isTournamentSize(count))
@@ -597,11 +411,7 @@ export function TournamentsTab() {
                         const capacity = Number(value);
                         const count = totalTeamParticipants / capacity;
                         if (isTournamentSize(count))
-                          void tournaments.updateStructure(
-                            "team",
-                            count,
-                            capacity,
-                          );
+                          void tournaments.updateStructure("team", count, capacity);
                       }}
                     >
                       <SelectTrigger className="h-8 w-32" aria-label="Participants per team">
@@ -817,7 +627,7 @@ export function TournamentsTab() {
               );
             })()}
           */}
-          <TournamentParticipantsPanel
+          <ParticipantPanel
             participants={
               detail.tournament.mode === "team"
                 ? detail.participants.filter((participant) => {
@@ -841,452 +651,463 @@ export function TournamentsTab() {
               );
               setParticipantName("");
             }}
-            onRemoveParticipant={(participantId) => void tournaments.removeParticipant(participantId)}
+            onRemoveParticipant={(participantId) =>
+              void tournaments.removeParticipant(participantId)
+            }
             busy={tournaments.busy}
             locked={Boolean(detail.matches.length)}
             onDragStart={(participantId) => setDraggedParticipantId(participantId)}
             onDragEnd={() => setDraggedParticipantId(null)}
           />
           {String(detail.tournament.mode) === "team" && (
-          <aside
-            className={cn(
-              "flex shrink-0 flex-col border-r border-border overflow-x-hidden rounded-3xl p-3 transition-[width] duration-300",
-              teamsExpanded ? (detail.tournament.mode === "team" ? "w-[380px]" : "w-72") : "w-14",
-            )}
-          >
-            <div
+            <aside
               className={cn(
-                "flex gap-2 pb-3",
-                teamsExpanded ? "items-center" : "flex-col items-center",
+                "flex shrink-0 flex-col border-r border-border overflow-x-hidden rounded-3xl p-3 transition-[width] duration-300",
+                teamsExpanded ? (detail.tournament.mode === "team" ? "w-[380px]" : "w-72") : "w-14",
               )}
             >
-              {detail.tournament.mode === "team" ? (
-                <Users className="size-4" />
-              ) : (
-                <User className="size-4" />
-              )}
-              {teamsExpanded && (
-                <>
-                  <h3 className="flex-1 text-[13px] font-semibold">
-                    {detail.tournament.mode === "team" ? "Teams" : "Participants"}
-                  </h3>
-                  <span className="text-xs text-muted-foreground">
-                    {entrantCount}/{detail.tournament.bracketSize}
-                  </span>
-                </>
-              )}
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={teamsExpanded ? "Collapse panel" : "Expand panel"}
-                onClick={() => setTeamsExpanded((value) => !value)}
-              >
-                {teamsExpanded ? <ChevronLeft /> : <ChevronRight />}
-              </Button>
-            </div>
-            {teamsExpanded && (
-              <div className="flex min-h-0 flex-1 flex-col">
-                <div className="flex min-w-0 gap-2 pb-3">
-                  <Input
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    placeholder={detail.tournament.mode === "team" ? "Add team…" : "Add name…"}
-                    disabled={tournaments.busy || detail.matches.length > 0}
-                    className="h-8 min-w-0 flex-1 text-[13px]"
-                  />
-                  <Button
-                    size="icon-sm"
-                    className="size-8 shrink-0"
-                    disabled={tournaments.busy || detail.matches.length > 0 || !name.trim()}
-                    onClick={() => {
-                      if (name.trim()) {
-                        void (detail.tournament.mode === "team"
-                          ? tournaments.addTeam(name.trim())
-                          : tournaments.addParticipant(
-                              name.trim(),
-                              live.selected?.provider ?? null,
-                              live.selected?.channelId ?? null,
-                            ));
-                        setName("");
-                      }
-                    }}
-                  >
-                    <Plus />
-                  </Button>
-                </div>
-                {detail.tournament.mode === "team" && detail.teams.length > 0 && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="mb-3"
-                    disabled={tournaments.busy || detail.matches.length > 0}
-                    onClick={() => void tournaments.shuffleTeamMembers()}
-                  >
-                    <Sparkles /> Shuffle participants
-                  </Button>
+              <div
+                className={cn(
+                  "flex gap-2 pb-3",
+                  teamsExpanded ? "items-center" : "flex-col items-center",
                 )}
-                <div
-                  className={cn(
-                    "min-h-0 space-y-2 overflow-y-auto",
-                    detail.tournament.mode === "individual" ? "flex-[4_1_0%]" : "flex-1",
-                  )}
+              >
+                {detail.tournament.mode === "team" ? (
+                  <Users className="size-4" />
+                ) : (
+                  <User className="size-4" />
+                )}
+                {teamsExpanded && (
+                  <>
+                    <h3 className="flex-1 text-[13px] font-semibold">
+                      {detail.tournament.mode === "team" ? "Teams" : "Participants"}
+                    </h3>
+                    <span className="text-xs text-muted-foreground">
+                      {entrantCount}/{detail.tournament.bracketSize}
+                    </span>
+                  </>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={teamsExpanded ? "Collapse panel" : "Expand panel"}
+                  onClick={() => setTeamsExpanded((value) => !value)}
                 >
-                  {detail.tournament.mode === "team"
-                    ? detail.teams.map((team) => {
-                        const members = detail.teamMembers.filter(
-                          (member) => member.teamId === team.id,
-                        );
-                        const draftName = teamNames[team.id] ?? team.name;
-                        return (
-                          <div
-                            key={team.id}
-                            className="rounded-2xl border border-border-strong bg-card p-3"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <button
-                                    type="button"
-                                    aria-label={`Choose color for ${team.name}`}
-                                    disabled={tournaments.busy || detail.matches.length > 0}
-                                    className="size-7 shrink-0 rounded-full border-2 border-border-strong outline-none transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                                    style={{ backgroundColor: team.color }}
-                                  />
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  align="start"
-                                  className="w-auto border-0 bg-transparent p-0 shadow-none"
-                                >
-                                  <BaseColorPicker
-                                    value={team.color}
-                                    onChange={(color) =>
+                  {teamsExpanded ? <ChevronLeft /> : <ChevronRight />}
+                </Button>
+              </div>
+              {teamsExpanded && (
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <div className="flex min-w-0 gap-2 pb-3">
+                    <Input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder={detail.tournament.mode === "team" ? "Add team…" : "Add name…"}
+                      disabled={tournaments.busy || detail.matches.length > 0}
+                      className="h-8 min-w-0 flex-1 text-[13px]"
+                    />
+                    <Button
+                      size="icon-sm"
+                      className="size-8 shrink-0"
+                      disabled={tournaments.busy || detail.matches.length > 0 || !name.trim()}
+                      onClick={() => {
+                        if (name.trim()) {
+                          void (detail.tournament.mode === "team"
+                            ? tournaments.addTeam(name.trim())
+                            : tournaments.addParticipant(
+                                name.trim(),
+                                live.selected?.provider ?? null,
+                                live.selected?.channelId ?? null,
+                              ));
+                          setName("");
+                        }
+                      }}
+                    >
+                      <Plus />
+                    </Button>
+                  </div>
+                  {detail.tournament.mode === "team" && detail.teams.length > 0 && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="mb-3"
+                      disabled={tournaments.busy || detail.matches.length > 0}
+                      onClick={() => void tournaments.shuffleTeamMembers()}
+                    >
+                      <Sparkles /> Shuffle participants
+                    </Button>
+                  )}
+                  <div
+                    className={cn(
+                      "min-h-0 space-y-2 overflow-y-auto",
+                      detail.tournament.mode === "individual" ? "flex-[4_1_0%]" : "flex-1",
+                    )}
+                  >
+                    {detail.tournament.mode === "team"
+                      ? detail.teams.map((team) => {
+                          const members = detail.teamMembers.filter(
+                            (member) => member.teamId === team.id,
+                          );
+                          const draftName = teamNames[team.id] ?? team.name;
+                          return (
+                            <div
+                              key={team.id}
+                              className="rounded-2xl border border-border-strong bg-card p-3"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      aria-label={`Choose color for ${team.name}`}
+                                      disabled={tournaments.busy || detail.matches.length > 0}
+                                      className="size-7 shrink-0 rounded-full border-2 border-border-strong outline-none transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                                      style={{ backgroundColor: team.color }}
+                                    />
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    align="start"
+                                    className="w-auto border-0 bg-transparent p-0 shadow-none"
+                                  >
+                                    <BaseColorPicker
+                                      value={team.color}
+                                      onChange={(color) =>
+                                        void tournaments.updateTeam(
+                                          team.id,
+                                          draftName,
+                                          team.capacity,
+                                          color,
+                                        )
+                                      }
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <Input
+                                  value={draftName}
+                                  disabled={tournaments.busy || detail.matches.length > 0}
+                                  className="h-8 font-semibold"
+                                  onChange={(event) =>
+                                    setTeamNames((current) => ({
+                                      ...current,
+                                      [team.id]: event.target.value,
+                                    }))
+                                  }
+                                  onBlur={() => {
+                                    if (draftName.trim() && draftName.trim() !== team.name)
                                       void tournaments.updateTeam(
                                         team.id,
-                                        draftName,
+                                        draftName.trim(),
                                         team.capacity,
-                                        color,
-                                      )
-                                    }
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <Input
-                                value={draftName}
-                                disabled={tournaments.busy || detail.matches.length > 0}
-                                className="h-8 font-semibold"
-                                onChange={(event) =>
-                                  setTeamNames((current) => ({
-                                    ...current,
-                                    [team.id]: event.target.value,
-                                  }))
-                                }
-                                onBlur={() => {
-                                  if (draftName.trim() && draftName.trim() !== team.name)
+                                        team.color,
+                                      );
+                                  }}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label={`Delete ${team.name}`}
+                                  disabled={tournaments.busy || detail.matches.length > 0}
+                                  onClick={() => setDeletingTeam({ id: team.id, name: team.name })}
+                                >
+                                  <Trash2 />
+                                </Button>
+                              </div>
+                              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                <span className="flex-1">
+                                  {members.length}/{team.capacity} slots
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  disabled={
+                                    team.capacity <= 1 ||
+                                    members.some((member) => member.slotPosition === team.capacity)
+                                  }
+                                  onClick={() =>
                                     void tournaments.updateTeam(
                                       team.id,
-                                      draftName.trim(),
-                                      team.capacity,
+                                      draftName,
+                                      team.capacity - 1,
                                       team.color,
-                                    );
-                                }}
-                              />
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                aria-label={`Delete ${team.name}`}
-                                disabled={tournaments.busy || detail.matches.length > 0}
-                                onClick={() => setDeletingTeam({ id: team.id, name: team.name })}
-                              >
-                                <Trash2 />
-                              </Button>
-                            </div>
-                            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                              <span className="flex-1">
-                                {members.length}/{team.capacity} slots
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                disabled={
-                                  team.capacity <= 1 ||
-                                  members.some((member) => member.slotPosition === team.capacity)
-                                }
-                                onClick={() =>
-                                  void tournaments.updateTeam(
-                                    team.id,
-                                    draftName,
-                                    team.capacity - 1,
-                                    team.color,
-                                  )
-                                }
-                              >
-                                <Minus />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                disabled={team.capacity >= 16}
-                                onClick={() =>
-                                  void tournaments.updateTeam(
-                                    team.id,
-                                    draftName,
-                                    team.capacity + 1,
-                                    team.color,
-                                  )
-                                }
-                              >
-                                <Plus />
-                              </Button>
-                            </div>
-                            <div className="mt-2 space-y-1.5">
-                              {Array.from({ length: team.capacity }, (_, index) => {
-                                const slot = index + 1;
-                                const member = members.find((item) => item.slotPosition === slot);
-                                return (
-                                  <div
-                                    key={slot}
-                                    onDragOver={(event) => event.preventDefault()}
-                                    onDrop={() => {
-                                      if (draggedMemberId)
-                                        void tournaments.moveTeamMember(
-                                          draggedMemberId,
-                                          team.id,
-                                          slot,
-                                        );
-                                      else if (draggedParticipantId)
-                                        void tournaments.assignParticipant(
-                                          team.id,
-                                          draggedParticipantId,
-                                          slot,
-                                        );
-                                      setDraggedMemberId(null);
-                                      setDraggedParticipantId(null);
-                                    }}
-                                    className="flex min-h-9 items-center gap-2 rounded-xl border border-border bg-surface-2/60 px-2"
-                                  >
-                                    <span className="w-4 text-[10px] text-muted-foreground">
-                                      {slot}
-                                    </span>
-                                    {member ? (
-                                      <>
-                                        <GripVertical className="size-3 cursor-grab text-muted-foreground" />
-                                        {detail.participants.find(
-                                          (participant) => participant.id === member.participantId,
-                                        )?.avatarUrl ? (
-                                          <img
-                                            src={
-                                              detail.participants.find(
-                                                (participant) =>
-                                                  participant.id === member.participantId,
-                                              )!.avatarUrl!
+                                    )
+                                  }
+                                >
+                                  <Minus />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  disabled={team.capacity >= 16}
+                                  onClick={() =>
+                                    void tournaments.updateTeam(
+                                      team.id,
+                                      draftName,
+                                      team.capacity + 1,
+                                      team.color,
+                                    )
+                                  }
+                                >
+                                  <Plus />
+                                </Button>
+                              </div>
+                              <div className="mt-2 space-y-1.5">
+                                {Array.from({ length: team.capacity }, (_, index) => {
+                                  const slot = index + 1;
+                                  const member = members.find((item) => item.slotPosition === slot);
+                                  return (
+                                    <div
+                                      key={slot}
+                                      onDragOver={(event) => event.preventDefault()}
+                                      onDrop={() => {
+                                        if (draggedMemberId)
+                                          void tournaments.moveTeamMember(
+                                            draggedMemberId,
+                                            team.id,
+                                            slot,
+                                          );
+                                        else if (draggedParticipantId)
+                                          void tournaments.assignParticipant(
+                                            team.id,
+                                            draggedParticipantId,
+                                            slot,
+                                          );
+                                        setDraggedMemberId(null);
+                                        setDraggedParticipantId(null);
+                                      }}
+                                      className="flex min-h-9 items-center gap-2 rounded-xl border border-border bg-surface-2/60 px-2"
+                                    >
+                                      <span className="w-4 text-[10px] text-muted-foreground">
+                                        {slot}
+                                      </span>
+                                      {member ? (
+                                        <>
+                                          <GripVertical className="size-3 cursor-grab text-muted-foreground" />
+                                          {detail.participants.find(
+                                            (participant) =>
+                                              participant.id === member.participantId,
+                                          )?.avatarUrl ? (
+                                            <img
+                                              src={
+                                                detail.participants.find(
+                                                  (participant) =>
+                                                    participant.id === member.participantId,
+                                                )!.avatarUrl!
+                                              }
+                                              alt=""
+                                              className="size-5 shrink-0 rounded-full object-cover"
+                                            />
+                                          ) : (
+                                            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-card">
+                                              <User className="size-3" />
+                                            </span>
+                                          )}
+                                          <span
+                                            draggable
+                                            onDragStart={() => setDraggedMemberId(member.id)}
+                                            className="min-w-0 flex-1 truncate text-xs"
+                                          >
+                                            {member.displayName}
+                                          </span>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            onClick={() =>
+                                              void tournaments.removeTeamMember(member.id)
                                             }
-                                            alt=""
-                                            className="size-5 shrink-0 rounded-full object-cover"
+                                          >
+                                            <Trash2 />
+                                          </Button>
+                                        </>
+                                      ) : (
+                                        <span className="text-xs text-muted-foreground">
+                                          Slot vazio
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })
+                      : visibleQualifiedParticipants.map((participant) => (
+                          <div
+                            key={participant.id}
+                            draggable={!tournaments.busy && !detail.matches.length}
+                            onDragStart={(event) => {
+                              event.dataTransfer.setData("text/plain", participant.id);
+                              event.dataTransfer.effectAllowed = "move";
+                              setDraggedParticipantId(participant.id);
+                            }}
+                            onDragEnd={() => setDraggedParticipantId(null)}
+                            className="raise flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[13px]"
+                          >
+                            {participant.avatarUrl ? (
+                              <img
+                                src={participant.avatarUrl}
+                                alt=""
+                                className="size-6 shrink-0 rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-[10px] font-semibold">
+                                {participant.displayName.slice(0, 2).toUpperCase()}
+                              </span>
+                            )}
+                            <span className="min-w-0 flex-1 truncate">
+                              {participant.displayName}
+                            </span>
+                            <CircleCheck
+                              className="size-3.5 shrink-0 text-emerald-500"
+                              aria-label="Outside bracket"
+                            />
+                            {participant.source === "chat" && (
+                              <span className="shrink-0" title={participant.provider ?? undefined}>
+                                {participant.provider && (
+                                  <BaseBrandIcon
+                                    provider={participant.provider}
+                                    className="size-3"
+                                  />
+                                )}
+                              </span>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              className="shrink-0"
+                              disabled={tournaments.busy || detail.matches.length > 0}
+                              onClick={() => void tournaments.removeParticipant(participant.id)}
+                              aria-label={`Delete ${participant.displayName}`}
+                            >
+                              <Trash2 />
+                            </Button>
+                          </div>
+                        ))}
+                  </div>
+                  {detail.tournament.mode === "individual" && !detail.matches.length && (
+                    <section
+                      className={cn(
+                        "mt-3 flex min-h-0 flex-[1_1_0%] flex-col overflow-hidden rounded-xl border border-red-500/20 bg-red-500/[0.06] p-2 transition-colors",
+                        draggedParticipantId && "border-red-400/50 bg-red-500/10",
+                      )}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => {
+                        const participantId =
+                          event.dataTransfer.getData("text/plain") || draggedParticipantId;
+                        if (participantId) void tournaments.queueParticipant(participantId);
+                        setDraggedParticipantId(null);
+                      }}
+                    >
+                      <div className="mb-2 flex items-center justify-between px-1">
+                        <p className="text-[11px] font-semibold">Outside the bracket</p>
+                        <span className="text-[10px] text-muted-foreground">
+                          {overflowParticipants.length}
+                        </span>
+                      </div>
+                      {!overflowParticipants.length && (
+                        <p className="px-2 py-2 text-center text-[10px] text-red-300/60">
+                          Drag a person from the bracket here
+                        </p>
+                      )}
+                      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+                        {visibleOverflowParticipants.map((participant) => (
+                          <div
+                            key={participant.id}
+                            draggable={!tournaments.busy && !detail.matches.length}
+                            onDragStart={(event) => {
+                              event.dataTransfer.setData("text/plain", participant.id);
+                              event.dataTransfer.effectAllowed = "move";
+                              setDraggedParticipantId(participant.id);
+                            }}
+                            onDragEnd={() => setDraggedParticipantId(null)}
+                            className="flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 text-xs"
+                          >
+                            <UserX className="size-3.5 shrink-0 text-red-400/70" />
+                            <span className="min-w-0 flex-1 truncate text-muted-foreground line-through decoration-red-400/60">
+                              {participant.displayName}
+                            </span>
+                            {participant.provider && (
+                              <BaseBrandIcon
+                                provider={participant.provider}
+                                className="size-3 shrink-0"
+                              />
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              className="shrink-0"
+                              disabled={tournaments.busy || detail.matches.length > 0}
+                              onClick={() => void tournaments.removeParticipant(participant.id)}
+                              aria-label={`Delete ${participant.displayName}`}
+                            >
+                              <Trash2 />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
+              )}
+              {!teamsExpanded && (
+                <TooltipProvider delayDuration={250}>
+                  <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1">
+                    {detail.tournament.mode === "team"
+                      ? detail.teams.map((team) => {
+                          const members = detail.teamMembers.filter(
+                            (member) => member.teamId === team.id,
+                          );
+                          return (
+                            <Tooltip key={team.id}>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={`Expand team ${team.name}`}
+                                  onClick={() => setTeamsExpanded(true)}
+                                  className="size-7 max-w-full shrink-0 rounded-full border-2 border-border-strong outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring"
+                                  style={{ backgroundColor: team.color }}
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="right"
+                                className="w-56 rounded-xl border border-border-strong bg-popover p-3 text-popover-foreground shadow-xl"
+                              >
+                                <p className="mb-2 truncate text-xs font-semibold">{team.name}</p>
+                                <div className="flex flex-col gap-1.5">
+                                  {members.map((member) => (
+                                    <div
+                                      key={member.id}
+                                      className="flex min-w-0 items-center gap-2"
+                                    >
+                                      {(() => {
+                                        const participant = detail.participants.find(
+                                          (item) => item.id === member.participantId,
+                                        );
+                                        return participant ? (
+                                          <ParticipantAvatar
+                                            displayName={participant.displayName}
+                                            avatarUrl={participant.avatarUrl}
+                                            className="size-5"
                                           />
                                         ) : (
-                                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-card">
-                                            <User className="size-3" />
-                                          </span>
-                                        )}
-                                        <span
-                                          draggable
-                                          onDragStart={() => setDraggedMemberId(member.id)}
-                                          className="min-w-0 flex-1 truncate text-xs"
-                                        >
-                                          {member.displayName}
-                                        </span>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon-sm"
-                                          onClick={() =>
-                                            void tournaments.removeTeamMember(member.id)
-                                          }
-                                        >
-                                          <Trash2 />
-                                        </Button>
-                                      </>
-                                    ) : (
-                                      <span className="text-xs text-muted-foreground">
-                                        Slot vazio
-                                      </span>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })
-                    : visibleQualifiedParticipants.map((participant) => (
-                        <div
-                          key={participant.id}
-                          draggable={!tournaments.busy && !detail.matches.length}
-                          onDragStart={(event) => {
-                            event.dataTransfer.setData("text/plain", participant.id);
-                            event.dataTransfer.effectAllowed = "move";
-                            setDraggedParticipantId(participant.id);
-                          }}
-                          onDragEnd={() => setDraggedParticipantId(null)}
-                          className="raise flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[13px]"
-                        >
-                          {participant.avatarUrl ? (
-                            <img
-                              src={participant.avatarUrl}
-                              alt=""
-                              className="size-6 shrink-0 rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-[10px] font-semibold">
-                              {participant.displayName.slice(0, 2).toUpperCase()}
-                            </span>
-                          )}
-                          <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
-                          <CircleCheck
-                            className="size-3.5 shrink-0 text-emerald-500"
-                            aria-label="Outside bracket"
-                          />
-                          {participant.source === "chat" && (
-                            <span className="shrink-0" title={participant.provider ?? undefined}>
-                              {participant.provider && (
-                                <BaseBrandIcon provider={participant.provider} className="size-3" />
-                              )}
-                            </span>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            className="shrink-0"
-                            disabled={tournaments.busy || detail.matches.length > 0}
-                            onClick={() => void tournaments.removeParticipant(participant.id)}
-                            aria-label={`Delete ${participant.displayName}`}
-                          >
-                            <Trash2 />
-                          </Button>
-                        </div>
-                      ))}
-                </div>
-                {detail.tournament.mode === "individual" && !detail.matches.length && (
-                  <section
-                    className={cn(
-                      "mt-3 flex min-h-0 flex-[1_1_0%] flex-col overflow-hidden rounded-xl border border-red-500/20 bg-red-500/[0.06] p-2 transition-colors",
-                      draggedParticipantId && "border-red-400/50 bg-red-500/10",
-                    )}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={(event) => {
-                      const participantId =
-                        event.dataTransfer.getData("text/plain") || draggedParticipantId;
-                      if (participantId) void tournaments.queueParticipant(participantId);
-                      setDraggedParticipantId(null);
-                    }}
-                  >
-                    <div className="mb-2 flex items-center justify-between px-1">
-                      <p className="text-[11px] font-semibold">Outside the bracket</p>
-                      <span className="text-[10px] text-muted-foreground">
-                        {overflowParticipants.length}
-                      </span>
-                    </div>
-                    {!overflowParticipants.length && (
-                      <p className="px-2 py-2 text-center text-[10px] text-red-300/60">
-                        Drag a person from the bracket here
-                      </p>
-                    )}
-                    <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
-                      {visibleOverflowParticipants.map((participant) => (
-                        <div
-                          key={participant.id}
-                          draggable={!tournaments.busy && !detail.matches.length}
-                          onDragStart={(event) => {
-                            event.dataTransfer.setData("text/plain", participant.id);
-                            event.dataTransfer.effectAllowed = "move";
-                            setDraggedParticipantId(participant.id);
-                          }}
-                          onDragEnd={() => setDraggedParticipantId(null)}
-                          className="flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 text-xs"
-                        >
-                          <UserX className="size-3.5 shrink-0 text-red-400/70" />
-                          <span className="min-w-0 flex-1 truncate text-muted-foreground line-through decoration-red-400/60">
-                            {participant.displayName}
-                          </span>
-                          {participant.provider && (
-                            <BaseBrandIcon
-                              provider={participant.provider}
-                              className="size-3 shrink-0"
-                            />
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            className="shrink-0"
-                            disabled={tournaments.busy || detail.matches.length > 0}
-                            onClick={() => void tournaments.removeParticipant(participant.id)}
-                            aria-label={`Delete ${participant.displayName}`}
-                          >
-                            <Trash2 />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-              </div>
-            )}
-            {!teamsExpanded && (
-              <TooltipProvider delayDuration={250}>
-                <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1">
-                  {detail.tournament.mode === "team"
-                    ? detail.teams.map((team) => {
-                        const members = detail.teamMembers.filter(
-                          (member) => member.teamId === team.id,
-                        );
-                        return (
-                          <Tooltip key={team.id}>
+                                          <User className="size-3.5 shrink-0 text-muted-foreground" />
+                                        );
+                                      })()}
+                                      <span className="truncate text-xs">{member.displayName}</span>
+                                    </div>
+                                  ))}
+                                  {!members.length && (
+                                    <span className="text-xs text-muted-foreground">
+                                      No participant
+                                    </span>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })
+                      : visibleParticipants.map((participant) => (
+                          <Tooltip key={participant.id}>
                             <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                aria-label={`Expand team ${team.name}`}
-                                onClick={() => setTeamsExpanded(true)}
-                                className="size-7 max-w-full shrink-0 rounded-full border-2 border-border-strong outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring"
-                                style={{ backgroundColor: team.color }}
-                              />
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="right"
-                              className="w-56 rounded-xl border border-border-strong bg-popover p-3 text-popover-foreground shadow-xl"
-                            >
-                              <p className="mb-2 truncate text-xs font-semibold">{team.name}</p>
-                              <div className="flex flex-col gap-1.5">
-                                {members.map((member) => (
-                                  <div key={member.id} className="flex min-w-0 items-center gap-2">
-                                    {(() => {
-                                      const participant = detail.participants.find(
-                                        (item) => item.id === member.participantId,
-                                      );
-                                      return participant ? (
-                                        <ParticipantAvatar
-                                          displayName={participant.displayName}
-                                          avatarUrl={participant.avatarUrl}
-                                          className="size-5"
-                                        />
-                                      ) : (
-                                        <User className="size-3.5 shrink-0 text-muted-foreground" />
-                                      );
-                                    })()}
-                                    <span className="truncate text-xs">{member.displayName}</span>
-                                  </div>
-                                ))}
-                                {!members.length && (
-                                  <span className="text-xs text-muted-foreground">
-                                    No participant
-                                  </span>
-                                )}
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        );
-                      })
-                    : visibleParticipants.map((participant) => (
-                        <Tooltip key={participant.id}>
-                          <TooltipTrigger asChild>
                               <button
                                 type="button"
                                 aria-label={`Expand participant ${participant.displayName}`}
@@ -1299,14 +1120,14 @@ export function TournamentsTab() {
                                   className="size-6"
                                 />
                               </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">{participant.displayName}</TooltipContent>
-                        </Tooltip>
-                      ))}
-                </div>
-              </TooltipProvider>
-            )}
-          </aside>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">{participant.displayName}</TooltipContent>
+                          </Tooltip>
+                        ))}
+                  </div>
+                </TooltipProvider>
+              )}
+            </aside>
           )}
 
           <div className="min-w-0 flex-1 overflow-auto rounded-3xl p-5">
@@ -1349,73 +1170,82 @@ export function TournamentsTab() {
                       rowGap: "16px",
                     }}
                   >
-                      {bracketMatches
-                        .filter((match) => match.roundNumber === round)
-                        .map((match, matchIndex) => {
-                          const rowSpan = 2 ** (round - 1);
-                          const left = bracketEntries.find(
-                            (entry) => entry.id === match.leftEntryId,
-                          );
-                          const right = bracketEntries.find(
-                            (entry) => entry.id === match.rightEntryId,
-                          );
-                          const active =
-                            detail.tournament.currentMatchId === match.id &&
-                            match.status === "in_progress";
-                          return (
-                            <div
-                              role={detail.matches.length ? "button" : undefined}
-                              data-bracket-index={matchIndex}
-                              data-bracket-round={round}
-                              tabIndex={detail.matches.length ? 0 : undefined}
-                              key={match.id}
-                              onClick={() => {
-                                if (detail.matches.length) {
-                                  setSelectedMatchId(match.id);
-                                  setOperatingMatchId(match.id);
-                                }
-                              }}
-                              onKeyDown={(event) => {
-                                if (
-                                  detail.matches.length &&
-                                  (event.key === "Enter" || event.key === " ")
-                                ) {
-                                  setSelectedMatchId(match.id);
-                                  setOperatingMatchId(match.id);
-                                }
-                              }}
-                              className={cn(
-                                "bracket-match group relative min-h-[104px] self-center rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-white/[0.05]",
-                                active
-                                  ? "border-border-strong ring-2 ring-white/15"
-                                  : "border-border",
-                              )}
-                              style={{
-                                alignSelf: "center",
-                                gridRow: `${matchIndex * rowSpan + 1} / span ${rowSpan}`,
-                              }}
-                            >
-                              {!!detail.matches.length && (
-                                <div className="pointer-events-none absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-popover/95 p-1 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-visible:pointer-events-auto group-focus-visible:opacity-100">
-                                  {match.status === "ready" &&
-                                    detail.tournament.status === "in_progress" && (
-                                      <Button
-                                        size="sm"
-                                        className="h-7"
-                                        disabled={
-                                          tournaments.busy ||
-                                          detail.matches.some(
-                                            (item) => item.status === "in_progress",
-                                          )
-                                        }
-                                        onClick={(event) => {
-                                          event.stopPropagation();
-                                          void tournaments.startMatch(match.id);
-                                        }}
-                                      >
-                                        <Play className="size-3" /> Start
-                                      </Button>
-                                    )}
+                    {bracketMatches
+                      .filter((match) => match.roundNumber === round)
+                      .map((match, matchIndex) => {
+                        const rowSpan = 2 ** (round - 1);
+                        const left = bracketEntries.find((entry) => entry.id === match.leftEntryId);
+                        const right = bracketEntries.find(
+                          (entry) => entry.id === match.rightEntryId,
+                        );
+                        const active =
+                          detail.tournament.currentMatchId === match.id &&
+                          match.status === "in_progress";
+                        return (
+                          <div
+                            role={detail.matches.length ? "button" : undefined}
+                            data-bracket-index={matchIndex}
+                            data-bracket-round={round}
+                            tabIndex={detail.matches.length ? 0 : undefined}
+                            key={match.id}
+                            onClick={() => {
+                              if (detail.matches.length) {
+                                setSelectedMatchId(match.id);
+                                setOperatingMatchId(match.id);
+                              }
+                            }}
+                            onKeyDown={(event) => {
+                              if (
+                                detail.matches.length &&
+                                (event.key === "Enter" || event.key === " ")
+                              ) {
+                                setSelectedMatchId(match.id);
+                                setOperatingMatchId(match.id);
+                              }
+                            }}
+                            className={cn(
+                              "bracket-match group relative min-h-[104px] self-center rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-white/[0.05]",
+                              active
+                                ? "border-border-strong ring-2 ring-white/15"
+                                : "border-border",
+                            )}
+                            style={{
+                              alignSelf: "center",
+                              gridRow: `${matchIndex * rowSpan + 1} / span ${rowSpan}`,
+                            }}
+                          >
+                            {!!detail.matches.length && (
+                              <div className="pointer-events-none absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-popover/95 p-1 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-visible:pointer-events-auto group-focus-visible:opacity-100">
+                                {match.status === "ready" &&
+                                  detail.tournament.status === "in_progress" && (
+                                    <Button
+                                      size="sm"
+                                      className="h-7"
+                                      disabled={
+                                        tournaments.busy ||
+                                        detail.matches.some((item) => item.status === "in_progress")
+                                      }
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        void tournaments.startMatch(match.id);
+                                      }}
+                                    >
+                                      <Play className="size-3" /> Start
+                                    </Button>
+                                  )}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedMatchId(match.id);
+                                    setOperatingMatchId(match.id);
+                                  }}
+                                >
+                                  Open match
+                                </Button>
+                                {match.status === "finished" && (
                                   <Button
                                     size="sm"
                                     variant="ghost"
@@ -1423,116 +1253,99 @@ export function TournamentsTab() {
                                     onClick={(event) => {
                                       event.stopPropagation();
                                       setSelectedMatchId(match.id);
-                                      setOperatingMatchId(match.id);
+                                      setCorrectingMatchId(match.id);
                                     }}
                                   >
-                                    Open match
+                                    Correct
                                   </Button>
-                                  {match.status === "finished" && (
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-7"
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        setSelectedMatchId(match.id);
-                                        setCorrectingMatchId(match.id);
-                                      }}
-                                    >
-                                      Correct
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
-                              <p className="px-2 pb-1 text-[10px] text-muted-foreground">
-                                Match {match.matchNumber}
-                              </p>
-                              {[left, right].map((entry, index) => {
-                                const result = index === 0 ? match.leftResult : match.rightResult;
-                                return (
-                                  <div
-                                    key={index}
-                                    draggable={
-                                      !detail.matches.length &&
-                                      match.roundNumber === 1 &&
-                                      Boolean(entry)
+                                )}
+                              </div>
+                            )}
+                            <p className="px-2 pb-1 text-[10px] text-muted-foreground">
+                              Match {match.matchNumber}
+                            </p>
+                            {[left, right].map((entry, index) => {
+                              const result = index === 0 ? match.leftResult : match.rightResult;
+                              return (
+                                <div
+                                  key={index}
+                                  draggable={
+                                    !detail.matches.length &&
+                                    match.roundNumber === 1 &&
+                                    Boolean(entry)
+                                  }
+                                  onDragStart={(event) => {
+                                    if (!entry || detail.matches.length || match.roundNumber !== 1)
+                                      return;
+                                    event.dataTransfer.setData("text/plain", entry.sourceId);
+                                    event.dataTransfer.effectAllowed = "move";
+                                    setDraggedParticipantId(entry.sourceId);
+                                  }}
+                                  onDragEnd={() => setDraggedParticipantId(null)}
+                                  onDragOver={(event) => {
+                                    if (!detail.matches.length && match.roundNumber === 1)
+                                      event.preventDefault();
+                                  }}
+                                  onDrop={(event) => {
+                                    if (detail.matches.length || match.roundNumber !== 1) return;
+                                    const sourceId = event.dataTransfer.getData("text/plain");
+                                    const seed = (match.matchNumber - 1) * 2 + index + 1;
+                                    if (sourceId) {
+                                      if (detail.tournament.mode === "individual")
+                                        void tournaments.reorderParticipant(sourceId, seed);
+                                      else void tournaments.reorderTeam(sourceId, seed);
                                     }
-                                    onDragStart={(event) => {
-                                      if (
-                                        !entry ||
-                                        detail.matches.length ||
-                                        match.roundNumber !== 1
-                                      )
-                                        return;
-                                      event.dataTransfer.setData("text/plain", entry.sourceId);
-                                      event.dataTransfer.effectAllowed = "move";
-                                      setDraggedParticipantId(entry.sourceId);
-                                    }}
-                                    onDragEnd={() => setDraggedParticipantId(null)}
-                                    onDragOver={(event) => {
-                                      if (!detail.matches.length && match.roundNumber === 1)
-                                        event.preventDefault();
-                                    }}
-                                    onDrop={(event) => {
-                                      if (detail.matches.length || match.roundNumber !== 1) return;
-                                      const sourceId = event.dataTransfer.getData("text/plain");
-                                      const seed = (match.matchNumber - 1) * 2 + index + 1;
-                                      if (sourceId) {
-                                        if (detail.tournament.mode === "individual")
-                                          void tournaments.reorderParticipant(sourceId, seed);
-                                        else void tournaments.reorderTeam(sourceId, seed);
-                                      }
-                                      setDraggedParticipantId(null);
-                                    }}
+                                    setDraggedParticipantId(null);
+                                  }}
+                                  className={cn(
+                                    "flex items-center gap-2 px-2 py-2 text-[13px]",
+                                    index === 0 && "border-b border-border",
+                                  )}
+                                >
+                                  {detail.tournament.mode === "individual" && entry ? (
+                                    <ParticipantAvatar
+                                      displayName={entry.name}
+                                      avatarUrl={entry.avatarUrl}
+                                      className="size-5"
+                                    />
+                                  ) : null}
+                                  <span
                                     className={cn(
-                                      "flex items-center gap-2 px-2 py-2 text-[13px]",
-                                      index === 0 && "border-b border-border",
+                                      "min-w-0 flex-1 truncate",
+                                      result === "won" && "text-emerald-400",
+                                      ["lost", "forfeit"].includes(result) && "opacity-50",
                                     )}
                                   >
-                                    {detail.tournament.mode === "individual" && entry ? (
-                                      <ParticipantAvatar
-                                        displayName={entry.name}
-                                        avatarUrl={entry.avatarUrl}
-                                        className="size-5"
-                                      />
-                                    ) : null}
+                                    {entry?.name ?? "TBD"}
+                                  </span>
+                                  {result !== "pending" && (
                                     <span
                                       className={cn(
-                                        "min-w-0 flex-1 truncate",
-                                        result === "won" && "text-emerald-400",
-                                        ["lost", "forfeit"].includes(result) && "opacity-50",
+                                        "text-[9px] uppercase",
+                                        result === "won" ? "text-emerald-400" : "text-red-400",
                                       )}
                                     >
-                                      {entry?.name ?? "TBD"}
+                                      {result === "won"
+                                        ? "Won"
+                                        : result === "lost"
+                                          ? "Lost"
+                                          : result === "forfeit"
+                                            ? "Forfeit"
+                                            : "Draw"}
                                     </span>
-                                    {result !== "pending" && (
-                                      <span
-                                        className={cn(
-                                          "text-[9px] uppercase",
-                                          result === "won" ? "text-emerald-400" : "text-red-400",
-                                        )}
-                                      >
-                                        {result === "won"
-                                          ? "Won"
-                                          : result === "lost"
-                                            ? "Lost"
-                                            : result === "forfeit"
-                                              ? "Forfeit"
-                                              : "Draw"}
-                                      </span>
-                                    )}
-                                    {entry?.color && (
-                                      <span
-                                        className="size-2.5 shrink-0 rounded-full"
-                                        style={{ backgroundColor: entry.color }}
-                                      />
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })}
+                                  )}
+                                  {entry?.color && (
+                                    <span
+                                      className="size-2.5 shrink-0 rounded-full"
+                                      style={{ backgroundColor: entry.color }}
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
                   </div>
                 ),
               )}
@@ -1713,12 +1526,7 @@ export function TournamentsTab() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-yellow-400">
                   Champion
                 </p>
-                <p
-                  className={cn(
-                    "truncate text-lg font-semibold",
-                    "text-emerald-400",
-                  )}
-                >
+                <p className={cn("truncate text-lg font-semibold", "text-emerald-400")}>
                   {champion?.name ?? "Result unavailable"}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
@@ -1818,6 +1626,17 @@ export function TournamentsTab() {
           target="tournament"
           targetId={detail.tournament.id}
           participantCount={detail.participants.length}
+          onRefresh={async () => {
+            await tournaments.reload(detail.tournament.id);
+          }}
+        />
+      )}
+      {detail && (
+        <PaymentCaptureDialog
+          open={capturingPayment}
+          onOpenChange={setCapturingPayment}
+          target="tournament"
+          targetId={detail.tournament.id}
           onRefresh={async () => {
             await tournaments.reload(detail.tournament.id);
           }}

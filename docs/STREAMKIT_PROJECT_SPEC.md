@@ -1414,7 +1414,7 @@ Evento externo
 #### 21.6.3 Requisitos
 
 - idempotência;
-- reconexão com backoff;
+- conexão explícita usando a URL de notificações configurada no aplicativo LivePix;
 - tolerância a eventos fora de ordem;
 - estado de conexão visível;
 - fila de eventos com falha;

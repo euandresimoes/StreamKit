@@ -4,6 +4,7 @@ import { ApiApplicationError } from '../../../../application/api-error'
 import { LivePixAuthService } from './livepix-auth.service'
 import {
   LivePixAccountResponseSchema,
+  LivePixMessageResponseSchema,
   LivePixPaymentResponseSchema,
 } from './livepix.schemas'
 
@@ -21,16 +22,29 @@ export class LivePixApiClient {
     return this.request(`/v2/payments/${encodeURIComponent(id)}`, LivePixPaymentResponseSchema)
   }
 
+  public message(id: string) {
+    return this.request(`/v2/messages/${encodeURIComponent(id)}`, LivePixMessageResponseSchema)
+  }
+
   private async request<T extends { parse(value: unknown): unknown }>(
     path: string,
     schema: T,
     init: RequestInit = {},
+    retryAfterUnauthorized = true,
   ): Promise<ReturnType<T['parse']>> {
+    const accessToken = await this.auth.getAccessToken()
     const response = await fetch(`https://api.livepix.gg${path}`, {
       ...init,
-      headers: { authorization: `Bearer ${await this.auth.getAccessToken()}`, ...init.headers },
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        ...init.headers,
+      },
       signal: AbortSignal.timeout(LIVEPIX_REQUEST_TIMEOUT_MS),
     })
+    if (response.status === 401 && retryAfterUnauthorized) {
+      await this.auth.invalidateAccessToken(accessToken)
+      return this.request(path, schema, init, false)
+    }
     if (response.status === 401)
       throw new ApiApplicationError(
         'INTEGRATION_AUTH_REVOKED',

@@ -5,11 +5,14 @@ import {
   type OnModuleDestroy,
 } from '@nestjs/common'
 import {
+  ErrorCodeSchema,
   ExternalEventIngressSchema,
   type ExternalEventProvider,
   type ExternalEventRecord,
 } from '@streamkit/contracts'
+import { ZodError } from 'zod'
 
+import { ApiApplicationError } from '../../../application/api-error'
 import { ExternalEventBus } from './external-event.bus'
 import { ExternalEventQueueRepository } from './external-event-queue.repository'
 
@@ -60,17 +63,27 @@ export class ExternalEventService implements OnApplicationBootstrap, OnModuleDes
 
   private async dispatch(record: ExternalEventRecord): Promise<void> {
     const failures = await this.bus.publish(record)
-    if (!failures) {
+    if (!failures.length) {
       await this.queue.markProcessed(record.id)
       return
     }
     const nextDelay = RETRY_DELAYS_MS[Math.min(record.attemptCount - 1, RETRY_DELAYS_MS.length - 1)]
     await this.queue.markFailed(
       record.id,
-      'EXTERNAL_EVENT_HANDLER_FAILED',
+      this.errorCode(failures[0]),
       record.attemptCount >= this.queue.maxAttempts()
         ? null
         : new Date(Date.now() + nextDelay!).toISOString(),
     )
+  }
+
+  private errorCode(cause: unknown): string {
+    if (cause instanceof ApiApplicationError) return cause.code
+    if (cause instanceof ZodError) return 'VALIDATION_FAILED'
+    if (cause && typeof cause === 'object' && 'code' in cause) {
+      const parsed = ErrorCodeSchema.safeParse(cause.code)
+      if (parsed.success) return parsed.data
+    }
+    return 'EXTERNAL_EVENT_HANDLER_FAILED'
   }
 }

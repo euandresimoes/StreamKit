@@ -45,4 +45,15 @@ describe('LivePix payment contracts', () => {
     })
     expect(pending.participantHandle).toBe('viewer_handle')
   })
+
+  it('accepts named LivePix donations delivered as message resources', () => {
+    const webhook = LivePixWebhookEnvelopeSchema.parse({
+      clientId: 'client-1',
+      event: 'new',
+      resource: { id: 'message-1', type: 'message' },
+      userId: 'account-1',
+    })
+
+    expect(webhook.resource.type).toBe('message')
+  })
 })

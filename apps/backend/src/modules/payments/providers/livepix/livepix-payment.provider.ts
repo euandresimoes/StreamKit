@@ -24,10 +24,8 @@ import { PaymentCampaignService } from '../../payment-campaign.service'
 export class LivePixPaymentProvider
   implements ContributionProvider, OnApplicationBootstrap, OnModuleDestroy
 {
-  private retryTimer: NodeJS.Timeout | null = null
   private monitorTimer: NodeJS.Timeout | null = null
   private stopped = false
-  private retryAttempt = 0
   private connectPromise: Promise<
     Awaited<ReturnType<LivePixPaymentProvider['connectInternal']>>
   > | null = null
@@ -43,12 +41,12 @@ export class LivePixPaymentProvider
 
   public onApplicationBootstrap(): void {
     this.events.subscribe('livepix', async (event) => this.handleExternalEvent(event.payload))
-    this.monitorTimer = setInterval(() => void this.monitor(), 5_000)
+    this.monitorTimer = setInterval(() => void this.monitor().catch(() => undefined), 5_000)
+    void this.monitor().catch(() => undefined)
   }
 
   public async onModuleDestroy(): Promise<void> {
     this.stopped = true
-    if (this.retryTimer) clearTimeout(this.retryTimer)
     if (this.monitorTimer) clearInterval(this.monitorTimer)
   }
 
@@ -77,6 +75,12 @@ export class LivePixPaymentProvider
   private async connectInternal() {
     this.stopped = false
     const current = await this.repository.connection()
+    if (
+      current?.state === 'ready' &&
+      current.webhookUrl &&
+      this.transport.snapshot().state === 'ready'
+    )
+      return this.status()
     await this.repository.saveConnection({
       accountId: current?.accountId ?? null,
       accountUsername: null,
@@ -114,20 +118,12 @@ export class LivePixPaymentProvider
             : 'degraded',
         webhookUrl: current?.webhookUrl ?? null,
       })
-      if (
-        !(cause instanceof ApiApplicationError) ||
-        !['RATE_LIMITED', 'INTEGRATION_AUTH_REQUIRED', 'INTEGRATION_AUTH_REVOKED'].includes(
-          cause.code,
-        )
-      )
-        this.scheduleRetry()
       throw cause
     }
   }
 
   public async disconnect() {
     this.stopped = true
-    if (this.retryTimer) clearTimeout(this.retryTimer)
     const existing = await this.repository.connection()
     await this.transport.unregister('livepix')
     await this.auth.disconnect().catch(() => undefined)
@@ -145,19 +141,31 @@ export class LivePixPaymentProvider
 
   private async monitor(): Promise<void> {
     if (this.stopped) return
+    await this.reconcilePending()
     const current = await this.repository.connection()
-    if (current?.state === 'ready' && this.transport.snapshot().state === 'error')
-      this.scheduleRetry()
+    if (current?.state === 'ready' && this.transport.snapshot().state !== 'ready') {
+      await this.repository.saveConnection({
+        accountId: current.accountId,
+        accountUsername: current.accountUsername,
+        generation: current.generation,
+        lastErrorCode: 'EXTERNAL_TUNNEL_UNAVAILABLE',
+        remoteWebhookId: current.remoteWebhookId,
+        state: 'degraded',
+        webhookUrl: current.webhookUrl,
+      })
+    }
   }
 
-  private scheduleRetry(delay = 5_000): void {
-    if (this.stopped || this.retryTimer) return
-    const backoff = Math.max(delay, Math.min(300_000, 5_000 * 2 ** this.retryAttempt++))
-    const jitter = Math.floor(Math.random() * Math.max(1_000, backoff * 0.2))
-    this.retryTimer = setTimeout(() => {
-      this.retryTimer = null
-      void this.connect().catch(() => undefined)
-    }, backoff + jitter)
+  private async reconcilePending(): Promise<void> {
+    const pending = await this.repository.listPending()
+    for (const contribution of pending) {
+      try {
+        const applied = await this.campaigns.apply(contribution)
+        if (applied > 0) await this.repository.markProcessed(contribution.providerResourceId)
+      } catch {
+        // Keep the contribution pending so the next reconciliation can retry it.
+      }
+    }
   }
 
   public async handleExternalEvent(payload: unknown): Promise<void> {
@@ -170,16 +178,18 @@ export class LivePixPaymentProvider
     )
       throw new ApiApplicationError('UNAUTHORIZED', 'LivePix webhook account mismatch', 401)
     if (await this.repository.hasContribution(envelope.resource.id)) return
-    const details = LivePixPaymentDetailsSchema.parse(
-      (await this.api.payment(envelope.resource.id)).data,
-    )
+    const response =
+      envelope.resource.type === 'message'
+        ? await this.api.message(envelope.resource.id)
+        : await this.api.payment(envelope.resource.id)
+    const details = LivePixPaymentDetailsSchema.parse(response.data)
     const contribution = ContributionReceivedSchema.parse({
       amountInCents: details.amount,
       contributionType: 'payment',
       currency: details.currency,
       eventId: envelope.resource.id,
       message: details.message ?? null,
-      occurredAt: details.createdAt,
+      occurredAt: new Date(details.createdAt).toISOString(),
       participantHandle: details.username?.trim() || null,
       participantPlatform: null,
       provider: 'livepix',
@@ -194,5 +204,4 @@ export class LivePixPaymentProvider
     const applied = await this.campaigns.apply(contribution)
     if (applied > 0) await this.repository.markProcessed(contribution.providerResourceId)
   }
-
 }

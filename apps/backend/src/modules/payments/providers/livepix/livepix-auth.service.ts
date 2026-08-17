@@ -11,12 +11,13 @@ import { LivePixTokenResponseSchema } from './livepix.schemas'
 
 const CREDENTIAL = 'livepix'
 const LIVEPIX_REQUEST_TIMEOUT_MS = 15_000
+const LIVEPIX_SCOPE = 'account:read messages:read payments:read webhooks'
 const StoredCredentialSchema = z.object({
   accessToken: z.string().min(1).optional(),
   clientId: z.string().min(1),
   clientSecret: z.string().min(1),
   expiresAt: z.iso.datetime().optional(),
-  refreshToken: z.string().min(1).optional(),
+  scope: z.string().optional(),
 })
 
 @Injectable()
@@ -47,6 +48,7 @@ export class LivePixAuthService {
     if (
       stored.accessToken &&
       stored.expiresAt &&
+      this.hasRequiredScope(stored.scope) &&
       Date.parse(stored.expiresAt) > Date.now() + 60_000
     )
       return stored.accessToken
@@ -61,6 +63,19 @@ export class LivePixAuthService {
     return (await this.read())?.clientId ?? null
   }
 
+  public async invalidateAccessToken(rejectedToken: string): Promise<void> {
+    const stored = await this.read()
+    if (!stored || stored.accessToken !== rejectedToken) return
+    await this.credentials.save(
+      CREDENTIAL,
+      JSON.stringify({
+        clientId: stored.clientId,
+        clientSecret: stored.clientSecret,
+        scope: stored.scope,
+      }),
+    )
+  }
+
   public async disconnect(): Promise<void> {
     await this.credentials.remove(CREDENTIAL)
   }
@@ -69,9 +84,8 @@ export class LivePixAuthService {
     const body = new URLSearchParams({
       client_id: stored.clientId,
       client_secret: stored.clientSecret,
-      grant_type: stored.refreshToken ? 'refresh_token' : 'client_credentials',
-      ...(stored.refreshToken ? { refresh_token: stored.refreshToken } : {}),
-      scope: 'account:read wallet:read',
+      grant_type: 'client_credentials',
+      scope: LIVEPIX_SCOPE,
     })
     const response = await fetch('https://oauth.livepix.gg/oauth2/token', {
       body,
@@ -95,10 +109,15 @@ export class LivePixAuthService {
       ...stored,
       accessToken: token.access_token,
       expiresAt: new Date(Date.now() + token.expires_in * 1_000).toISOString(),
-      ...(token.refresh_token ? { refreshToken: token.refresh_token } : {}),
+      scope: token.scope || LIVEPIX_SCOPE,
     }
     await this.credentials.save(CREDENTIAL, JSON.stringify(next))
     return token.access_token
+  }
+
+  private hasRequiredScope(scope: string | undefined): boolean {
+    const granted = new Set(scope?.split(/\s+/).filter(Boolean) ?? [])
+    return LIVEPIX_SCOPE.split(' ').every((required) => granted.has(required))
   }
 
   private async read(): Promise<z.infer<typeof StoredCredentialSchema> | null> {

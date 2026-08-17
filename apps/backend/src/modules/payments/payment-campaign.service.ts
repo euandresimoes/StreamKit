@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { Inject, Injectable } from '@nestjs/common'
-import { and, eq, or, sql } from 'drizzle-orm'
+import { and, eq, inArray, or, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {
@@ -71,7 +71,7 @@ export class PaymentCampaignService {
             and(
               eq(giveawayCaptureRules.giveawayId, input.campaignId),
               eq(giveawayCaptureRules.connectionId, input.connectionId),
-              eq(giveaways.status, 'ready'),
+              inArray(giveaways.status, ['draft', 'ready']),
             ),
           )
           .get()
@@ -85,6 +85,7 @@ export class PaymentCampaignService {
           .insert(giveawayParticipants)
           .values({
             active: true,
+            avatarUrl: null,
             channelId: connection.channelId,
             createdAt: new Date().toISOString(),
             displayName: input.handle,
@@ -113,7 +114,7 @@ export class PaymentCampaignService {
             and(
               eq(tournamentCaptureRules.tournamentId, input.campaignId),
               eq(tournamentCaptureRules.connectionId, input.connectionId),
-              eq(tournaments.status, 'ready'),
+              inArray(tournaments.status, ['draft', 'ready']),
             ),
           )
           .get()
@@ -172,8 +173,8 @@ export class PaymentCampaignService {
         .where(
           and(
             eq(giveawayCaptureRules.status, 'active'),
-            eq(giveaways.status, 'ready'),
-            eq(integrationConnections.status, 'connected'),
+            inArray(giveaways.status, ['draft', 'ready']),
+            inArray(integrationConnections.status, ['connected', 'connecting', 'reconnecting']),
             or(
               eq(integrationConnections.isGlobalSelected, true),
               sql`NOT EXISTS (SELECT 1 FROM integration_connections WHERE is_global_selected = 1)`,
@@ -195,18 +196,42 @@ export class PaymentCampaignService {
           .where(
             and(
               eq(giveawayParticipants.giveawayId, rule.giveawayId),
-              eq(giveawayParticipants.normalizedName, identity),
-              eq(giveawayParticipants.externalRef, `livepix:${contribution.providerResourceId}`),
+              or(
+                eq(giveawayParticipants.normalizedName, identity),
+                eq(giveawayParticipants.externalRef, `livepix:${contribution.providerResourceId}`),
+              ),
             ),
           )
           .get()
         if (existing) continue
+        const giveaway = this.database.orm
+          .select({ maxParticipants: giveaways.maxParticipants })
+          .from(giveaways)
+          .where(eq(giveaways.id, rule.giveawayId))
+          .get()
+        const participantCount =
+          this.database.orm
+            .select({ count: sql<number>`count(*)` })
+            .from(giveawayParticipants)
+            .where(
+              and(
+                eq(giveawayParticipants.giveawayId, rule.giveawayId),
+                eq(giveawayParticipants.active, true),
+              ),
+            )
+            .get()?.count ?? 0
+        if (!giveaway || participantCount >= giveaway.maxParticipants) {
+          this.incrementGiveawayRejected(rule.id)
+          continue
+        }
+        const now = new Date().toISOString()
         this.database.orm
           .insert(giveawayParticipants)
           .values({
             active: true,
+            avatarUrl: null,
             channelId: channelId!,
-            createdAt: new Date().toISOString(),
+            createdAt: now,
             displayName: handle,
             externalRef: `livepix:${contribution.providerResourceId}`,
             giveawayId: rule.giveawayId,
@@ -223,15 +248,21 @@ export class PaymentCampaignService {
           .update(giveawayCaptureRules)
           .set({
             capturedCount: sql`${giveawayCaptureRules.capturedCount} + 1`,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           })
           .where(eq(giveawayCaptureRules.id, rule.id))
+          .run()
+        this.database.orm
+          .update(giveaways)
+          .set({ status: 'ready', updatedAt: now })
+          .where(eq(giveaways.id, rule.giveawayId))
           .run()
       }
       const tournamentRules = this.database.orm
         .select({
           bracketSize: tournaments.bracketSize,
           mode: tournaments.mode,
+          teamCapacity: tournaments.teamCapacity,
           rule: tournamentCaptureRules,
           provider: integrationConnections.provider,
           channelId: integrationConnections.channelId,
@@ -245,8 +276,8 @@ export class PaymentCampaignService {
         .where(
           and(
             eq(tournamentCaptureRules.status, 'active'),
-            eq(tournaments.status, 'ready'),
-            eq(integrationConnections.status, 'connected'),
+            inArray(tournaments.status, ['draft', 'ready']),
+            inArray(integrationConnections.status, ['connected', 'connecting', 'reconnecting']),
             or(
               eq(integrationConnections.isGlobalSelected, true),
               sql`NOT EXISTS (SELECT 1 FROM integration_connections WHERE is_global_selected = 1)`,
@@ -254,7 +285,14 @@ export class PaymentCampaignService {
           ),
         )
         .all()
-      for (const { bracketSize, mode, rule, provider, channelId } of tournamentRules) {
+      for (const {
+        bracketSize,
+        mode,
+        rule,
+        provider,
+        channelId,
+        teamCapacity,
+      } of tournamentRules) {
         if (
           !provider ||
           !channelId ||
@@ -268,12 +306,29 @@ export class PaymentCampaignService {
           .where(
             and(
               eq(tournamentParticipants.tournamentId, rule.tournamentId),
-              eq(tournamentParticipants.identityKey, identity),
-              eq(tournamentParticipants.externalRef, `livepix:${contribution.providerResourceId}`),
+              or(
+                eq(tournamentParticipants.identityKey, identity),
+                eq(
+                  tournamentParticipants.externalRef,
+                  `livepix:${contribution.providerResourceId}`,
+                ),
+              ),
             ),
           )
           .get()
         if (existing) continue
+        const participantCount =
+          this.database.orm
+            .select({ count: sql<number>`count(*)` })
+            .from(tournamentParticipants)
+            .where(eq(tournamentParticipants.tournamentId, rule.tournamentId))
+            .get()?.count ?? 0
+        const participantLimit =
+          mode === 'team' ? bracketSize * Math.max(1, teamCapacity ?? 1) : bracketSize
+        if (participantCount >= participantLimit) {
+          this.incrementTournamentRejected(rule.id)
+          continue
+        }
         this.database.orm
           .insert(tournamentParticipants)
           .values({
@@ -321,6 +376,28 @@ export class PaymentCampaignService {
       contribution.amountInCents >= minimum &&
       contribution.currency === currency,
     )
+  }
+
+  private incrementGiveawayRejected(ruleId: string): void {
+    this.database.orm
+      .update(giveawayCaptureRules)
+      .set({
+        rejectedCount: sql`${giveawayCaptureRules.rejectedCount} + 1`,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(giveawayCaptureRules.id, ruleId))
+      .run()
+  }
+
+  private incrementTournamentRejected(ruleId: string): void {
+    this.database.orm
+      .update(tournamentCaptureRules)
+      .set({
+        rejectedCount: sql`${tournamentCaptureRules.rejectedCount} + 1`,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(tournamentCaptureRules.id, ruleId))
+      .run()
   }
 
   private normalize(value: string): string {

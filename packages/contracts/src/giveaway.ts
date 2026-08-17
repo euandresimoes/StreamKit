@@ -56,11 +56,14 @@ export const GiveawaySchema = z.object({
   updatedAt: z.iso.datetime(),
 })
 export const GiveawayParticipantSchema = z.object({
+  avatarUrl: z.string().nullable().default(null),
   createdAt: z.iso.datetime(),
   channelId: z.string().nullable().default(null),
   displayName: ParticipantNameSchema,
   giveawayId: z.uuid(),
   id: z.uuid(),
+  livepixAmountInCents: z.number().int().positive().nullable().default(null),
+  livepixCurrency: z.string().trim().min(1).max(12).nullable().default(null),
   normalizedName: z.string().min(1),
   provider: z.enum(['kick', 'twitch', 'youtube']).nullable().default(null),
   providerUserId: z.string().nullable().default(null),

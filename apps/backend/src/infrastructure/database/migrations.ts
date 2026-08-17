@@ -442,4 +442,10 @@ export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
       ALTER TABLE integration_connections ADD COLUMN is_global_selected INTEGER NOT NULL DEFAULT 0;
     `,
   },
+  {
+    destructive: false,
+    name: 'giveaway_participant_avatar',
+    version: 22,
+    sql: `ALTER TABLE giveaway_participants ADD COLUMN avatar_url TEXT;`,
+  },
 ]

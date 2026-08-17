@@ -855,22 +855,24 @@ Games e Torneios deve continuar funcionando sem rede, LivePix ou qualquer outro 
 
 - [ ] Criar `ContributionProvider` e `ContributionReceived` em contratos compartilhados, sem tipos do LivePix no domínio.
 - [ ] Criar `PaymentProviderRegistry` e a pasta isolada `providers/livepix/`.
-- [ ] Separar autenticação, cliente HTTP, webhook, normalização, erros e reconciliação em serviços próprios.
+- [ ] Separar autenticação, cliente HTTP, webhook, normalização e erros em serviços próprios.
 - [ ] Garantir que Giveaway, Games e Torneios dependam do contrato interno, nunca do adapter LivePix.
 - [ ] Modelar tipos de evento, valores em centavos, moeda, referência, mensagem, handle exato e horário UTC.
 
 ### 27.2 OAuth2, cofre e ciclo de conexão
 
-- [ ] Implementar OAuth2 com state/PKCE quando suportado pelo fluxo escolhido e escopos mínimos aprovados.
-- [ ] Armazenar client secret, access token e refresh token exclusivamente no cofre seguro do sistema operacional.
-- [ ] Reutilizar tokens até expiração e implementar renovação single-flight sem tempestade de requisições.
+- [ ] Implementar OAuth2 `client_credentials` com os escopos mínimos exigidos pelos endpoints usados: `account:read messages:read payments:read webhooks`.
+- [ ] Armazenar client secret e access token exclusivamente no cofre seguro do sistema operacional.
+- [ ] Reutilizar tokens até próximo da expiração e emitir outro token single-flight, sem refresh token inventado.
 - [ ] Exibir estados `disconnected`, `connecting`, `ready`, `degraded`, `reauthorization_required` e `stopped`.
 - [ ] Tratar revogação, escopo insuficiente, timeout, 401, 429 e 5xx com códigos estáveis e logs redigidos.
-- [ ] Permitir desconexão que revogue/limpe credenciais locais e remova webhooks conhecidos.
+- [ ] Permitir desconexão que limpe credenciais locais sem chamar endpoints de gerenciamento de webhooks.
 
 ### 27.3 Webhook, detalhes e idempotência
 
-- [ ] Criar webhook LivePix somente depois que o túnel estiver pronto e verificável.
+- [ ] Gerar a URL de notificações somente depois que o túnel estiver pronto e verificável.
+- [ ] Exibir a URL para configuração no aplicativo LivePix antes de solicitar Client ID e Client Secret.
+- [ ] Não chamar `GET`, `POST` ou `DELETE /v2/webhooks`; usar a URL de notificações cadastrada em Settings > API.
 - [ ] Validar body, `userId`, `clientId`, `event`, `resource.id`, tipo e tamanho com Zod.
 - [ ] Persistir envelope durável antes de responder HTTP 200; duplicata conhecida também retorna 200.
 - [ ] Buscar detalhes autenticados do recurso antes de aceitar valor, mensagem ou identidade.
@@ -878,16 +880,14 @@ Games e Torneios deve continuar funcionando sem rede, LivePix ou qualquer outro 
 - [ ] Separar evento recebido, evento normalizado e efeito de campanha para permitir reprocessamento seguro.
 - [ ] Nunca executar comando administrativo ou regra de campanha dentro do controller do webhook.
 
-### 27.4 Reconexão e rotação automática da URL
+### 27.4 Conexão explícita e recuperação limitada
 
-- [ ] Implementar máquina de estados do provider com backoff exponencial, jitter, limite e cancelamento.
-- [ ] Detectar queda do túnel, API ou webhook remoto e iniciar reconexão sem intervenção do usuário.
-- [ ] Criar nova geração de webhook, persistir a nova referência e remover a anterior somente após confirmação.
-- [ ] Manter janela de sobreposição quando possível e garantir segurança por deduplicação.
-- [ ] Reconciliar webhooks existentes após restart, falha no meio da troca ou encerramento inesperado.
-- [ ] Limpar webhooks órfãos conhecidos sem apagar webhooks de outra instalação/conta.
-- [ ] Atualizar automaticamente a URL no LivePix e só anunciar `ready` após confirmação remota.
-- [ ] Cobrir falha de rede durante cada etapa sem criar webhooks infinitos nem perder a referência local.
+- [ ] Impedir chamadas concorrentes de conexão e criação duplicada enquanto o provider estiver `ready`.
+- [ ] Persistir a geração e a URL local do túnel, sem inventar uma referência remota.
+- [ ] Detectar queda do túnel e mudar para `degraded` sem chamar automaticamente a API LivePix.
+- [ ] Exigir ação explícita para configurar uma nova URL depois de restart ou falha do túnel.
+- [ ] Documentar que webhooks de URLs temporárias antigas podem exigir limpeza manual na conta LivePix.
+- [ ] Cobrir timeout e resposta ambígua sem iniciar retries automáticos ou loops de criação.
 
 ### 27.5 Campanhas e identidade do StreamKit
 
@@ -911,9 +911,10 @@ Games e Torneios deve continuar funcionando sem rede, LivePix ou qualquer outro 
 
 - [ ] Testar contratos, normalização, OAuth, renovação single-flight, 401, 429, 5xx e rate limit.
 - [ ] Testar payload inválido, duplicata, replay, fora de ordem, detalhe indisponível e dead-letter.
-- [ ] Testar criação, troca, sobreposição, remoção e reconciliação de webhooks com adapter LivePix falso.
-- [ ] Testar queda do túnel durante evento e reconexão com nova URL.
-- [ ] Testar restart entre cada etapa da rotação e ausência de webhooks órfãos criados em loop.
+- [ ] Testar emissão e reutilização do token com os quatro escopos obrigatórios.
+- [ ] Testar que conectar e desconectar não chamam endpoints de gerenciamento de webhooks.
+- [ ] Testar recursos `message` e `payment`, incluindo identidade ausente e timestamp com offset.
+- [ ] Testar queda do túnel e recuperação explícita com nova URL.
 - [ ] Testar persistência, cofre, logs redigidos e funcionamento manual sem rede.
 - [ ] Executar ambiente real somente com conta autorizada, credenciais de teste e webhook controlado.
 - [ ] Executar gate completo e marcar tasks apenas após todos os critérios e decisões estarem fechados.

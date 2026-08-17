@@ -307,6 +307,7 @@ export const giveaways = sqliteTable('giveaways', {
 })
 export const giveawayParticipants = sqliteTable('giveaway_participants', {
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
+  avatarUrl: text('avatar_url'),
   channelId: text('channel_id'),
   id: text('id').primaryKey(),
   giveawayId: text('giveaway_id')

@@ -25,11 +25,7 @@ export const TournamentMatchStatusSchema = z.enum([
 export const TournamentSideResultSchema = z.enum(['pending', 'won', 'lost', 'forfeit', 'draw'])
 // Bracket sizes grow without fixed presets. Any integer size is supported; the
 // bracket generator adds byes when the size is not a power of two.
-export const TournamentSizeSchema = z
-  .number()
-  .int()
-  .min(2)
-  .max(8192)
+export const TournamentSizeSchema = z.number().int().min(2).max(8192)
 export const TournamentNameSchema = z.string().trim().min(1).max(120)
 export const TournamentParticipantNameSchema = z.string().trim().min(1).max(200)
 export const CreateTournamentRequestSchema = z
@@ -128,6 +124,8 @@ export const TournamentParticipantSchema = z.object({
   displayName: TournamentParticipantNameSchema,
   entryId: z.uuid().nullable(),
   id: z.uuid(),
+  livepixAmountInCents: z.number().int().positive().nullable().default(null),
+  livepixCurrency: z.string().trim().min(1).max(12).nullable().default(null),
   provider: z.enum(['kick', 'twitch', 'youtube']).nullable().default(null),
   providerUserId: z.string().nullable().default(null),
   seed: z.number().int().positive().nullable(),

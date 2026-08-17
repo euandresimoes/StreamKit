@@ -59,7 +59,7 @@ export class ExternalEventController {
               const webhook = LivePixWebhookEnvelopeSchema.parse(body)
               return ExternalEventIngressSchema.parse({
                 eventId: webhook.resource.id,
-                eventType: 'payment',
+                eventType: webhook.resource.type,
                 payload: webhook,
                 timestamp: new Date().toISOString(),
               })

@@ -56,14 +56,14 @@ export const LivePixWebhookEnvelopeSchema = z.object({
   resource: z.object({
     id: z.string().trim().min(1).max(300),
     reference: z.string().trim().max(300).nullable().optional(),
-    type: z.literal('payment'),
+    type: z.enum(['message', 'payment']),
   }),
   userId: z.string().trim().min(1).max(300),
 })
 export const LivePixPaymentDetailsSchema = z.object({
   amount: z.number().int().positive(),
   currency: z.string().trim().min(1).max(12),
-  createdAt: z.iso.datetime(),
+  createdAt: z.iso.datetime({ offset: true }),
   flagged: z.boolean().optional(),
   id: z.string().trim().min(1).max(300),
   message: z.string().max(10_000).nullable().optional(),

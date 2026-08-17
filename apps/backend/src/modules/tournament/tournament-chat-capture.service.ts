@@ -27,6 +27,7 @@ export class TournamentChatCaptureService implements OnApplicationBootstrap, OnM
 
   public onApplicationBootstrap(): void {
     this.unsubscribe = this.events.subscribe(async (event) => {
+      await this.captures.linkIdentity(event)
       const rules = await this.captures.findForEvent(event)
       for (const rule of rules)
         if (matchesParticipantCaptureRule(rule, event, new Date(event.occurredAt)))

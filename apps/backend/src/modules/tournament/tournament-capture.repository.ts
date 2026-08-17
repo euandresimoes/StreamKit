@@ -24,6 +24,27 @@ import type { SqliteDatabase } from '../../infrastructure/database/sqlite-databa
 export class TournamentCaptureRepository {
   public constructor(@Inject(SQLITE_DATABASE) private readonly database: SqliteDatabase) {}
 
+  public async linkIdentity(event: ChatMessageReceived): Promise<void> {
+    const identity = event.author.handle.normalize('NFKC').trim().toLocaleLowerCase('pt-BR')
+    await this.database.orm
+      .update(tournamentParticipants)
+      .set({
+        avatarUrl: event.author.avatarUrl,
+        channelId: event.channelId,
+        displayName: event.author.handle,
+        externalRef: `${event.provider}:${event.author.providerUserId}`,
+        identityKey: `${event.provider}:${event.author.providerUserId}`,
+        providerUserId: event.author.providerUserId,
+      })
+      .where(
+        and(
+          eq(tournamentParticipants.provider, event.provider),
+          eq(tournamentParticipants.identityKey, identity),
+          isNull(tournamentParticipants.providerUserId),
+        ),
+      )
+  }
+
   public async capture(rule: TournamentCaptureRule, event: ChatMessageReceived): Promise<boolean> {
     return this.database.transaction(() => {
       const identity = event.author.handle.normalize('NFKC').trim().toLocaleLowerCase('pt-BR')

@@ -15,7 +15,7 @@ import {
   type ParsedParticipant,
   type UpdateGiveawayRequest,
 } from '@streamkit/contracts'
-import { and, asc, desc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {
   giveawayCaptureRules,
@@ -23,6 +23,7 @@ import {
   giveawayRoundEntries,
   giveawayRounds,
   giveaways,
+  paymentContributions,
 } from '../../infrastructure/database/schema'
 import type { SqliteDatabase } from '../../infrastructure/database/sqlite-database'
 import { selectWinner } from './domain/draw-winner'
@@ -57,8 +58,45 @@ export class GiveawayRepository {
       .from(giveawayParticipants)
       .where(and(eq(giveawayParticipants.giveawayId, id), eq(giveawayParticipants.active, true)))
       .orderBy(asc(giveawayParticipants.createdAt))
+    const contributionMetadata = await this.livepixContributionMetadata(
+      participants.map((participant) => participant.externalRef),
+    )
     const activeRound = await this.activeRound(id)
-    return GiveawayDetailSchema.parse({ giveaway, participants, activeRound })
+    return GiveawayDetailSchema.parse({
+      giveaway,
+      participants: participants.map((participant) => ({
+        ...participant,
+        ...(participant.externalRef
+          ? (contributionMetadata.get(participant.externalRef) ?? {
+              livepixAmountInCents: null,
+              livepixCurrency: null,
+            })
+          : { livepixAmountInCents: null, livepixCurrency: null }),
+      })),
+      activeRound,
+    })
+  }
+
+  private async livepixContributionMetadata(externalRefs: Array<string | null>) {
+    const resourceIds = externalRefs
+      .filter((value): value is string => Boolean(value?.startsWith('livepix:')))
+      .map((value) => value.slice('livepix:'.length))
+    if (!resourceIds.length)
+      return new Map<string, { livepixAmountInCents: number; livepixCurrency: string }>()
+    const rows = await this.database.orm
+      .select({
+        amountInCents: paymentContributions.amountInCents,
+        currency: paymentContributions.currency,
+        providerResourceId: paymentContributions.providerResourceId,
+      })
+      .from(paymentContributions)
+      .where(inArray(paymentContributions.providerResourceId, resourceIds))
+    return new Map(
+      rows.map((row) => [
+        `livepix:${row.providerResourceId}`,
+        { livepixAmountInCents: row.amountInCents, livepixCurrency: row.currency },
+      ]),
+    )
   }
   public async replaceParticipants(
     id: string,

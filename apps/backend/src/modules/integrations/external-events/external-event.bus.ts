@@ -22,18 +22,18 @@ export class ExternalEventBus {
       .map(([provider]) => provider)
   }
 
-  public async publish(event: ExternalEventRecord): Promise<number> {
+  public async publish(event: ExternalEventRecord): Promise<unknown[]> {
     const handlers = [...(this.handlers.get(event.provider) ?? [])]
     const failures = await Promise.all(
       handlers.map(async (handler) => {
         try {
           await handler(event)
-          return false
-        } catch {
-          return true
+          return null
+        } catch (cause) {
+          return cause
         }
       }),
     )
-    return failures.filter(Boolean).length
+    return failures.filter((failure): failure is unknown => failure !== null)
   }
 }

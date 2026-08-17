@@ -27,6 +27,7 @@ export class GiveawayChatCaptureService implements OnApplicationBootstrap, OnMod
 
   public onApplicationBootstrap(): void {
     this.unsubscribe = this.events.subscribe(async (event) => {
+      await this.captures.linkIdentity(event)
       const rules = await this.captures.findForEvent(event)
       for (const rule of rules) {
         if (matchesGiveawayCaptureRule(rule, event, new Date(event.occurredAt)))
