@@ -47,8 +47,10 @@ export const ExternalTransportSnapshotSchema = z.object({
   startedAt: z.iso.datetime().nullable(),
   state: ExternalTransportStateSchema,
 })
+export const ExternalTransportEndpointSchema = z.object({ callbackUrl: z.url() })
 
 export type ExternalEventProvider = z.infer<typeof ExternalEventProviderSchema>
 export type ExternalEventRecord = z.infer<typeof ExternalEventRecordSchema>
 export type ExternalEventIngress = z.infer<typeof ExternalEventIngressSchema>
 export type ExternalTransportSnapshot = z.infer<typeof ExternalTransportSnapshotSchema>
+export type ExternalTransportEndpoint = z.infer<typeof ExternalTransportEndpointSchema>

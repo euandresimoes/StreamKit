@@ -77,6 +77,10 @@ const DEFAULT_TEAM_COLORS = [
   '#F43F5E',
 ] as const
 
+function getNextBracketSize(requiredEntries: number) {
+  return 2 ** Math.ceil(Math.log2(Math.max(2, requiredEntries)))
+}
+
 @Injectable()
 export class TournamentRepository {
   public constructor(@Inject(SQLITE_DATABASE) private readonly database: SqliteDatabase) {}
@@ -352,11 +356,19 @@ export class TournamentRepository {
       tournamentEntries,
       eq(tournamentEntries.tournamentId, id),
     )
-    if (count >= tournament.bracketSize) return 'full' as const
     const now = new Date().toISOString(),
       teamId = randomUUID(),
       resolvedCapacity = capacity ?? tournament.teamCapacity ?? 1
+    const nextSize = getNextBracketSize(count + 1)
+    if (nextSize > 8192) return 'full' as const
+    const nextBracketSize = Math.max(tournament.bracketSize, nextSize)
     this.database.transaction(() => {
+      if (nextBracketSize !== tournament.bracketSize)
+        this.database.orm
+          .update(tournaments)
+          .set({ bracketSize: nextBracketSize, updatedAt: now })
+          .where(eq(tournaments.id, id))
+          .run()
       this.database.orm
         .insert(tournamentTeams)
         .values({
@@ -381,7 +393,12 @@ export class TournamentRepository {
           tournamentId: id,
         })
         .run()
-      this.audit(id, 'team.added', { capacity: resolvedCapacity, seed: count + 1, teamId })
+      this.audit(id, 'team.added', {
+        bracketSize: nextBracketSize,
+        capacity: resolvedCapacity,
+        seed: count + 1,
+        teamId,
+      })
     })
     return this.detail(id)
   }
@@ -708,6 +725,11 @@ export class TournamentRepository {
       tournamentEntries,
       eq(tournamentEntries.tournamentId, id),
     )
+    const participantCount = await this.database.orm.$count(
+      tournamentParticipants,
+      eq(tournamentParticipants.tournamentId, id),
+    )
+    if (getNextBracketSize(participantCount + 1) > 8192) return 'full' as const
     const now = new Date().toISOString(),
       participantId = randomUUID()
     this.database.transaction(() => {
@@ -726,23 +748,21 @@ export class TournamentRepository {
           provider,
           source: 'manual',
           tournamentId: id,
-        })
-        .run()
-      if (count < tournament.bracketSize)
+      })
+      .run()
+      const nextSize = getNextBracketSize(participantCount + 1)
+      const nextBracketSize = Math.max(tournament.bracketSize, nextSize)
+      if (nextBracketSize !== tournament.bracketSize)
         this.database.orm
-          .insert(tournamentEntries)
-          .values({
-            createdAt: now,
-            id: randomUUID(),
-            participantId,
-            seed: count + 1,
-            teamId: null,
-            tournamentId: id,
-          })
+          .update(tournaments)
+          .set({ bracketSize: nextBracketSize, updatedAt: now })
+          .where(eq(tournaments.id, id))
           .run()
-      this.audit(id, count < tournament.bracketSize ? 'participant.added' : 'participant.queued', {
+      this.reconcileIndividualEntries(id, nextBracketSize)
+      this.audit(id, 'participant.added', {
         participantId,
-        seed: count < tournament.bracketSize ? count + 1 : null,
+        seed: count < nextBracketSize ? count + 1 : null,
+        bracketSize: nextBracketSize,
       })
     })
     return this.detail(id)
@@ -1029,31 +1049,86 @@ export class TournamentRepository {
       .where(eq(tournamentEntries.tournamentId, id))
       .orderBy(asc(tournamentEntries.seed))
     if (entries.length !== tournament.bracketSize) return 'incomplete' as const
-    const definitions = generateSingleEliminationBracket(tournament.bracketSize as 4 | 8 | 16 | 32)
+    const definitions = generateSingleEliminationBracket(tournament.bracketSize)
     const ids = new Map(definitions.map((definition) => [definition.matchNumber, randomUUID()]))
+    const childrenByParent = new Map<number, typeof definitions>()
+    for (const definition of definitions) {
+      if (definition.nextMatchNumber === null) continue
+      const children = childrenByParent.get(definition.nextMatchNumber) ?? []
+      children.push(definition)
+      childrenByParent.set(definition.nextMatchNumber, children)
+    }
+    const states = new Map<
+      number,
+      {
+        leftEntryId: string | null
+        rightEntryId: string | null
+        status: 'pending' | 'ready' | 'finished'
+        winnerEntryId: string | null
+      }
+    >()
+    for (const definition of definitions) {
+      const childDefinitions = childrenByParent.get(definition.matchNumber) ?? []
+      const leftChild = childDefinitions.find((child) => child.nextSlot === 'left')
+      const rightChild = childDefinitions.find((child) => child.nextSlot === 'right')
+      const leftEntryId =
+        definition.leftSeed !== null
+          ? entries[definition.leftSeed - 1]?.id ?? null
+          : leftChild
+            ? states.get(leftChild.matchNumber)?.winnerEntryId ?? null
+            : null
+      const rightEntryId =
+        definition.rightSeed !== null
+          ? entries[definition.rightSeed - 1]?.id ?? null
+          : rightChild
+            ? states.get(rightChild.matchNumber)?.winnerEntryId ?? null
+            : null
+      const leftResolved = leftChild ? states.get(leftChild.matchNumber)?.status === 'finished' : true
+      const rightResolved = rightChild
+        ? states.get(rightChild.matchNumber)?.status === 'finished'
+        : true
+      const bothResolved = leftResolved && rightResolved
+      const hasLeft = Boolean(leftEntryId)
+      const hasRight = Boolean(rightEntryId)
+      const status =
+        !hasLeft && !hasRight && bothResolved
+          ? 'finished'
+          : hasLeft !== hasRight && bothResolved
+            ? 'finished'
+            : hasLeft && hasRight
+              ? 'ready'
+              : 'pending'
+      states.set(definition.matchNumber, {
+        leftEntryId,
+        rightEntryId,
+        status,
+        winnerEntryId: status === 'finished' ? leftEntryId ?? rightEntryId : null,
+      })
+    }
     const now = new Date().toISOString()
     this.database.transaction(() => {
       for (const definition of [...definitions].reverse())
-        this.database.orm
-          .insert(tournamentMatches)
-          .values({
+        (() => {
+          const state = states.get(definition.matchNumber)!
+          this.database.orm.insert(tournamentMatches).values({
             id: ids.get(definition.matchNumber)!,
-            finishedAt: null,
-            leftEntryId: definition.leftSeed ? entries[definition.leftSeed - 1]!.id : null,
-            leftResult: 'pending' as const,
+            finishedAt: state.status === 'finished' ? now : null,
+            leftEntryId: state.leftEntryId,
+            leftResult: state.winnerEntryId === state.leftEntryId && state.leftEntryId ? 'won' : 'pending',
             matchNumber: definition.matchNumber,
             nextMatchId: definition.nextMatchNumber ? ids.get(definition.nextMatchNumber)! : null,
             nextSlot: definition.nextSlot,
-            rightEntryId: definition.rightSeed ? entries[definition.rightSeed - 1]!.id : null,
-            rightResult: 'pending' as const,
+            rightEntryId: state.rightEntryId,
+            rightResult: state.winnerEntryId === state.rightEntryId && state.rightEntryId ? 'won' : 'pending',
             roundNumber: definition.roundNumber,
-            status: definition.roundNumber === 1 ? 'ready' : 'pending',
+            status: state.status,
             startedAt: null,
             tournamentId: id,
             updatedAt: now,
-            winnerEntryId: null,
+            winnerEntryId: state.winnerEntryId,
           })
           .run()
+        })()
       this.database.orm
         .update(tournaments)
         .set({ status: 'ready', updatedAt: now })

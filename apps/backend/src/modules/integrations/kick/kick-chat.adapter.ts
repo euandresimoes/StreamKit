@@ -79,6 +79,7 @@ export class KickChatAdapter
       body: JSON.stringify({
         broadcaster_user_id: Number(context.channelId),
         events: [{ name: 'chat.message.sent', version: 1 }],
+        method: 'webhook',
       }),
       headers: { authorization: `Bearer ${token.accessToken}`, 'content-type': 'application/json' },
       method: 'POST',

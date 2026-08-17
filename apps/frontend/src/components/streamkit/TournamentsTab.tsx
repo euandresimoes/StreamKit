@@ -16,6 +16,7 @@ import {
   UserX,
   Users,
 } from "lucide-react";
+import type { TournamentParticipant } from "@streamkit/contracts";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import {
   Select,
   SelectContent,
+  SelectCustomItem,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -35,16 +37,231 @@ import {
 import { useTournaments } from "@/modules/tournament/use-tournaments";
 import { useLiveSelection } from "@/modules/live-control/use-live-control";
 import { cn } from "@/lib/utils";
+import { publishNotification } from "@/modules/notifications/notifications";
 import { CreateItemDialog } from "./CreateItemDialog";
 import { EntityHub } from "./EntityHub";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { FocusedChatPanel } from "./FocusedChatPanel";
 import { TournamentMatchChat } from "./TournamentMatchChat";
 import { ParticipantCaptureDialog } from "./ParticipantCaptureDialog";
+import { DebugChatSimulationButton } from "./DebugChatSimulationButton";
 import { MAX_VISIBLE_PARTICIPANTS } from "@/modules/performance/bounded-render-window";
 
 function getParticipantInitials(displayName: string) {
   return Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
+}
+
+function ParticipantAvatar({
+  displayName,
+  avatarUrl,
+  className = "size-6",
+}: {
+  displayName: string;
+  avatarUrl: string | null;
+  className?: string;
+}) {
+  return avatarUrl ? (
+    <img src={avatarUrl} alt="" className={`${className} shrink-0 rounded-full object-cover`} />
+  ) : (
+    <span
+      className={`flex ${className} shrink-0 items-center justify-center rounded-lg bg-surface-2 text-[10px] font-semibold`}
+    >
+      {getParticipantInitials(displayName)}
+    </span>
+  );
+}
+
+function TournamentParticipantsPanel({
+  participants,
+  expanded,
+  onToggle,
+  participantName,
+  onParticipantNameChange,
+  onAddParticipant,
+  onRemoveParticipant,
+  busy,
+  locked,
+  onDragStart,
+  onDragEnd,
+}: {
+  participants: TournamentParticipant[];
+  expanded: boolean;
+  onToggle(): void;
+  participantName: string;
+  onParticipantNameChange(value: string): void;
+  onAddParticipant(): void;
+  onRemoveParticipant(participantId: string): void;
+  busy: boolean;
+  locked: boolean;
+  onDragStart(participantId: string): void;
+  onDragEnd(): void;
+}) {
+  const visibleParticipants = participants.slice(0, MAX_VISIBLE_PARTICIPANTS);
+  const addParticipant = () => {
+    if (!participantName.trim()) return;
+    onAddParticipant();
+  };
+
+  return (
+    <aside
+      className={cn(
+        "flex shrink-0 flex-col overflow-x-hidden rounded-3xl border-r border-border p-3 transition-[width] duration-300",
+        expanded ? "w-72" : "w-14",
+      )}
+    >
+      <div className={cn("flex gap-2 pb-3", expanded ? "items-center" : "flex-col items-center")}>
+        <User className="size-4" />
+        {expanded && (
+          <>
+            <h3 className="flex-1 text-[13px] font-semibold">Participants</h3>
+            <span className="text-xs text-muted-foreground">
+              {participants.length}
+            </span>
+          </>
+        )}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={expanded ? "Collapse participants" : "Expand participants"}
+          onClick={onToggle}
+        >
+          {expanded ? <ChevronLeft /> : <ChevronRight />}
+        </Button>
+      </div>
+      {expanded ? (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex gap-1.5 pb-3">
+            <Input
+              value={participantName}
+              onChange={(event) => onParticipantNameChange(event.target.value)}
+              className="h-8 text-xs"
+              placeholder="Add participant"
+              disabled={busy || locked}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") addParticipant();
+              }}
+            />
+            <Button
+              size="icon-sm"
+              disabled={!participantName.trim() || busy || locked}
+              onClick={addParticipant}
+            >
+              <Plus />
+            </Button>
+          </div>
+          <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
+            {visibleParticipants.map((participant) => (
+              <ParticipantPanelRow
+                key={participant.id}
+                participant={participant}
+                busy={busy}
+                locked={locked}
+                onRemove={onRemoveParticipant}
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
+              />
+            ))}
+            {!participants.length && (
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                Add participants manually or capture chat entries.
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <TooltipProvider delayDuration={250}>
+          <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1">
+            {visibleParticipants.map((participant) => (
+              <Tooltip key={participant.id}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={`Expand participant ${participant.displayName}`}
+                    onClick={onToggle}
+                    className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <ParticipantAvatar
+                      displayName={participant.displayName}
+                      avatarUrl={participant.avatarUrl}
+                      className="size-6"
+                    />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">{participant.displayName}</TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+        </TooltipProvider>
+      )}
+    </aside>
+  );
+}
+
+function ParticipantPanelRow({
+  participant,
+  busy,
+  locked,
+  onRemove,
+  onDragStart,
+  onDragEnd,
+  muted = false,
+}: {
+  participant: TournamentParticipant;
+  busy: boolean;
+  locked: boolean;
+  onRemove(participantId: string): void;
+  onDragStart(participantId: string): void;
+  onDragEnd(): void;
+  muted?: boolean;
+}) {
+  return (
+    <div
+      draggable={!busy && !locked}
+      onDragStart={(event) => {
+        event.dataTransfer.setData("text/plain", participant.id);
+        event.dataTransfer.effectAllowed = "move";
+        onDragStart(participant.id);
+      }}
+      onDragEnd={onDragEnd}
+      className={cn(
+        "raise flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[13px]",
+        muted && "text-muted-foreground",
+      )}
+    >
+      <GripVertical className="size-3 cursor-grab text-muted-foreground" />
+      <ParticipantAvatar displayName={participant.displayName} avatarUrl={participant.avatarUrl} />
+      <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
+      {participant.provider && <BaseBrandIcon provider={participant.provider} className="size-3" />}
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="shrink-0"
+        disabled={busy || locked}
+        onClick={() => onRemove(participant.id)}
+        aria-label={`Delete ${participant.displayName}`}
+      >
+        <Trash2 />
+      </Button>
+    </div>
+  );
+}
+
+function isTournamentSize(value: number): boolean {
+  return Number.isInteger(value) && value >= 2 && value <= 8192;
+}
+
+function nextTournamentSize(value: number) {
+  return Math.max(2, Math.ceil(value));
+}
+
+function notifyInvalidTournamentSize(value: string) {
+  const parsed = Number(value);
+  const suggested = Number.isFinite(parsed) && parsed > 2 ? nextTournamentSize(parsed) : 2;
+  publishNotification({
+    level: "warning",
+    title: "Invalid bracket size",
+    message: `${value || "The value"} must be an integer between 2 and 8192. Try ${suggested}.`,
+  });
 }
 
 export function TournamentsTab() {
@@ -52,6 +269,8 @@ export function TournamentsTab() {
   const live = useLiveSelection();
   const [name, setName] = useState("");
   const [participantName, setParticipantName] = useState("");
+  const [customParticipantCount, setCustomParticipantCount] = useState("");
+  const [customTeamParticipantCount, setCustomTeamParticipantCount] = useState("");
   const [creating, setCreating] = useState(false);
   const [configuring, setConfiguring] = useState(false);
   const [capturing, setCapturing] = useState(false);
@@ -69,12 +288,13 @@ export function TournamentsTab() {
   const teamCount = detail?.tournament.mode === "team" ? detail.tournament.bracketSize : 0;
   const membersPerTeam = detail?.tournament.teamCapacity ?? 1;
   const totalTeamParticipants = teamCount * membersPerTeam;
+  const presetTotalParticipantOptions = [8, 16, 24, 32, 64];
   const totalParticipantOptions = Array.from(
-    new Set([8, 16, 24, 32, 64, totalTeamParticipants].filter(Boolean)),
+    new Set([...presetTotalParticipantOptions, totalTeamParticipants].filter(Boolean)),
   ).sort((left, right) => left - right);
-  const availableTeamCounts = ([4, 8, 16, 32] as const).filter(
-    (count) => totalTeamParticipants % count === 0 && totalTeamParticipants / count <= 16,
-  );
+  const availableTeamCounts = Array.from(
+    new Set([4, 8, 16, 32, 64, teamCount].filter((count) => count >= 2)),
+  ).sort((left, right) => left - right);
   const qualifiedParticipants =
     detail?.participants.filter((participant) => participant.entryId) ?? [];
   const overflowParticipants =
@@ -120,9 +340,10 @@ export function TournamentsTab() {
   );
   const previewMatches =
     detail && !detail.matches.length
-      ? Array.from({ length: Math.log2(detail.tournament.bracketSize) }, (_, roundIndex) => {
+      ? Array.from({ length: Math.ceil(Math.log2(detail.tournament.bracketSize)) }, (_, roundIndex) => {
           const roundNumber = roundIndex + 1;
-          const count = detail.tournament.bracketSize / 2 ** roundNumber;
+          const bracketSlots = 2 ** Math.ceil(Math.log2(detail.tournament.bracketSize));
+          const count = bracketSlots / 2 ** roundNumber;
           return Array.from({ length: count }, (_, matchIndex) => ({
             id: `preview-${roundNumber}-${matchIndex + 1}`,
             leftEntryId:
@@ -140,7 +361,8 @@ export function TournamentsTab() {
   const bracketMatches = detail?.matches.length ? detail.matches : previewMatches;
   const maxRound = detail?.matches.length
     ? detail.matches.reduce((maximum, match) => Math.max(maximum, match.roundNumber), 0)
-    : Math.log2(detail?.tournament.bracketSize ?? 4);
+    : Math.ceil(Math.log2(detail?.tournament.bracketSize ?? 4));
+  const firstRoundMatchCount = bracketMatches.filter((match) => match.roundNumber === 1).length;
   const champion = detail?.championEntryId
     ? (bracketEntries.find((entry) => entry.id === detail.championEntryId) ?? null)
     : null;
@@ -184,23 +406,39 @@ export function TournamentsTab() {
               <MessageCircle /> Capture from chat
             </Button>
           )}
+          <DebugChatSimulationButton
+            target="tournament"
+            targetId={detail.tournament.id}
+            onProgress={async () => {
+              await tournaments.select(detail.tournament.id);
+            }}
+          />
 
           {detail && (
             <>
               {["draft", "ready"].includes(detail.tournament.status) &&
                 detail.tournament.mode === "individual" && (
                   <Select
-                    value={String(detail.tournament.bracketSize)}
-                    disabled={tournaments.busy || !canChangeStructure}
-                    onValueChange={(value) =>
-                      void tournaments.updateStructure(
-                        detail.tournament.mode,
-                        Number(value) as 4 | 8 | 16 | 32,
-                      )
+                    value={
+                        [4, 8, 16, 32, 64].includes(detail.tournament.bracketSize)
+                        ? String(detail.tournament.bracketSize)
+                        : "custom"
                     }
+                    disabled={tournaments.busy || !canChangeStructure}
+                    onValueChange={(value) => {
+                      if (value === "custom") return;
+                      const count = Number(value);
+                      if (isTournamentSize(count))
+                        void tournaments.updateStructure(detail.tournament.mode, count);
+                    }}
                   >
                     <SelectTrigger className="h-8 w-36" aria-label="Participant count">
-                      <SelectValue />
+                      <SelectValue>
+                        {isTournamentSize(detail.tournament.bracketSize) &&
+                        ![4, 8, 16, 32, 64].includes(detail.tournament.bracketSize)
+                          ? `${detail.tournament.bracketSize} Custom participants`
+                          : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {[4, 8, 16, 32].map((size) => (
@@ -208,6 +446,31 @@ export function TournamentsTab() {
                           {size} participants
                         </SelectItem>
                       ))}
+                      <SelectItem value="custom" className="sr-only">
+                        Custom
+                      </SelectItem>
+                      <SelectCustomItem
+                        inputAriaLabel="Custom participant count"
+                        inputMode="numeric"
+                        inputType="text"
+                        label="Custom size"
+                        min={2}
+                        max={8192}
+                        step={1}
+                        value={
+                          customParticipantCount ||
+                          (![4, 8, 16, 32, 64].includes(detail.tournament.bracketSize)
+                            ? String(detail.tournament.bracketSize)
+                            : "")
+                        }
+                        onValueChange={(value) => {
+                          setCustomParticipantCount(value);
+                          const count = Number(value);
+                          if (isTournamentSize(count))
+                            void tournaments.updateStructure("individual", count);
+                          else notifyInvalidTournamentSize(value);
+                        }}
+                      />
                     </SelectContent>
                   </Select>
                 )}
@@ -218,8 +481,9 @@ export function TournamentsTab() {
                       value={String(totalTeamParticipants)}
                       disabled={tournaments.busy || !canChangeStructure}
                       onValueChange={(value) => {
+                        if (value === "custom") return;
                         const total = Number(value);
-                        const nextTeams = ([teamCount, 4, 8, 16, 32] as const).find(
+                        const nextTeams = availableTeamCounts.find(
                           (count) => total % count === 0 && total / count <= 16,
                         );
                         if (nextTeams)
@@ -227,7 +491,11 @@ export function TournamentsTab() {
                       }}
                     >
                       <SelectTrigger className="h-8 w-40" aria-label="Total participants">
-                        <SelectValue />
+                      <SelectValue>
+                        {!presetTotalParticipantOptions.includes(totalTeamParticipants)
+                          ? `${totalTeamParticipants} Custom participants`
+                          : undefined}
+                      </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {totalParticipantOptions.map((total) => (
@@ -235,13 +503,51 @@ export function TournamentsTab() {
                             {total} participants
                           </SelectItem>
                         ))}
+                        <SelectItem value="custom" className="sr-only">
+                          Custom
+                        </SelectItem>
+                        <SelectCustomItem
+                          inputAriaLabel="Custom total participant count"
+                          inputMode="numeric"
+                          inputType="text"
+                          label="Custom participants"
+                          min={2}
+                          max={8192 * 16}
+                          step={1}
+                          value={customTeamParticipantCount}
+                          onValueChange={(value) => {
+                            setCustomTeamParticipantCount(value);
+                            const total = Number(value);
+                            if (!Number.isInteger(total) || total < 2 || total > 8192) {
+                              notifyInvalidTournamentSize(value);
+                              return;
+                            }
+                            const nextTeams = Array.from(
+                              { length: Math.min(8192, Math.floor(total / 2)) - 1 },
+                              (_, index) => index + 2,
+                            )
+                              .filter(
+                                (count) =>
+                                  isTournamentSize(count) &&
+                                  total % count === 0 &&
+                                  total / count <= 16,
+                              )
+                              .sort((left, right) => Math.abs(left - teamCount) - Math.abs(right - teamCount))[0];
+                            if (!nextTeams) {
+                              notifyInvalidTournamentSize(value);
+                              return;
+                            }
+                            void tournaments.updateStructure("team", nextTeams, total / nextTeams);
+                          }}
+                        />
                       </SelectContent>
                     </Select>
                     <Select
-                      value={String(teamCount)}
+                      value={[4, 8, 16, 32, 64].includes(teamCount) ? String(teamCount) : "custom"}
                       disabled={tournaments.busy || !canChangeStructure}
                       onValueChange={(value) => {
-                        const count = Number(value) as 4 | 8 | 16 | 32;
+                        if (value === "custom") return;
+                        const count = Number(value);
                         void tournaments.updateStructure(
                           "team",
                           count,
@@ -250,7 +556,11 @@ export function TournamentsTab() {
                       }}
                     >
                       <SelectTrigger className="h-8 w-28" aria-label="Team count">
-                        <SelectValue />
+                        <SelectValue>
+                          {!([4, 8, 16, 32, 64].includes(teamCount))
+                            ? `${teamCount} Custom teams`
+                            : undefined}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {availableTeamCounts.map((count) => (
@@ -258,18 +568,38 @@ export function TournamentsTab() {
                             {count} teams
                           </SelectItem>
                         ))}
+                        <SelectItem value="custom" className="sr-only">
+                          Custom
+                        </SelectItem>
+                        <SelectCustomItem
+                          inputAriaLabel="Custom team count"
+                          inputMode="numeric"
+                          inputType="text"
+                          label="Custom team count"
+                          min={2}
+                          max={8192}
+                          step={1}
+                          value={!([4, 8, 16, 32, 64].includes(teamCount)) ? String(teamCount) : ""}
+                          onValueChange={(value) => {
+                            const count = Number(value);
+                            if (isTournamentSize(count))
+                              void tournaments.updateStructure("team", count, membersPerTeam);
+                            else notifyInvalidTournamentSize(value);
+                          }}
+                        />
                       </SelectContent>
                     </Select>
                     <Select
                       value={String(membersPerTeam)}
                       disabled={tournaments.busy || !canChangeStructure}
                       onValueChange={(value) => {
+                        if (value === "custom") return;
                         const capacity = Number(value);
                         const count = totalTeamParticipants / capacity;
-                        if ([4, 8, 16, 32].includes(count))
+                        if (isTournamentSize(count))
                           void tournaments.updateStructure(
                             "team",
-                            count as 4 | 8 | 16 | 32,
+                            count,
                             capacity,
                           );
                       }}
@@ -343,7 +673,8 @@ export function TournamentsTab() {
         />
       ) : (
         <div className="flex min-h-0 flex-1">
-          {detail.tournament.mode === "team" &&
+          {/* Legacy duplicate participant panel removed in favor of TournamentParticipantsPanel.
+          {detail.tournament.mode === "team" && false &&
             (() => {
               const assignedIds = new Set(detail.teamMembers.map((member) => member.participantId));
               const queued = detail.participants.filter(
@@ -406,6 +737,12 @@ export function TournamentsTab() {
                           <Plus />
                         </Button>
                       </div>
+                      {detail.tournament.mode === "team" && (
+                        <div className="mb-2 flex items-center justify-between px-1">
+                          <p className="text-[11px] font-semibold">Outside the bracket</p>
+                          <span className="text-[10px] text-muted-foreground">{queued.length}</span>
+                        </div>
+                      )}
                       <div className="space-y-1.5 overflow-y-auto">
                         {queued.map((participant) => (
                           <div
@@ -413,12 +750,14 @@ export function TournamentsTab() {
                             draggable={!tournaments.busy}
                             onDragStart={() => setDraggedParticipantId(participant.id)}
                             onDragEnd={() => setDraggedParticipantId(null)}
-                            className="flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-2"
+                            className="raise flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[13px]"
                           >
                             <GripVertical className="size-3 cursor-grab text-muted-foreground" />
-                            <span className="min-w-0 flex-1 truncate text-xs">
-                              {participant.displayName}
-                            </span>
+                            <ParticipantAvatar
+                              displayName={participant.displayName}
+                              avatarUrl={participant.avatarUrl}
+                            />
+                            <span className="min-w-0 flex-1 truncate">{participant.displayName}</span>
                             {participant.source === "chat" && (
                               <span
                                 className="rounded-md bg-surface-2 p-1"
@@ -461,7 +800,11 @@ export function TournamentsTab() {
                                 onClick={() => setParticipantsExpanded(true)}
                                 className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                               >
-                                {getParticipantInitials(participant.displayName)}
+                                <ParticipantAvatar
+                                  displayName={participant.displayName}
+                                  avatarUrl={participant.avatarUrl}
+                                  className="size-6"
+                                />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent side="right">{participant.displayName}</TooltipContent>
@@ -473,6 +816,38 @@ export function TournamentsTab() {
                 </aside>
               );
             })()}
+          */}
+          <TournamentParticipantsPanel
+            participants={
+              detail.tournament.mode === "team"
+                ? detail.participants.filter((participant) => {
+                    const assigned = detail.teamMembers.some(
+                      (member) => member.participantId === participant.id,
+                    );
+                    return !assigned;
+                  })
+                : qualifiedParticipants
+            }
+            expanded={participantsExpanded}
+            onToggle={() => setParticipantsExpanded((value) => !value)}
+            participantName={participantName}
+            onParticipantNameChange={setParticipantName}
+            onAddParticipant={() => {
+              if (!participantName.trim()) return;
+              void tournaments.addParticipant(
+                participantName.trim(),
+                live.selected?.provider ?? null,
+                live.selected?.channelId ?? null,
+              );
+              setParticipantName("");
+            }}
+            onRemoveParticipant={(participantId) => void tournaments.removeParticipant(participantId)}
+            busy={tournaments.busy}
+            locked={Boolean(detail.matches.length)}
+            onDragStart={(participantId) => setDraggedParticipantId(participantId)}
+            onDragEnd={() => setDraggedParticipantId(null)}
+          />
+          {String(detail.tournament.mode) === "team" && (
           <aside
             className={cn(
               "flex shrink-0 flex-col border-r border-border overflow-x-hidden rounded-3xl p-3 transition-[width] duration-300",
@@ -882,7 +1257,20 @@ export function TournamentsTab() {
                               <div className="flex flex-col gap-1.5">
                                 {members.map((member) => (
                                   <div key={member.id} className="flex min-w-0 items-center gap-2">
-                                    <User className="size-3.5 shrink-0 text-muted-foreground" />
+                                    {(() => {
+                                      const participant = detail.participants.find(
+                                        (item) => item.id === member.participantId,
+                                      );
+                                      return participant ? (
+                                        <ParticipantAvatar
+                                          displayName={participant.displayName}
+                                          avatarUrl={participant.avatarUrl}
+                                          className="size-5"
+                                        />
+                                      ) : (
+                                        <User className="size-3.5 shrink-0 text-muted-foreground" />
+                                      );
+                                    })()}
                                     <span className="truncate text-xs">{member.displayName}</span>
                                   </div>
                                 ))}
@@ -899,14 +1287,18 @@ export function TournamentsTab() {
                     : visibleParticipants.map((participant) => (
                         <Tooltip key={participant.id}>
                           <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              aria-label={`Expand participant ${participant.displayName}`}
-                              onClick={() => setTeamsExpanded(true)}
-                              className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            >
-                              {getParticipantInitials(participant.displayName)}
-                            </button>
+                              <button
+                                type="button"
+                                aria-label={`Expand participant ${participant.displayName}`}
+                                onClick={() => setTeamsExpanded(true)}
+                                className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              >
+                                <ParticipantAvatar
+                                  displayName={participant.displayName}
+                                  avatarUrl={participant.avatarUrl}
+                                  className="size-6"
+                                />
+                              </button>
                           </TooltipTrigger>
                           <TooltipContent side="right">{participant.displayName}</TooltipContent>
                         </Tooltip>
@@ -915,6 +1307,7 @@ export function TournamentsTab() {
               </TooltipProvider>
             )}
           </aside>
+          )}
 
           <div className="min-w-0 flex-1 overflow-auto rounded-3xl p-5">
             {!!bracketMatches.length && (
@@ -939,7 +1332,7 @@ export function TournamentsTab() {
                 </p>
               </div>
             )}
-            <div className="relative flex min-h-[calc(100%_-_32px)] min-w-[720px] gap-8">
+            <div className="relative flex min-h-max min-w-[720px] gap-8 overflow-visible">
               {!!bracketMatches.length && (
                 <BracketConnections
                   roundCount={maxRound}
@@ -948,11 +1341,18 @@ export function TournamentsTab() {
               )}
               {Array.from(new Set(bracketMatches.map((match) => match.roundNumber))).map(
                 (round) => (
-                  <div key={round} className="bracket-round z-10 flex min-w-52 flex-1 flex-col">
-                    <div className="flex flex-1 flex-col justify-around gap-4 py-3">
+                  <div
+                    key={round}
+                    className="bracket-round z-10 grid min-w-52 flex-1 shrink-0"
+                    style={{
+                      gridTemplateRows: `repeat(${firstRoundMatchCount}, minmax(104px, auto))`,
+                      rowGap: "16px",
+                    }}
+                  >
                       {bracketMatches
                         .filter((match) => match.roundNumber === round)
                         .map((match, matchIndex) => {
+                          const rowSpan = 2 ** (round - 1);
                           const left = bracketEntries.find(
                             (entry) => entry.id === match.leftEntryId,
                           );
@@ -985,11 +1385,15 @@ export function TournamentsTab() {
                                 }
                               }}
                               className={cn(
-                                "bracket-match group relative rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-white/[0.05]",
+                                "bracket-match group relative min-h-[104px] self-center rounded-2xl border bg-card p-2 text-left transition-colors hover:bg-white/[0.05]",
                                 active
                                   ? "border-border-strong ring-2 ring-white/15"
                                   : "border-border",
                               )}
+                              style={{
+                                alignSelf: "center",
+                                gridRow: `${matchIndex * rowSpan + 1} / span ${rowSpan}`,
+                              }}
                             >
                               {!!detail.matches.length && (
                                 <div className="pointer-events-none absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-popover/95 p-1 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-visible:pointer-events-auto group-focus-visible:opacity-100">
@@ -1085,21 +1489,17 @@ export function TournamentsTab() {
                                       index === 0 && "border-b border-border",
                                     )}
                                   >
-                                    {entry?.avatarUrl && detail.tournament.mode === "individual" ? (
-                                      <img
-                                        src={entry.avatarUrl}
-                                        alt=""
-                                        className="size-5 shrink-0 rounded-full object-cover"
+                                    {detail.tournament.mode === "individual" && entry ? (
+                                      <ParticipantAvatar
+                                        displayName={entry.name}
+                                        avatarUrl={entry.avatarUrl}
+                                        className="size-5"
                                       />
-                                    ) : detail.tournament.mode === "individual" && entry ? (
-                                      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-surface-2">
-                                        <User className="size-3" />
-                                      </span>
                                     ) : null}
                                     <span
                                       className={cn(
                                         "min-w-0 flex-1 truncate",
-                                        result === "won" && "text-yellow-400",
+                                        result === "won" && "text-emerald-400",
                                         ["lost", "forfeit"].includes(result) && "opacity-50",
                                       )}
                                     >
@@ -1133,7 +1533,6 @@ export function TournamentsTab() {
                             </div>
                           );
                         })}
-                    </div>
                   </div>
                 ),
               )}
@@ -1314,7 +1713,12 @@ export function TournamentsTab() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-yellow-400">
                   Champion
                 </p>
-                <p className="truncate text-lg font-semibold">
+                <p
+                  className={cn(
+                    "truncate text-lg font-semibold",
+                    "text-emerald-400",
+                  )}
+                >
                   {champion?.name ?? "Result unavailable"}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
@@ -1342,7 +1746,7 @@ export function TournamentsTab() {
                         {left?.name ?? "To be decided"}{" "}
                         <span className="text-muted-foreground">×</span> {right?.name ?? "TBD"}
                       </span>
-                      <span className="max-w-32 truncate font-medium text-yellow-400">
+                      <span className="max-w-32 truncate font-medium text-emerald-400">
                         {winner?.name ?? (match.leftResult === "draw" ? "Draw" : "No result")}
                       </span>
                     </div>

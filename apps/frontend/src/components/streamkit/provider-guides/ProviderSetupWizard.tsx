@@ -48,7 +48,8 @@ export function ProviderSetupWizard({
   const isLivePix = provider === "livepix";
   const isYouTube = provider === "youtube";
   const needsClientId = isLivePix || provider === "twitch" || isYouTube || provider === "kick";
-  const preparingKickTunnel = provider === "kick" && busy && !redirectUrl && !webhookUrl;
+  const preparingTunnel =
+    (provider === "kick" || provider === "livepix") && busy && !webhookUrl;
 
   const close = (value: boolean) => {
     if (!value) {
@@ -144,14 +145,28 @@ export function ProviderSetupWizard({
                 {webhookUrl && <BaseCopyField label="Webhook URL" value={webhookUrl} />}
               </div>
             )}
-            {preparingKickTunnel && (
+            {provider === "livepix" && webhookUrl && (
+              <div className="mt-6 space-y-2 border-t border-border pt-4">
+                <div className="flex items-center gap-2 text-xs font-semibold">
+                  <ShieldCheck className="size-3.5" /> LivePix notification URL
+                </div>
+                <p className="text-[10px] leading-4 text-muted-foreground">
+                  If the LivePix application form asks for a notification URL, copy this URL into
+                  that field. The URL belongs to the current StreamKit session and must be updated
+                  after restarting the app. The redirect URL is not used by StreamKit&apos;s
+                  client-credentials flow.
+                </p>
+                <BaseCopyField label="Notification URL" value={webhookUrl} />
+              </div>
+            )}
+            {preparingTunnel && (
               <div
                 className="mt-6 flex items-center gap-3 rounded-md border border-border bg-surface-2/30 px-3 py-3 text-xs text-muted-foreground"
                 role="status"
                 aria-live="polite"
               >
                 <LoaderCircle className="size-4 animate-spin text-primary" />
-                <span>{t("settings.preparingKickTunnel")}</span>
+                <span>{t("settings.preparingExternalTunnel")}</span>
               </div>
             )}
             {needsClientId && (

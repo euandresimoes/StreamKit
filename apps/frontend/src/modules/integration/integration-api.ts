@@ -81,6 +81,16 @@ export const integrationApi = {
       method: "POST",
       schema: ChatSimulationStatusSchema,
     }),
+  ensureSimulationConnection: (body: {
+    channelDisplayName: string;
+    channelId: string;
+    provider: "kick" | "twitch" | "youtube";
+  }) =>
+    apiClient.request("/api/v1/integrations/debug/simulation/connection", {
+      body: { ...body, capabilities: ["chat.read"] },
+      method: "POST",
+      schema: IntegrationConnectionSchema,
+    }),
   stopSimulation: () =>
     apiClient.request("/api/v1/integrations/debug/simulation", {
       method: "DELETE",

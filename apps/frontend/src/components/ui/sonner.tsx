@@ -7,6 +7,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       className="toaster group"
       position="bottom-right"
+      theme="dark"
       toastOptions={{
         classNames: {
           toast: "streamkit-toast group toast group-[.toaster]:text-foreground",

@@ -23,12 +23,13 @@ export const TournamentMatchStatusSchema = z.enum([
   'cancelled',
 ])
 export const TournamentSideResultSchema = z.enum(['pending', 'won', 'lost', 'forfeit', 'draw'])
-export const TournamentSizeSchema = z.union([
-  z.literal(4),
-  z.literal(8),
-  z.literal(16),
-  z.literal(32),
-])
+// Bracket sizes grow without fixed presets. Any integer size is supported; the
+// bracket generator adds byes when the size is not a power of two.
+export const TournamentSizeSchema = z
+  .number()
+  .int()
+  .min(2)
+  .max(8192)
 export const TournamentNameSchema = z.string().trim().min(1).max(120)
 export const TournamentParticipantNameSchema = z.string().trim().min(1).max(200)
 export const CreateTournamentRequestSchema = z

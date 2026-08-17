@@ -81,6 +81,19 @@ export class TournamentCaptureRepository {
           .run()
         return false
       }
+      if (tournament.mode === 'team') {
+        const participantCount =
+          this.database.orm
+            .select({ count: sql<number>`count(*)` })
+            .from(tournamentParticipants)
+            .where(eq(tournamentParticipants.tournamentId, rule.tournamentId))
+            .get()?.count ?? 0
+        const participantLimit = tournament.bracketSize * (tournament.teamCapacity ?? 1)
+        if (participantCount >= participantLimit) {
+          this.incrementRejected(rule.id, now)
+          return false
+        }
+      }
       const participantId = randomUUID()
       this.database.orm
         .insert(tournamentParticipants)

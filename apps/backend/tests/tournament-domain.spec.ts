@@ -5,12 +5,25 @@ import {
 } from '../src/modules/tournament/domain/single-elimination'
 
 describe('single-elimination bracket', () => {
-  it.each([4, 8, 16, 32] as const)('generates a complete bracket for %i entries', (size) => {
+  it.each([4, 8, 16, 32, 64] as const)('generates a complete bracket for %i entries', (size) => {
     const matches = generateSingleEliminationBracket(size)
     expect(matches).toHaveLength(size - 1)
     expect(matches.filter((match) => match.roundNumber === 1)).toHaveLength(size / 2)
     expect(matches.at(-1)).toMatchObject({ nextMatchNumber: null, nextSlot: null })
     expect(new Set(matches.map((match) => match.matchNumber)).size).toBe(size - 1)
+  })
+
+  it.each([3, 5, 10, 100])('supports arbitrary entry counts with byes for %i entries', (size) => {
+    const matches = generateSingleEliminationBracket(size)
+    const bracketSlots = 2 ** Math.ceil(Math.log2(size))
+
+    expect(matches).toHaveLength(bracketSlots - 1)
+    expect(matches.filter((match) => match.roundNumber === 1)).toHaveLength(bracketSlots / 2)
+    expect(
+      matches.filter(
+        (match) => match.roundNumber === 1 && (match.leftSeed === null || match.rightSeed === null),
+      ),
+    ).toHaveLength(bracketSlots / 2 - Math.floor(size / 2))
   })
 
   it('only advances a match when both entries are known', () => {

@@ -3,6 +3,7 @@ import {
   Injectable,
   type OnApplicationBootstrap,
   type OnModuleDestroy,
+  Optional,
 } from '@nestjs/common'
 
 import { ApiApplicationError } from '../../application/api-error'
@@ -10,6 +11,7 @@ import { GiveawayRepository } from '../giveaway/giveaway.repository'
 import { TournamentRepository } from '../tournament/tournament.repository'
 import { type FocusedChatKey, FocusedChatRepository } from './focused-chat.repository'
 import { IntegrationEventBus } from './integration-event.bus'
+import { IntegrationRepository } from './integration.repository'
 
 @Injectable()
 export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestroy {
@@ -20,6 +22,7 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
     @Inject(IntegrationEventBus) private readonly events: IntegrationEventBus,
     @Inject(GiveawayRepository) private readonly giveaways: GiveawayRepository,
     @Inject(TournamentRepository) private readonly tournaments: TournamentRepository,
+    @Optional() @Inject(IntegrationRepository) private readonly integrations?: IntegrationRepository,
   ) {}
 
   public onApplicationBootstrap(): void {
@@ -37,7 +40,7 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
     const winner = detail.participants.find((participant) => participant.id === winnerId)
     return this.chat.thread(
       winner?.providerUserId ?? winner?.displayName ?? detail.giveaway.name,
-      this.keyFor(winner),
+      await this.keysFor(winner),
     )
   }
 
@@ -51,7 +54,7 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
       )
       return this.chat.thread(
         champion?.displayName ?? detail.tournament.name,
-        this.keyFor(champion),
+        await this.keysFor(champion),
       )
     }
     const team = detail.teams.find((item) => item.entryId === detail.championEntryId)
@@ -60,9 +63,13 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
         .filter((member) => member.teamId === team?.id)
         .map((member) => member.participantId),
     )
-    const keys = detail.participants.flatMap((participant) =>
-      memberIds.has(participant.id) ? this.keyFor(participant) : [],
-    )
+    const keys = (
+      await Promise.all(
+        detail.participants
+          .filter((participant) => memberIds.has(participant.id))
+          .map((participant) => this.keysFor(participant)),
+      )
+    ).flat()
     return this.chat.thread(team?.name ?? detail.tournament.name, keys)
   }
 
@@ -76,7 +83,10 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
     if (!entryId) return this.chat.thread('A definir', [])
     if (detail.tournament.mode === 'individual') {
       const participant = detail.participants.find((item) => item.entryId === entryId)
-      return this.chat.thread(participant?.displayName ?? 'Participante', this.keyFor(participant))
+      return this.chat.thread(
+        participant?.displayName ?? 'Participante',
+        await this.keysFor(participant),
+      )
     }
     const team = detail.teams.find((item) => item.entryId === entryId)
     const memberIds = new Set(
@@ -84,13 +94,17 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
         .filter((member) => member.teamId === team?.id)
         .map((member) => member.participantId),
     )
-    const keys = detail.participants.flatMap((participant) =>
-      memberIds.has(participant.id) ? this.keyFor(participant) : [],
-    )
+    const keys = (
+      await Promise.all(
+        detail.participants
+          .filter((participant) => memberIds.has(participant.id))
+          .map((participant) => this.keysFor(participant)),
+      )
+    ).flat()
     return this.chat.thread(team?.name ?? 'Equipe', keys)
   }
 
-  private keyFor(
+  private async keysFor(
     participant:
       | {
           channelId: string | null
@@ -99,17 +113,32 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
           providerUserId: string | null
         }
       | undefined,
-  ): FocusedChatKey[] {
-    return participant?.channelId && participant.provider
-      ? [
-          {
-            channelId: participant.channelId,
-            displayName: participant.displayName,
-            identityKey: participant.displayName,
-            provider: participant.provider,
-            providerUserId: participant.providerUserId,
-          },
-        ]
-      : []
+  ): Promise<FocusedChatKey[]> {
+    if (!participant) return []
+
+    const connections = (this.integrations ? await this.integrations.listConnections() : []).filter(
+      (connection) =>
+        connection.capabilities.includes('chat.read') &&
+        (!participant.provider || connection.provider === participant.provider) &&
+        (!participant.channelId || connection.channelId === participant.channelId),
+    )
+    const candidates = connections.length
+      ? connections
+      : participant.provider && participant.channelId
+        ? [
+            {
+              channelId: participant.channelId,
+              provider: participant.provider,
+            },
+          ]
+        : []
+
+    return candidates.map((connection) => ({
+      channelId: connection.channelId,
+      displayName: participant.displayName,
+      identityKey: participant.displayName,
+      provider: connection.provider,
+      providerUserId: participant.providerUserId,
+    }))
   }
 }

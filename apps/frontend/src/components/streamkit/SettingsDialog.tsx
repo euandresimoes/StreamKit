@@ -76,6 +76,8 @@ export function SettingsDialog({
   > | null>(null);
   const [livepixBusy, setLivepixBusy] = useState(false);
   const [livepixError, setLivepixError] = useState<string | null>(null);
+  const [livepixWebhookUrl, setLivepixWebhookUrl] = useState<string | null>(null);
+  const [livepixPreparing, setLivepixPreparing] = useState(false);
   const [setupProvider, setSetupProvider] = useState<ProviderGuideId | null>(null);
   const { t } = useTranslation(undefined, { i18n });
   const persisted = useSettings(open);
@@ -91,6 +93,17 @@ export function SettingsDialog({
   useEffect(() => {
     if (setupProvider === "kick") void integrations.prepareKickAuth();
   }, [integrations.prepareKickAuth, setupProvider]);
+  useEffect(() => {
+    if (setupProvider !== "livepix") return;
+    setLivepixPreparing(true);
+    void settingsApi
+      .prepareLivepixWebhook()
+      .then((result) => setLivepixWebhookUrl(result.callbackUrl))
+      .catch((cause) =>
+        setLivepixError(cause instanceof Error ? cause.message : "Could not prepare LivePix."),
+      )
+      .finally(() => setLivepixPreparing(false));
+  }, [setupProvider]);
 
   const saveLivepix = async (credentials: { clientId: string; clientSecret: string }) => {
     setLivepixBusy(true);
@@ -265,7 +278,7 @@ export function SettingsDialog({
                       </p>
                     </div>
                     <div className="flex shrink-0 gap-2">
-                      {livepixStatus?.configured && (
+                      {livepixStatus?.state === "ready" && (
                         <Button
                           variant="danger"
                           size="sm"
@@ -275,19 +288,21 @@ export function SettingsDialog({
                           {t("settings.disconnect")}
                         </Button>
                       )}
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        loading={livepixBusy}
-                        onClick={() => {
-                          setLivepixError(null);
-                          setSetupProvider("livepix");
-                        }}
-                      >
-                        {livepixStatus?.configured
-                          ? t("settings.retryLivepix")
-                          : t("settings.connect")}
-                      </Button>
+                      {livepixStatus?.state !== "ready" && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          loading={livepixBusy}
+                          onClick={() => {
+                            setLivepixError(null);
+                            setSetupProvider("livepix");
+                          }}
+                        >
+                          {livepixStatus?.configured
+                            ? t("settings.retryLivepix")
+                            : t("settings.connect")}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -526,7 +541,7 @@ export function SettingsDialog({
           <ProviderSetupWizard
             open
             provider={setupProvider}
-            busy={setupProvider === "livepix" ? livepixBusy : integrations.busy}
+            busy={setupProvider === "livepix" ? livepixBusy || livepixPreparing : integrations.busy}
             error={setupProvider === "livepix" ? livepixError : integrations.error}
             onOpenChange={(open) => {
               if (!open) setSetupProvider(null);
@@ -534,7 +549,9 @@ export function SettingsDialog({
             webhookUrl={
               setupProvider === "kick"
                 ? (integrations.kickFlow?.webhookUrl ?? integrations.kickSetup?.webhookUrl ?? null)
-                : null
+                : setupProvider === "livepix"
+                  ? livepixWebhookUrl
+                  : null
             }
             redirectUrl={
               setupProvider === "kick"

@@ -137,6 +137,79 @@ const SelectSeparator = React.forwardRef<
 ));
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
 
+type SelectCustomItemProps = {
+  inputAriaLabel: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  inputType?: React.HTMLInputTypeAttribute;
+  label?: React.ReactNode;
+  max?: number;
+  min?: number;
+  onValueChange(value: string): void;
+  placeholder?: string;
+  step?: number;
+  value: string;
+};
+
+function SelectCustomItem({
+  inputAriaLabel,
+  inputMode,
+  inputType = "text",
+  label = "Custom",
+  max,
+  min,
+  onValueChange,
+  placeholder,
+  step,
+  value,
+}: SelectCustomItemProps) {
+  const [draft, setDraft] = React.useState(value);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const lastCommittedValue = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    setDraft(value);
+    lastCommittedValue.current = value;
+  }, [value]);
+
+  const commit = () => {
+    const nextValue = draft.trim();
+    if (!nextValue || nextValue === lastCommittedValue.current) return;
+    lastCommittedValue.current = nextValue;
+    onValueChange(nextValue);
+  };
+
+  return (
+    <div
+      className="flex items-center gap-2 border-t border-border px-3 py-2 text-xs"
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={() => inputRef.current?.focus()}
+    >
+      <span className="min-w-0 flex-1 text-muted-foreground">{label}</span>
+      <input
+        ref={inputRef}
+        aria-label={inputAriaLabel}
+        className="h-7 w-20 bg-white/[0.06] px-2 text-left text-xs outline-none focus:bg-white/[0.1]"
+        type={inputType}
+        inputMode={inputMode}
+        value={draft}
+        min={min}
+        max={max}
+        step={step}
+        placeholder={placeholder}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={(event) => {
+          event.stopPropagation();
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commit();
+          }
+        }}
+        onBlur={commit}
+      />
+    </div>
+  );
+}
+
 export {
   Select,
   SelectGroup,
@@ -145,6 +218,7 @@ export {
   SelectContent,
   SelectLabel,
   SelectItem,
+  SelectCustomItem,
   SelectSeparator,
   SelectScrollUpButton,
   SelectScrollDownButton,

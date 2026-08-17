@@ -10,7 +10,6 @@ import {
   Settings2,
   Trash2,
   Trophy,
-  UserX,
   Users,
 } from "lucide-react";
 
@@ -24,23 +23,26 @@ import { useLiveSelection } from "@/modules/live-control/use-live-control";
 import { shouldShowGiveawayFocusedChat } from "@/modules/giveaway/giveaway-presentation";
 import { CreateItemDialog } from "./CreateItemDialog";
 import { EntityHub } from "./EntityHub";
-import { GiveawayStage } from "./GiveawayStage";
+import { GiveawayStage, GIVEAWAY_WHEEL_SPIN_DURATION_MS } from "./GiveawayStage";
 import { EntitySettingsDialog } from "./EntitySettingsDialog";
 import { FocusedChatPanel } from "./FocusedChatPanel";
 import { ParticipantCaptureDialog } from "./ParticipantCaptureDialog";
+import { DebugChatSimulationButton } from "./DebugChatSimulationButton";
 import { MAX_VISIBLE_PARTICIPANTS } from "@/modules/performance/bounded-render-window";
+
+type GiveawayAsideView = "import" | "participants";
 
 export function GiveawaysTab() {
   const giveaways = useGiveaways(false);
   const live = useLiveSelection();
   const [input, setInput] = useState("");
   const [winner, setWinner] = useState<string | null>(null);
-  const [targetWinner, setTargetWinner] = useState<string | null>(null);
+  const [targetWinnerId, setTargetWinnerId] = useState<string | null>(null);
   const [drawPhase, setDrawPhase] = useState<"idle" | "drawing" | "revealed">("idle");
   const [creating, setCreating] = useState(false);
   const [newMaxParticipants, setNewMaxParticipants] = useState(1000);
   const [participantQuery, setParticipantQuery] = useState("");
-  const [overflowParticipants, setOverflowParticipants] = useState<string[]>([]);
+  const [asideView, setAsideView] = useState<GiveawayAsideView>("import");
   const [configuring, setConfiguring] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [removingParticipant, setRemovingParticipant] = useState<{
@@ -60,9 +62,9 @@ export function GiveawaysTab() {
 
   useEffect(() => {
     setWinner(null);
-    setTargetWinner(null);
+    setTargetWinnerId(null);
     setDrawPhase("idle");
-    setOverflowParticipants([]);
+    setAsideView("import");
   }, [detail?.giveaway.id]);
 
   const createGiveaway = async (name: string) => {
@@ -81,19 +83,20 @@ export function GiveawaysTab() {
     if (!round) return;
     const entry = round.entries.find((item) => item.participantId === round.winnerParticipantId);
     const selectedWinner = entry?.displayName ?? null;
-    setTargetWinner(selectedWinner);
+    const selectedWinnerId = round.winnerParticipantId;
+    setTargetWinnerId(selectedWinnerId);
     setDrawPhase("drawing");
     const revealDelay = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? 50
       : detail?.giveaway.mode === "case-opening"
         ? 9000
-        : 6500;
+        : GIVEAWAY_WHEEL_SPIN_DURATION_MS + 250;
     revealTimer.current = setTimeout(() => {
       void (async () => {
         const completed = await giveaways.completeRound(round.id);
         if (!completed) {
           setDrawPhase("idle");
-          setTargetWinner(null);
+          setTargetWinnerId(null);
           return;
         }
         setWinner(selectedWinner);
@@ -105,7 +108,7 @@ export function GiveawaysTab() {
   const clearCompletedPresentation = () => {
     if (detail?.giveaway.status !== "completed") return;
     setWinner(null);
-    setTargetWinner(null);
+    setTargetWinnerId(null);
     setDrawPhase("idle");
   };
   const filteredParticipants =
@@ -129,10 +132,36 @@ export function GiveawaysTab() {
             <ChevronLeft />
           </Button>
           <h2 className="text-lg font-semibold">{detail.giveaway.name}</h2>
+          <span
+            className="rounded-md bg-surface-2 px-2 py-1 text-[11px] text-muted-foreground"
+            aria-label={`${detail.participants.length} of ${detail.giveaway.maxParticipants} participants`}
+          >
+            {detail.participants.length}/{detail.giveaway.maxParticipants} participants
+          </span>
           <div className="ml-auto flex items-center gap-1.5">
+            <BaseSegmentedControl
+              ariaLabel="Giveaway mode"
+              value={detail.giveaway.mode}
+              disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
+              options={[
+                { value: "wheel", label: "Wheel", icon: <RotateCw className="size-3.5" /> },
+                { value: "case-opening", label: "Box", icon: <Box className="size-3.5" /> },
+              ]}
+              onChange={(mode) => {
+                clearCompletedPresentation();
+                void giveaways.updateMode(mode);
+              }}
+            />
             <Button size="sm" variant="secondary" onClick={() => setCapturing(true)}>
               <MessageCircle /> Capture from chat
             </Button>
+            <DebugChatSimulationButton
+              target="giveaway"
+              targetId={detail.giveaway.id}
+              onProgress={async () => {
+                await giveaways.refresh();
+              }}
+            />
             <Button
               variant="ghost"
               size="icon-sm"
@@ -155,30 +184,25 @@ export function GiveawaysTab() {
         />
       ) : (
         <div className="grid min-h-0 flex-1 xl:grid-cols-[300px_minmax(400px,1fr)_280px]">
-          <aside className="flex flex-col rounded-3xl p-4 border-r border-border">
-            <div className="mb-3">
-              <BaseSegmentedControl
-                ariaLabel="Giveaway type"
-                value={detail.giveaway.mode}
-                disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
-                options={[
-                  { value: "wheel", label: "Wheel", icon: <RotateCw className="size-3.5" /> },
-                  { value: "case-opening", label: "Box", icon: <Box className="size-3.5" /> },
-                ]}
-                onChange={(mode) => {
-                  clearCompletedPresentation();
-                  void giveaways.updateMode(mode);
-                }}
-              />
-            </div>
-            <div className="flex items-center gap-2 pb-3">
-              <ListPlus className="size-4" />
-              <h3 className="flex-1 text-[13px] font-semibold">Import participants</h3>
-              <span className="rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-muted-foreground">
-                {detail.giveaway.status === "completed" ? "Completed" : "Ready"}
-              </span>
-            </div>
-            <>
+          <aside className="flex min-h-0 flex-col rounded-3xl border-r border-border p-4">
+            <BaseSegmentedControl
+              ariaLabel="Participant management view"
+              value={asideView}
+              options={[
+                { value: "import", label: "Import", icon: <ListPlus className="size-3.5" /> },
+                { value: "participants", label: "Participants", icon: <Users className="size-3.5" /> },
+              ]}
+              onChange={(value) => setAsideView(value as GiveawayAsideView)}
+            />
+            {asideView === "import" ? (
+              <div className="mt-4 flex min-h-0 flex-1 flex-col">
+                <div className="flex items-center gap-2 pb-3">
+                  <ListPlus className="size-4" />
+                  <h3 className="flex-1 text-[13px] font-semibold">Import participants</h3>
+                  <span className="rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-muted-foreground">
+                    {detail.giveaway.status === "completed" ? "Completed" : "Ready"}
+                  </span>
+                </div>
               <Textarea
                 value={input}
                 disabled={!canModify || giveaways.busy || drawPhase === "drawing"}
@@ -199,29 +223,14 @@ export function GiveawaysTab() {
                   );
                   if (saved) {
                     setInput("");
-                    setOverflowParticipants([]);
-                  } else {
-                    const existing = new Set(
-                      detail.participants.map((participant) => participant.normalizedName),
-                    );
-                    const incoming = input
-                      .split(/\r?\n/)
-                      .map((value) => value.trim())
-                      .filter(Boolean)
-                      .filter((value, index, values) => values.indexOf(value) === index)
-                      .filter((value) => !existing.has(value.toLocaleLowerCase("en-US")));
-                    const capacity = Math.max(
-                      0,
-                      detail.giveaway.maxParticipants - detail.participants.length,
-                    );
-                    setOverflowParticipants(incoming.slice(capacity));
                   }
                 }}
               >
                 <Users /> Save participants
               </Button>
-            </>
-            <div className="mt-4 min-h-0 rounded-2xl border border-border bg-card/45 p-2">
+              </div>
+            ) : (
+            <div className="mt-4 flex min-h-0 flex-1 flex-col rounded-2xl border border-border bg-card/45 p-2">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -232,7 +241,7 @@ export function GiveawaysTab() {
                   aria-label="Search participant"
                 />
               </div>
-              <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto pr-1">
+              <div className="mt-2 min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1">
                 {visibleParticipants.map((participant) => (
                   <div
                     key={participant.id}
@@ -269,28 +278,6 @@ export function GiveawaysTab() {
                 )}
               </div>
             </div>
-            {overflowParticipants.length > 0 && (
-              <section className="mt-3 min-h-0 rounded-xl border border-red-400/25 bg-red-500/[0.06] p-2">
-                <div className="mb-2 flex items-center justify-between px-1">
-                  <p className="text-[11px] font-semibold">Outside the giveaway</p>
-                  <span className="text-[10px] text-muted-foreground">
-                    {overflowParticipants.length}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  {overflowParticipants.map((participant, index) => (
-                    <div
-                      key={`${participant}-${index}`}
-                      className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-xs"
-                    >
-                      <UserX className="size-3.5 shrink-0 text-red-400/70" />
-                      <span className="min-w-0 flex-1 truncate text-muted-foreground line-through decoration-red-400/60">
-                        {participant}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
             )}
           </aside>
 
@@ -306,8 +293,7 @@ export function GiveawaysTab() {
               onDraw={() => void draw()}
               participants={detail.participants}
               phase={drawPhase}
-              winner={winner}
-              targetWinner={targetWinner}
+              targetWinnerId={targetWinnerId}
             />
           </section>
 

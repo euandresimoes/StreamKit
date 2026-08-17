@@ -47,7 +47,9 @@ export class LiveControlService {
         return stream
       }),
     )
-    return streams.filter((stream) => stream.state === 'online')
+    const onlineStreams = streams.filter((stream) => stream.state === 'online')
+    if (!onlineStreams.length) await this.integrations.clearGlobalLiveSelection()
+    return onlineStreams
   }
 
   private async syncYouTubeBroadcasts(): Promise<YouTubeLiveBroadcast[] | null> {

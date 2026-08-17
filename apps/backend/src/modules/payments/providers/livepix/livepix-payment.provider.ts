@@ -44,7 +44,6 @@ export class LivePixPaymentProvider
   public onApplicationBootstrap(): void {
     this.events.subscribe('livepix', async (event) => this.handleExternalEvent(event.payload))
     this.monitorTimer = setInterval(() => void this.monitor(), 5_000)
-    void this.restoreIfNeeded()
   }
 
   public async onModuleDestroy(): Promise<void> {
@@ -69,10 +68,6 @@ export class LivePixPaymentProvider
 
   public connect() {
     if (this.connectPromise) return this.connectPromise
-    if (this.retryTimer) {
-      clearTimeout(this.retryTimer)
-      this.retryTimer = null
-    }
     this.connectPromise = this.connectInternal().finally(() => {
       this.connectPromise = null
     })
@@ -92,25 +87,18 @@ export class LivePixPaymentProvider
       webhookUrl: current?.webhookUrl ?? null,
     })
     try {
+      await this.auth.getAccessToken()
       const endpoint = await this.transport.register('livepix')
       if (!endpoint.callbackUrl) throw new Error('LIVEPIX_CALLBACK_URL_UNAVAILABLE')
-      const previous = await this.repository.connection()
-      const sameWebhook = previous?.remoteWebhookId && previous.webhookUrl === endpoint.callbackUrl
-      const remoteWebhookId = sameWebhook
-        ? previous.remoteWebhookId
-        : (await this.api.createWebhook(endpoint.callbackUrl)).data.id
-      if (previous?.remoteWebhookId && previous.remoteWebhookId !== remoteWebhookId && !sameWebhook)
-        await this.api.deleteWebhook(previous.remoteWebhookId).catch(() => undefined)
       await this.repository.saveConnection({
-        accountId: previous?.accountId ?? null,
-        accountUsername: previous?.accountUsername ?? null,
-        generation: (previous?.generation ?? 0) + 1,
+        accountId: current?.accountId ?? null,
+        accountUsername: current?.accountUsername ?? null,
+        generation: (current?.generation ?? 0) + 1,
         lastErrorCode: null,
-        remoteWebhookId,
+        remoteWebhookId: null,
         state: 'ready',
         webhookUrl: endpoint.callbackUrl,
       })
-      this.retryAttempt = 0
       return this.status()
     } catch (cause) {
       await this.repository.saveConnection({
@@ -126,16 +114,13 @@ export class LivePixPaymentProvider
             : 'degraded',
         webhookUrl: current?.webhookUrl ?? null,
       })
-      if (cause instanceof ApiApplicationError && cause.code === 'RATE_LIMITED') {
-        this.stopped = true
-        if (this.retryTimer) {
-          clearTimeout(this.retryTimer)
-          this.retryTimer = null
-        }
-        await this.transport.unregister('livepix').catch(() => undefined)
-      } else {
+      if (
+        !(cause instanceof ApiApplicationError) ||
+        !['RATE_LIMITED', 'INTEGRATION_AUTH_REQUIRED', 'INTEGRATION_AUTH_REVOKED'].includes(
+          cause.code,
+        )
+      )
         this.scheduleRetry()
-      }
       throw cause
     }
   }
@@ -144,8 +129,6 @@ export class LivePixPaymentProvider
     this.stopped = true
     if (this.retryTimer) clearTimeout(this.retryTimer)
     const existing = await this.repository.connection()
-    if (existing?.remoteWebhookId)
-      await this.api.deleteWebhook(existing.remoteWebhookId).catch(() => undefined)
     await this.transport.unregister('livepix')
     await this.auth.disconnect().catch(() => undefined)
     await this.repository.saveConnection({
@@ -158,6 +141,23 @@ export class LivePixPaymentProvider
       webhookUrl: null,
     })
     return this.status()
+  }
+
+  private async monitor(): Promise<void> {
+    if (this.stopped) return
+    const current = await this.repository.connection()
+    if (current?.state === 'ready' && this.transport.snapshot().state === 'error')
+      this.scheduleRetry()
+  }
+
+  private scheduleRetry(delay = 5_000): void {
+    if (this.stopped || this.retryTimer) return
+    const backoff = Math.max(delay, Math.min(300_000, 5_000 * 2 ** this.retryAttempt++))
+    const jitter = Math.floor(Math.random() * Math.max(1_000, backoff * 0.2))
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null
+      void this.connect().catch(() => undefined)
+    }, backoff + jitter)
   }
 
   public async handleExternalEvent(payload: unknown): Promise<void> {
@@ -195,28 +195,4 @@ export class LivePixPaymentProvider
     if (applied > 0) await this.repository.markProcessed(contribution.providerResourceId)
   }
 
-  private async monitor(): Promise<void> {
-    if (this.stopped) return
-    const current = await this.repository.connection()
-    if (current?.state === 'ready' && this.transport.snapshot().state === 'error')
-      this.scheduleRetry()
-  }
-
-  private async restoreIfNeeded(): Promise<void> {
-    const current = await this.repository.connection()
-    // A degraded connection can represent a provider rate limit. Do not retry it on
-    // every application start; the user can retry after the provider cooldown.
-    if (current?.state === 'ready') this.scheduleRetry(0)
-  }
-
-  private scheduleRetry(delay = 5_000): void {
-    if (this.stopped || this.retryTimer) return
-    const backoff =
-      delay === 0 ? 0 : Math.max(delay, Math.min(300_000, 5_000 * 2 ** this.retryAttempt++))
-    const jitter = backoff === 0 ? 0 : Math.floor(Math.random() * Math.max(1_000, backoff * 0.2))
-    this.retryTimer = setTimeout(() => {
-      this.retryTimer = null
-      void this.connect().catch(() => undefined)
-    }, backoff + jitter)
-  }
 }

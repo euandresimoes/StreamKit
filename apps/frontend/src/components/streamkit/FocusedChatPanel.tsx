@@ -9,11 +9,42 @@ import { copyText } from "@/infrastructure/clipboard";
 import { integrationApi } from "@/modules/integration/integration-api";
 import { MAX_VISIBLE_CHAT_MESSAGES } from "@/modules/performance/bounded-render-window";
 
+function getInitials(value: string) {
+  return Array.from(value.trim()).slice(0, 2).join("").toUpperCase();
+}
+
+function ChatAvatar({
+  name,
+  avatarUrl,
+  className = "size-9",
+}: {
+  name: string;
+  avatarUrl: string | null;
+  className?: string;
+}) {
+  return avatarUrl ? (
+    <img
+      className={`${className} shrink-0 rounded-full object-cover`}
+      src={avatarUrl}
+      alt={`Avatar of ${name}`}
+    />
+  ) : (
+    <span
+      className={`${className} flex shrink-0 items-center justify-center rounded-full bg-surface-2 text-[10px] font-semibold`}
+      title={name}
+    >
+      {getInitials(name)}
+    </span>
+  );
+}
+
 export function FocusedChatPanel({
+  onClose,
   target,
   targetId,
   visible = true,
 }: {
+  onClose?: () => void;
   target: "giveaways" | "tournaments";
   targetId: string;
   visible?: boolean;
@@ -34,7 +65,7 @@ export function FocusedChatPanel({
     }
     const timer = window.setTimeout(() => setRendered(false), 180);
     return () => window.clearTimeout(timer);
-  }, [visible]);
+  }, [open, visible]);
 
   useEffect(() => {
     setOpen(true);
@@ -129,14 +160,24 @@ export function FocusedChatPanel({
   return (
     <aside
       aria-label="Focused chat"
-      className={`glass-panel fixed bottom-5 right-5 z-40 flex max-h-[70vh] w-[360px] flex-col overflow-hidden rounded-3xl border border-border-strong bg-popover/95 shadow-2xl ${panelVisible ? "motion-safe:animate-in motion-safe:slide-in-from-right-4" : "motion-safe:animate-out motion-safe:slide-out-to-right-4"}`}
+      className={`glass-panel fixed bottom-5 right-5 z-40 flex max-h-[70vh] w-[360px] flex-col overflow-hidden rounded-3xl border border-border-strong bg-popover/95 shadow-2xl ${panelVisible ? "streamkit-focused-chat-in" : "streamkit-focused-chat-out"}`}
     >
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
-        {identity?.avatarUrl ? (
-          <img
-            className="size-9 shrink-0 rounded-full object-cover"
-            src={identity.avatarUrl}
-            alt={`Avatar of ${identity.displayName}`}
+        {isGroup ? (
+          <div className="flex shrink-0 -space-x-2" aria-label="Team members">
+            {identities.map((member) => (
+              <ChatAvatar
+                key={`${member.provider}:${member.channelId}:${member.providerUserId}`}
+                name={member.displayName}
+                avatarUrl={member.avatarUrl}
+                className="size-8 border-2 border-popover"
+              />
+            ))}
+          </div>
+        ) : identity ? (
+          <ChatAvatar
+            name={identity.displayName}
+            avatarUrl={identity.avatarUrl}
           />
         ) : (
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-2">
@@ -186,7 +227,10 @@ export function FocusedChatPanel({
           variant="ghost"
           size="icon-sm"
           aria-label="Close chat"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            onClose?.();
+          }}
         >
           <X />
         </Button>
@@ -197,13 +241,16 @@ export function FocusedChatPanel({
           <p className="py-8 text-center text-xs text-muted-foreground">Loading messages…</p>
         )}
         {visibleMessages.map((item) => (
-          <div key={item.id} className="rounded-xl border border-border bg-card p-2.5">
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="font-medium text-foreground">{item.displayName}</span>
-              <BaseBrandIcon provider={item.provider} className="size-3" />
-              <time className="ml-auto">{new Date(item.occurredAt).toLocaleTimeString()}</time>
+          <div key={item.id} className="flex gap-2 rounded-xl border border-border bg-card p-2.5">
+            <ChatAvatar name={item.displayName} avatarUrl={item.avatarUrl} className="size-7" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                <span className="truncate font-medium text-foreground">{item.displayName}</span>
+                <BaseBrandIcon provider={item.provider} className="size-3" />
+                <time className="ml-auto shrink-0">{new Date(item.occurredAt).toLocaleTimeString()}</time>
+              </div>
+              <p className="mt-1 whitespace-pre-wrap break-words text-xs">{item.message}</p>
             </div>
-            <p className="mt-1 whitespace-pre-wrap break-words text-xs">{item.message}</p>
           </div>
         ))}
         {thread && thread.messages.length > MAX_VISIBLE_CHAT_MESSAGES && (

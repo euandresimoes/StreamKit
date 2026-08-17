@@ -123,16 +123,9 @@ export class FocusedChatRepository {
     const identityFilter = or(
       ...keys.map((key) =>
         (() => {
-          const sessionKey =
-            key.liveSessionKey ??
-            connectionRows.find(
-              (connection) =>
-                connection.provider === key.provider && connection.channelId === key.channelId,
-            )?.liveSessionKey
           return and(
             eq(chatMessageBuffer.provider, key.provider),
             eq(chatMessageBuffer.channelId, key.channelId),
-            sessionKey ? eq(chatMessageBuffer.liveSessionKey, sessionKey) : undefined,
             key.providerUserId
               ? eq(chatMessageBuffer.providerUserId, key.providerUserId)
               : sql`lower(${chatMessageBuffer.handle}) = lower(${key.identityKey ?? key.displayName})`,
@@ -148,12 +141,6 @@ export class FocusedChatRepository {
       .limit(FOCUSED_THREAD_MAX_MESSAGES)
     const avatarRows = await Promise.all(
       keys.map(async (key) => {
-        const sessionKey =
-          key.liveSessionKey ??
-          connectionRows.find(
-            (connection) =>
-              connection.provider === key.provider && connection.channelId === key.channelId,
-          )?.liveSessionKey
         const [row] = await this.database.orm
           .select({ avatarUrl: chatMessageBuffer.avatarUrl })
           .from(chatMessageBuffer)
@@ -161,7 +148,6 @@ export class FocusedChatRepository {
             and(
               eq(chatMessageBuffer.provider, key.provider),
               eq(chatMessageBuffer.channelId, key.channelId),
-              sessionKey ? eq(chatMessageBuffer.liveSessionKey, sessionKey) : undefined,
               key.providerUserId
                 ? eq(chatMessageBuffer.providerUserId, key.providerUserId)
                 : sql`lower(${chatMessageBuffer.handle}) = lower(${key.identityKey ?? key.displayName})`,

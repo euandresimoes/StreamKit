@@ -57,6 +57,10 @@ export class IntegrationController {
     this.requireDebug()
     return this.simulation.start(StartChatSimulationRequestSchema.parse(body))
   }
+  @Post('debug/simulation/connection') public saveSimulationConnection(@Body() body: unknown) {
+    this.requireDebug()
+    return this.service.saveDebugConnection(SaveIntegrationConnectionRequestSchema.parse(body))
+  }
   @Delete('debug/simulation') public stopSimulation() {
     this.requireDebug()
     return this.simulation.stop()

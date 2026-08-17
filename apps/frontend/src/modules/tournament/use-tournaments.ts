@@ -161,7 +161,7 @@ export function useTournaments(autoSelect = true) {
         : undefined,
     updateStructure: (
       mode: "individual" | "team",
-      bracketSize: 4 | 8 | 16 | 32,
+      bracketSize: number,
       teamCapacity?: number,
     ) =>
       detail

@@ -42,6 +42,10 @@ export class IntegrationService {
     return this.repository.saveConnection(input)
   }
 
+  public saveDebugConnection(input: SaveIntegrationConnectionRequest) {
+    return this.repository.saveDebugConnection(input)
+  }
+
   public async ingest(
     input: unknown,
     options: { retryOnHandlerFailure?: boolean } = {},

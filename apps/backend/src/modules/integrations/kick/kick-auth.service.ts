@@ -16,6 +16,7 @@ import {
   type SecureCredentialRepository,
 } from '../../settings/secure-credential.repository'
 import { ExternalTransportService } from '../external-events/external-transport.service'
+import { IntegrationRepository } from '../integration.repository'
 
 const CLIENT_ID = 'kick.client-id'
 const CLIENT_SECRET = 'kick.client-secret'
@@ -33,6 +34,14 @@ const StoredSchema = z.object({
   expiresAt: z.iso.datetime(),
   refreshToken: z.string().min(1),
   scopes: z.array(z.string()),
+})
+const CurrentUserSchema = z.object({
+  data: z.array(
+    z.object({
+      name: z.string().min(1),
+      user_id: z.union([z.string(), z.number()]),
+    }),
+  ).min(1),
 })
 type Pending = {
   codeVerifier: string
@@ -53,6 +62,7 @@ export class KickAuthService implements OnModuleDestroy {
   public constructor(
     @Inject(SECURE_CREDENTIAL_REPOSITORY) private readonly credentials: SecureCredentialRepository,
     @Inject(ExternalTransportService) private readonly transport: ExternalTransportService,
+    @Inject(IntegrationRepository) private readonly integrations: IntegrationRepository,
   ) {}
 
   public async begin() {
@@ -122,6 +132,7 @@ export class KickAuthService implements OnModuleDestroy {
     }
     if (!flow.token) return KickAuthorizationPollSchema.parse({ status: 'pending' })
     await this.credentials.save(TOKEN, JSON.stringify(flow.token))
+    await this.saveConnection(flow.token.accessToken)
     this.finish(flowId)
     return KickAuthorizationPollSchema.parse({
       authorization: await this.status(),
@@ -289,6 +300,28 @@ export class KickAuthService implements OnModuleDestroy {
         409,
       )
     return value
+  }
+
+  private async saveConnection(accessToken: string): Promise<void> {
+    const response = await fetch('https://api.kick.com/public/v1/users', {
+      headers: { authorization: `Bearer ${accessToken}` },
+    })
+    if (!response.ok) throw new Error(`KICK_USER_LOOKUP_${response.status}`)
+    const user = CurrentUserSchema.parse(await response.json()).data[0]!
+    await this.integrations.saveConnection({
+      capabilities: [
+        'chat.read',
+        'chat.write',
+        'chat.message.delete',
+        'chat.user.ban',
+        'chat.user.unban',
+        'live.read',
+        'user.identity',
+      ],
+      channelDisplayName: user.name,
+      channelId: String(user.user_id),
+      provider: 'kick',
+    })
   }
   private async readToken() {
     const value = await this.credentials.read(TOKEN)

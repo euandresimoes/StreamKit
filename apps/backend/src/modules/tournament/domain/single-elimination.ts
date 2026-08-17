@@ -9,25 +9,28 @@ export type BracketMatch = {
   rightSeed: number | null
 }
 
-export function generateSingleEliminationBracket(size: 4 | 8 | 16 | 32): BracketMatch[] {
-  const rounds = Math.log2(size)
+export function generateSingleEliminationBracket(size: number): BracketMatch[] {
+  if (!Number.isInteger(size) || size < 2 || size > 10_000)
+    throw new Error('Tournament bracket size must be an integer between 2 and 10000')
+  const rounds = Math.ceil(Math.log2(size))
+  const bracketSlots = 2 ** rounds
   const matches: BracketMatch[] = []
   let number = 1
   const roundStarts: number[] = []
   for (let round = 1; round <= rounds; round += 1) {
     roundStarts.push(number)
-    number += size / 2 ** round
+    number += bracketSlots / 2 ** round
   }
   for (let round = 1; round <= rounds; round += 1) {
-    const count = size / 2 ** round
+    const count = bracketSlots / 2 ** round
     for (let index = 0; index < count; index += 1) {
       const final = round === rounds
       matches.push({
-        leftSeed: round === 1 ? index * 2 + 1 : null,
+        leftSeed: round === 1 && index * 2 + 1 <= size ? index * 2 + 1 : null,
         matchNumber: roundStarts[round - 1]! + index,
         nextMatchNumber: final ? null : roundStarts[round]! + Math.floor(index / 2),
         nextSlot: final ? null : index % 2 === 0 ? 'left' : 'right',
-        rightSeed: round === 1 ? index * 2 + 2 : null,
+        rightSeed: round === 1 && index * 2 + 2 <= size ? index * 2 + 2 : null,
         roundNumber: round,
       })
     }

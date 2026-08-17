@@ -51,26 +51,37 @@ describe('Kick OAuth', () => {
     const credentials = new MemoryCredentials()
     await credentials.save('kick.client-id', 'kick-client-id')
     await credentials.save('kick.client-secret', 'kick-client-secret')
-    jest.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          access_token: 'kick-access-token',
-          expires_in: 3600,
-          refresh_token: 'kick-refresh-token',
-          scope: 'user:read channel:read',
-          token_type: 'bearer',
+    jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            access_token: 'kick-access-token',
+            expires_in: 3600,
+            refresh_token: 'kick-refresh-token',
+            scope: 'user:read channel:read',
+            token_type: 'bearer',
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: [{ user_id: 123, name: 'StreamKit User' }] }), {
+          status: 200,
         }),
-        { status: 200 },
-      ),
+      )
+    const service = new KickAuthService(
+      credentials,
+      {
+        register: jest.fn().mockResolvedValue({
+          callbackPath: '/api/v1/external-events/kick/test',
+          callbackUrl: 'https://temporary.example/api/v1/external-events/kick/test',
+          secret: 'test-secret',
+        }),
+        unregister: jest.fn(),
+      } as never,
+      { saveConnection: jest.fn() } as never,
     )
-    const service = new KickAuthService(credentials, {
-      register: jest.fn().mockResolvedValue({
-        callbackPath: '/api/v1/external-events/kick/test',
-        callbackUrl: 'https://temporary.example/api/v1/external-events/kick/test',
-        secret: 'test-secret',
-      }),
-      unregister: jest.fn(),
-    } as never)
 
     const flow = await service.begin()
     const authorizationUrl = new URL(flow.authorizationUrl)

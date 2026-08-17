@@ -6,6 +6,7 @@ import {
 } from '@streamkit/contracts'
 import { z } from 'zod'
 
+import { ApiApplicationError } from '../../../application/api-error'
 import { LocalPublic } from '../../../application/local-public.decorator'
 import { ExternalTransportService } from './external-transport.service'
 
@@ -17,6 +18,18 @@ export class ExternalEventController {
 
   @Get('transport') public status() {
     return this.transport.snapshot()
+  }
+
+  @Get('transport/setup/:provider')
+  public async setup(@Param('provider') provider: unknown) {
+    const endpoint = await this.transport.register(ExternalEventProviderSchema.parse(provider))
+    if (!endpoint.callbackUrl)
+      throw new ApiApplicationError(
+        'EXTERNAL_TUNNEL_UNAVAILABLE',
+        'External event transport is unavailable',
+        503,
+      )
+    return { callbackUrl: endpoint.callbackUrl }
   }
 
   @Post(':provider/:endpointId')

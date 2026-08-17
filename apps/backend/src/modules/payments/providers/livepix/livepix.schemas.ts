@@ -15,10 +15,6 @@ export const LivePixPaymentResponseSchema = z.object({
     username: z.string().nullable().optional(),
   }),
 })
-export const LivePixWebhooksResponseSchema = z.object({
-  data: z.array(z.object({ id: z.string().min(1), url: z.url() })),
-})
-export const LivePixWebhookCreatedSchema = z.object({ data: z.object({ id: z.string().min(1) }) })
 export const LivePixTokenResponseSchema = z.object({
   access_token: z.string().min(1),
   expires_in: z.number().int().positive(),

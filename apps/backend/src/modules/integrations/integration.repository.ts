@@ -112,6 +112,49 @@ export class IntegrationRepository {
     return this.parseConnection(row!)
   }
 
+  public async saveDebugConnection(input: SaveIntegrationConnectionRequest) {
+    const now = new Date().toISOString()
+    await this.database.orm
+      .insert(integrationConnections)
+      .values({
+        capabilitiesJson: JSON.stringify(['chat.read']),
+        channelDisplayName: input.channelDisplayName,
+        channelId: input.channelId,
+        createdAt: now,
+        id: randomUUID(),
+        isGlobalSelected: false,
+        liveSessionKey: null,
+        lastErrorCode: null,
+        nextRetryAt: null,
+        provider: input.provider,
+        retryAttempt: 0,
+        status: 'disconnected',
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [integrationConnections.provider, integrationConnections.channelId],
+        set: {
+          capabilitiesJson: JSON.stringify(['chat.read']),
+          channelDisplayName: input.channelDisplayName,
+          lastErrorCode: null,
+          nextRetryAt: null,
+          retryAttempt: 0,
+          status: 'disconnected',
+          updatedAt: now,
+        },
+      })
+    const [row] = await this.database.orm
+      .select()
+      .from(integrationConnections)
+      .where(
+        and(
+          eq(integrationConnections.provider, input.provider),
+          eq(integrationConnections.channelId, input.channelId),
+        ),
+      )
+    return this.parseConnection(row!)
+  }
+
   public async saveEvent(event: ChatMessageReceived): Promise<boolean> {
     const parsed = ChatMessageReceivedSchema.parse(event)
     const inserted = await this.database.orm
@@ -198,6 +241,13 @@ export class IntegrationRepository {
         .where(eq(integrationConnections.id, id))
         .run()
     })
+  }
+
+  public async clearGlobalLiveSelection(): Promise<void> {
+    await this.database.orm
+      .update(integrationConnections)
+      .set({ isGlobalSelected: false, updatedAt: new Date().toISOString() })
+      .where(eq(integrationConnections.isGlobalSelected, true))
   }
 
   public async retireStaleYouTubeConnections(activeChannelIds: readonly string[]): Promise<void> {

@@ -46,7 +46,11 @@ export class GiveawayCaptureRepository {
               ),
               and(
                 eq(giveawayParticipants.provider, event.provider),
-                eq(giveawayParticipants.channelId, event.channelId),
+                eq(giveawayParticipants.normalizedName, identity),
+                isNull(giveawayParticipants.providerUserId),
+              ),
+              and(
+                isNull(giveawayParticipants.provider),
                 eq(giveawayParticipants.normalizedName, identity),
                 isNull(giveawayParticipants.providerUserId),
               ),
@@ -57,7 +61,12 @@ export class GiveawayCaptureRepository {
       if (existing && existing.providerUserId !== event.author.providerUserId)
         this.database.orm
           .update(giveawayParticipants)
-          .set({ channelId: event.channelId, providerUserId: event.author.providerUserId })
+          .set({
+            channelId: event.channelId,
+            displayName: event.author.handle,
+            provider: event.provider,
+            providerUserId: event.author.providerUserId,
+          })
           .where(eq(giveawayParticipants.id, existing.id))
           .run()
       const duplicate = Boolean(existing?.active) && rule.entryPolicy === 'unique'

@@ -1,7 +1,10 @@
 import type { Giveaway, GiveawayParticipant } from "@streamkit/contracts";
 import { CircleUserRound, Gift } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { selectBoundedItems } from "@/modules/performance/bounded-render-window";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  MAX_VISIBLE_WHEEL_PARTICIPANTS,
+  selectRandomSampledItems,
+} from "@/modules/performance/bounded-render-window";
 
 const WHEEL_COLORS = [
   "#3369E8",
@@ -14,14 +17,15 @@ const WHEEL_COLORS = [
   "#E83E8C",
 ] as const;
 
+export const GIVEAWAY_WHEEL_SPIN_DURATION_MS = 8_500;
+
 type GiveawayStageProps = {
   disabled: boolean;
   mode: Giveaway["mode"];
   onDraw(): void;
   participants: GiveawayParticipant[];
   phase: "idle" | "drawing" | "revealed";
-  winner: string | null;
-  targetWinner: string | null;
+  targetWinnerId: string | null;
 };
 
 export function GiveawayStage({
@@ -30,12 +34,20 @@ export function GiveawayStage({
   onDraw,
   participants,
   phase,
-  targetWinner,
+  targetWinnerId,
 }: GiveawayStageProps) {
-  const visibleParticipants = selectBoundedItems(
-    participants,
-    (targetWinner && participants.find((item) => item.displayName === targetWinner)?.id) ?? null,
+  const sampledParticipants = useMemo(
+    () => selectRandomSampledItems(participants, null, MAX_VISIBLE_WHEEL_PARTICIPANTS),
+    [participants],
   );
+  const visibleParticipants = useMemo(() => {
+    if (!targetWinnerId || sampledParticipants.some((item) => item.id === targetWinnerId))
+      return sampledParticipants;
+    const winner = participants.find((item) => item.id === targetWinnerId);
+    return winner
+      ? [...sampledParticipants.slice(0, -1), winner]
+      : sampledParticipants;
+  }, [participants, sampledParticipants, targetWinnerId]);
   return (
     <button
       type="button"
@@ -48,13 +60,13 @@ export function GiveawayStage({
         <WheelStage
           participants={visibleParticipants}
           spinning={phase === "drawing"}
-          winner={targetWinner}
+          winnerId={targetWinnerId}
         />
       ) : (
         <CaseStage
           participants={visibleParticipants}
           rolling={phase === "drawing"}
-          winner={targetWinner}
+          winnerId={targetWinnerId}
         />
       )}
       {phase === "idle" && participants.length === 0 && (
@@ -75,13 +87,14 @@ export function GiveawayStage({
 function WheelStage({
   participants,
   spinning,
-  winner,
+  winnerId,
 }: {
   participants: GiveawayParticipant[];
   spinning: boolean;
-  winner: string | null;
+  winnerId: string | null;
 }) {
   const labels = participants;
+  const showLabels = labels.length <= 150;
   const [rotation, setRotation] = useState(0);
   const [pointerColor, setPointerColor] = useState<string>(WHEEL_COLORS[0]);
   const previousSpinning = useRef(false);
@@ -89,15 +102,15 @@ function WheelStage({
   const slice = labels.length ? 360 / labels.length : 360;
 
   useEffect(() => {
-    if (!spinning || previousSpinning.current || !winner || !labels.length) {
+    if (!spinning || previousSpinning.current || !winnerId || !labels.length) {
       previousSpinning.current = spinning;
       return;
     }
-    const winnerIndex = labels.findIndex((participant) => participant.displayName === winner);
+    const winnerIndex = labels.findIndex((participant) => participant.id === winnerId);
     if (winnerIndex < 0) return;
     setRotation((current) => {
       const random = crypto.getRandomValues(new Uint32Array(2));
-      const turns = 7 + ((random[0] ?? 0) % 4);
+      const turns = 10 + ((random[0] ?? 0) % 5);
       const landingRatio = 0.15 + ((random[1] ?? 0) / 0xffffffff) * 0.7;
       const landingAngle = -90 + (winnerIndex + landingRatio) * slice;
       const targetModulo = ((-landingAngle % 360) + 360) % 360;
@@ -106,10 +119,18 @@ function WheelStage({
       return current + turns * 360 + alignment;
     });
     previousSpinning.current = true;
-  }, [labels, slice, spinning, winner]);
+  }, [labels, slice, spinning, winnerId]);
 
   useEffect(() => {
-    if (!spinning || !labels.length) return;
+    if (!labels.length) return;
+    if (!spinning) {
+      const winnerIndex = winnerId
+        ? labels.findIndex((participant) => participant.id === winnerId)
+        : -1;
+      if (winnerIndex >= 0)
+        setPointerColor(WHEEL_COLORS[winnerIndex % WHEEL_COLORS.length] ?? WHEEL_COLORS[0]);
+      return;
+    }
     let frame = 0;
     const updatePointer = () => {
       const transform = wheelRef.current ? getComputedStyle(wheelRef.current).transform : "none";
@@ -122,7 +143,7 @@ function WheelStage({
     };
     frame = requestAnimationFrame(updatePointer);
     return () => cancelAnimationFrame(frame);
-  }, [labels.length, slice, spinning]);
+  }, [labels.length, slice, spinning, winnerId]);
 
   return (
     <div className="relative flex items-center justify-center">
@@ -150,7 +171,15 @@ function WheelStage({
           style={{
             transform: `rotate(${rotation}deg)`,
             transformOrigin: "120px 120px",
-            transition: spinning ? "transform 6.5s cubic-bezier(.08,.64,.06,1)" : "none",
+            transition: spinning
+              ? `transform ${GIVEAWAY_WHEEL_SPIN_DURATION_MS}ms cubic-bezier(.05,.72,.08,1)`
+              : "none",
+          }}
+          onTransitionEnd={() => {
+            if (!winnerId) return;
+            const winnerIndex = labels.findIndex((participant) => participant.id === winnerId);
+            if (winnerIndex >= 0)
+              setPointerColor(WHEEL_COLORS[winnerIndex % WHEEL_COLORS.length] ?? WHEEL_COLORS[0]);
           }}
         >
           {labels.length === 0 ? (
@@ -176,21 +205,23 @@ function WheelStage({
                     strokeWidth="4"
                     strokeLinejoin="round"
                   />
-                  <text
-                    x={textPosition.x}
-                    y={textPosition.y}
-                    fill="#ffffff"
-                    fontSize={fontSize}
-                    fontWeight="700"
-                    textAnchor="end"
-                    dominantBaseline="middle"
-                    paintOrder="stroke"
-                    stroke="rgba(0,0,0,.2)"
-                    strokeWidth="1.5"
-                    transform={`rotate(${centerAngle} ${textPosition.x} ${textPosition.y})`}
-                  >
-                    {truncateWheelLabel(participant.displayName, labels.length)}
-                  </text>
+                  {showLabels && (
+                    <text
+                      x={textPosition.x}
+                      y={textPosition.y}
+                      fill="#ffffff"
+                      fontSize={fontSize}
+                      fontWeight="700"
+                      textAnchor="end"
+                      dominantBaseline="middle"
+                      paintOrder="stroke"
+                      stroke="rgba(0,0,0,.2)"
+                      strokeWidth="1.5"
+                      transform={`rotate(${centerAngle} ${textPosition.x} ${textPosition.y})`}
+                    >
+                      {truncateWheelLabel(participant.displayName, labels.length)}
+                    </text>
+                  )}
                 </g>
               );
             })
@@ -232,47 +263,53 @@ function truncateWheelLabel(label: string, participantCount: number) {
 function CaseStage({
   participants,
   rolling,
-  winner,
+  winnerId,
 }: {
   participants: GiveawayParticipant[];
   rolling: boolean;
-  winner: string | null;
+  winnerId: string | null;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState(0);
   const previousRolling = useRef(false);
   const participantKey = participants.map((participant) => participant.id).join(":");
-  const items = participants;
+  const items = useMemo(() => shuffleParticipants(participants), [participantKey]);
   const itemStep = 156;
+  const loopCount = items.length > 150 ? 4 : 6;
+  const trackItems = useMemo(
+    () => Array.from({ length: loopCount }, () => items).flat(),
+    [items, loopCount],
+  );
 
   const centeredOffset = (index: number) =>
     (viewportRef.current?.clientWidth ?? 0) / 2 - index * itemStep - 72;
 
   useLayoutEffect(() => {
-    if (!participants.length || !viewportRef.current) return;
-    const initialIndex = 0;
+    if (rolling || !items.length || !viewportRef.current) return;
+    const random = new Uint32Array(1);
+    crypto.getRandomValues(random);
+    const randomIndex = items.length > 2 ? 1 + (random[0]! % (items.length - 2)) : 0;
+    const initialIndex = items.length + randomIndex;
     setOffset(centeredOffset(initialIndex));
-  }, [participantKey]);
+  }, [items, participantKey]);
 
   useEffect(() => {
-    if (!participants.length || !viewportRef.current) return;
-    const winnerIndex = winner
-      ? participants.findIndex((participant) => participant.displayName === winner)
+    if (!items.length || !viewportRef.current) return;
+    const winnerIndex = winnerId
+      ? items.findIndex((participant) => participant.id === winnerId)
       : -1;
 
     if (!rolling) {
-      if (previousRolling.current && winnerIndex >= 0) {
-        setOffset(centeredOffset(winnerIndex));
-      }
       previousRolling.current = false;
       return;
     }
     if (previousRolling.current || winnerIndex < 0) return;
 
-    const targetIndex = winnerIndex >= 0 ? winnerIndex : 0;
+    const targetIndex =
+      winnerIndex >= 0 ? items.length * (loopCount - 2) + winnerIndex : items.length * 2;
     setOffset(centeredOffset(targetIndex));
     previousRolling.current = true;
-  }, [participantKey, rolling, winner]);
+  }, [items, loopCount, participantKey, rolling, winnerId]);
 
   return (
     <div ref={viewportRef} className="relative w-full overflow-hidden py-8">
@@ -286,7 +323,7 @@ function CaseStage({
           transition: rolling ? "transform 9s cubic-bezier(.08,.64,.06,1)" : "none",
         }}
       >
-        {items.map((participant, index) => (
+        {trackItems.map((participant, index) => (
           <div
             key={`${participant.id}-${index}`}
             className="flex h-28 w-36 shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card px-3 shadow-lg"
@@ -300,4 +337,17 @@ function CaseStage({
       </div>
     </div>
   );
+}
+
+function shuffleParticipants(participants: readonly GiveawayParticipant[]) {
+  const shuffled = [...participants];
+  const randomValues = new Uint32Array(Math.max(0, shuffled.length - 1));
+  if (randomValues.length) crypto.getRandomValues(randomValues);
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = randomValues[shuffled.length - 1 - index]! % (index + 1);
+    const current = shuffled[index]!;
+    shuffled[index] = shuffled[randomIndex]!;
+    shuffled[randomIndex] = current;
+  }
+  return shuffled;
 }

@@ -28,7 +28,7 @@ export function BaseSegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={ariaLabel}
       aria-disabled={disabled}
-      className="grid grid-flow-col gap-1 rounded-xl border border-border bg-surface-2 p-1"
+      className="grid grid-flow-col gap-1 rounded-xl border border-border bg-surface-2 p-0.5"
     >
       {options.map((option) => {
         const selected = option.value === value;
@@ -41,7 +41,7 @@ export function BaseSegmentedControl<T extends string>({
             disabled={disabled}
             onClick={() => onChange(option.value)}
             className={cn(
-              "flex min-w-0 items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs outline-none transition-[background-color,border-color,color,box-shadow]",
+              "flex h-7 min-w-0 items-center justify-center gap-1.5 rounded-lg border px-2 py-0 text-xs outline-none transition-[background-color,border-color,color,box-shadow]",
               "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
               "disabled:cursor-not-allowed disabled:opacity-50",
               selected

@@ -1,13 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { unknown as unknownSchema } from 'zod'
 
 import { ApiApplicationError } from '../../../../application/api-error'
 import { LivePixAuthService } from './livepix-auth.service'
 import {
   LivePixAccountResponseSchema,
   LivePixPaymentResponseSchema,
-  LivePixWebhookCreatedSchema,
-  LivePixWebhooksResponseSchema,
 } from './livepix.schemas'
 
 const LIVEPIX_REQUEST_TIMEOUT_MS = 15_000
@@ -22,23 +19,6 @@ export class LivePixApiClient {
 
   public payment(id: string) {
     return this.request(`/v2/payments/${encodeURIComponent(id)}`, LivePixPaymentResponseSchema)
-  }
-
-  public webhooks() {
-    return this.request('/v2/webhooks', LivePixWebhooksResponseSchema)
-  }
-
-  public createWebhook(url: string) {
-    return this.request('/v2/webhooks', LivePixWebhookCreatedSchema, {
-      body: JSON.stringify({ url }),
-      method: 'POST',
-    })
-  }
-
-  public async deleteWebhook(id: string): Promise<void> {
-    await this.request(`/v2/webhooks/${encodeURIComponent(id)}`, unknownSchema(), {
-      method: 'DELETE',
-    })
   }
 
   private async request<T extends { parse(value: unknown): unknown }>(

@@ -2,6 +2,7 @@ import {
   AppSettingsSchema,
   CredentialStatusSchema,
   DiagnosticInfoSchema,
+  ExternalTransportEndpointSchema,
   PaymentConnectionStatusSchema,
   type UpdateAppSettingsRequest,
 } from "@streamkit/contracts";
@@ -64,6 +65,10 @@ export const settingsApi = {
     }),
   livepixStatus: () =>
     apiClient.request("/api/v1/payments/livepix/status", { schema: PaymentConnectionStatusSchema }),
+  prepareLivepixWebhook: () =>
+    apiClient.request("/api/v1/external-events/transport/setup/livepix", {
+      schema: ExternalTransportEndpointSchema,
+    }),
   connectLivepix: () =>
     apiClient.request("/api/v1/payments/livepix/connect", {
       method: "POST",

@@ -166,6 +166,47 @@ describe('tournament chat capture persistence', () => {
     database.close()
     await environment.cleanup()
   })
+
+  it('rejects team chat participants after all team slots are filled', async () => {
+    const environment = await createIsolatedTestEnvironment()
+    const database = await SqliteDatabase.open(environment.databasePath)
+    const integrations = new IntegrationRepository(database)
+    const connection = await integrations.saveConnection({
+      capabilities: ['chat.read', 'user.identity'],
+      channelDisplayName: 'Teams',
+      channelId: 'channel-team-capacity',
+      provider: 'twitch',
+    })
+    const tournaments = new TournamentRepository(database)
+    const tournament = await tournaments.create({
+      bracketSize: 4,
+      description: null,
+      mode: 'team',
+      name: 'Team capacity',
+      teamCapacity: 2,
+    })
+    const captures = new TournamentCaptureRepository(database)
+    const rule = await captures.save(tournament.id, {
+      connectionId: connection.id,
+      endsAt: null,
+      entryPolicy: 'unique',
+      excludeBots: true,
+      excludeBroadcaster: true,
+      excludeModerators: false,
+      match: 'any',
+      matchValue: null,
+      membersOnly: false,
+      startsAt: null,
+    })
+    for (let index = 0; index < 9; index += 1)
+      expect(await captures.capture(rule, chatMessage(index, 'channel-team-capacity'))).toBe(
+        index < 8,
+      )
+    expect((await tournaments.detail(tournament.id))?.participants).toHaveLength(8)
+    expect((await captures.list(tournament.id)).items[0]?.rejectedCount).toBe(1)
+    database.close()
+    await environment.cleanup()
+  })
 })
 
 function chatMessage(index: number, channelId: string): ChatMessageReceived {

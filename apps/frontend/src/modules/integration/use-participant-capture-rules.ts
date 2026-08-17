@@ -57,15 +57,17 @@ export function useParticipantCaptureRules(
     }, 5_000);
     return () => clearInterval(timer);
   }, [load]);
-  const mutate = async (operation: () => Promise<unknown>) => {
+  const mutate = async (operation: () => Promise<unknown>): Promise<boolean> => {
     setBusy(true);
     setError(null);
     try {
       await operation();
       await load();
       await onRefreshRef.current();
+      return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : i18n.t("errors.updateCapture"));
+      return false;
     } finally {
       setBusy(false);
     }

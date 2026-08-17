@@ -15,7 +15,7 @@ export const livePixSetupGuide: ProviderGuide = {
     {
       title: "Open your LivePix dashboard",
       description:
-        "Open the main LivePix website, sign in to the account that receives the payments, go to Settings > API and create a new application named StreamKit.\n\nCopy the Client ID and Client Secret into the secure fields below.",
+      "Open the main LivePix website, sign in to the account that receives the payments, go to Settings > API and create a new application named StreamKit. Copy the StreamKit notification URL shown below into the application's notification URL field. StreamKit uses client_credentials for your own account, so the redirect URL is not used.\n\nCopy the Client ID and Client Secret into the secure fields below.",
       actionLabel: "Open LivePix",
       actionUrl: "https://livepix.gg/",
       imageUrl: "/assets/provider-guides/livepix/step-1.png",

@@ -158,7 +158,7 @@ function AppShellContent() {
       </div>
 
       <SettingsDialog open={settings} onOpenChange={setSettings} />
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
       <Dialog open={launcherOpen} onOpenChange={setLauncherOpen}>
         <DialogContent className="max-w-2xl border-border-strong bg-background/95 p-6 shadow-[var(--shadow-float)] backdrop-blur-3xl sm:rounded-2xl">
           <DialogHeader>
