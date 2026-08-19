@@ -51,6 +51,7 @@ import { PaymentCaptureDialog } from "./PaymentCaptureDialog";
 import { DebugChatSimulationButton } from "./DebugChatSimulationButton";
 import { MAX_VISIBLE_PARTICIPANTS } from "@/modules/performance/bounded-render-window";
 import { ParticipantAvatar, ParticipantPanel } from "./ParticipantPanel";
+import { ParticipantImportModal } from "./ParticipantImportModal";
 
 function isTournamentSize(value: number): boolean {
   return Number.isInteger(value) && value >= 2 && value <= 8192;
@@ -85,6 +86,7 @@ export function TournamentsTab() {
   const [configuring, setConfiguring] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [capturingPayment, setCapturingPayment] = useState(false);
+  const [importingParticipants, setImportingParticipants] = useState(false);
   const [draggedParticipantId, setDraggedParticipantId] = useState<string | null>(null);
   const [draggedMemberId, setDraggedMemberId] = useState<string | null>(null);
   const [teamNames, setTeamNames] = useState<Record<string, string>>({});
@@ -689,6 +691,18 @@ export function TournamentsTab() {
             locked={Boolean(detail.matches.length)}
             onDragStart={(participantId) => setDraggedParticipantId(participantId)}
             onDragEnd={() => setDraggedParticipantId(null)}
+            actions={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t("giveaway.importParticipants")}
+                title={t("giveaway.importParticipants")}
+                disabled={tournaments.busy || Boolean(detail.matches.length)}
+                onClick={() => setImportingParticipants(true)}
+              >
+                <Users />
+              </Button>
+            }
           />
           {String(detail.tournament.mode) === "team" && (
             <aside
@@ -1210,7 +1224,7 @@ export function TournamentsTab() {
               )}
               {!teamsExpanded && (
                 <TooltipProvider delayDuration={250}>
-                  <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1">
+                  <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 pr-2 [scrollbar-gutter:stable]">
                     {detail.tournament.mode === "team"
                       ? detail.teams.map((team) => {
                           const members = detail.teamMembers.filter(
@@ -1326,7 +1340,7 @@ export function TournamentsTab() {
                 (round) => (
                   <div
                     key={round}
-                    className="bracket-round z-30 grid min-w-52 flex-1 shrink-0"
+                    className="bracket-round grid min-w-52 flex-1 shrink-0"
                     style={{
                       gridTemplateRows: `repeat(${firstRoundMatchCount}, minmax(104px, auto))`,
                       rowGap: "16px",
@@ -1377,7 +1391,7 @@ export function TournamentsTab() {
                             }}
                           >
                             {!!detail.matches.length && (
-                              <div className="pointer-events-none absolute -top-9 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-surface-2/95 p-1 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-visible:pointer-events-auto group-focus-visible:opacity-100">
+                              <div className="pointer-events-none absolute -top-9 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border-strong bg-surface-2/95 p-1 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-visible:pointer-events-auto group-focus-visible:opacity-100">
                                 {match.status === "ready" &&
                                   detail.tournament.status === "in_progress" && (
                                     <Button
@@ -1793,6 +1807,28 @@ export function TournamentsTab() {
           setDeletingTeam(null);
         }}
       />
+      {detail && (
+        <ParticipantImportModal
+          open={importingParticipants}
+          onOpenChange={setImportingParticipants}
+          busy={tournaments.busy}
+          locked={Boolean(detail.matches.length)}
+          onImport={async (input) => {
+            const names = input
+              .split(/\r?\n/)
+              .map((value) => value.trim())
+              .filter(Boolean);
+            for (const participantName of names) {
+              await tournaments.addParticipant(
+                participantName,
+                live.selected?.provider ?? null,
+                live.selected?.channelId ?? null,
+              );
+            }
+            return names.length > 0;
+          }}
+        />
+      )}
       {detail && (
         <ParticipantCaptureDialog
           open={capturing}

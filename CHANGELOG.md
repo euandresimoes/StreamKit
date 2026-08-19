@@ -1,4 +1,4 @@
-# Streamlet 0.1.0-beta.4
+# Streamlet 0.1.0-beta.5
 
 [EN-US]
 
@@ -12,6 +12,9 @@
 - Added local provider icons so the interface works without external image requests.
 - The initial guide now opens once on the first launch and records completion locally.
 - The Updates tab now displays the localized release notes instead of hardcoded entries.
+- Replaced the Kick icon with the official supplied artwork.
+- Added participant importing to tournament participant panels.
+- Fixed collapsed panel scrollbar spacing and match toolbar layering.
 
 ## Notes
 
@@ -31,6 +34,9 @@
 - Adicionados ícones locais dos providers para a interface funcionar sem imagens externas.
 - O guia inicial agora abre uma vez no primeiro acesso e registra a conclusão localmente.
 - A aba Atualizações agora exibe as notas da versão localizadas em vez de itens fixos.
+- Substituído o ícone da Kick pela arte oficial fornecida.
+- Adicionada a importação de participantes nos painéis de campeonatos.
+- Corrigido o espaçamento da scrollbar nos painéis recolhidos e a camada da toolbar das partidas.
 
 ## Observações
 
@@ -50,6 +56,9 @@
 - Añadidos iconos locales de los providers para que la interfaz funcione sin imágenes externas.
 - La guía inicial ahora se abre una vez en el primer acceso y registra la finalización localmente.
 - La pestaña Actualizaciones ahora muestra las notas localizadas en lugar de elementos fijos.
+- Sustituido el icono de Kick por el diseño oficial proporcionado.
+- Añadida la importación de participantes en los paneles de torneos.
+- Corregidos el espacio de la barra de desplazamiento y las capas de la toolbar de partidas.
 
 ## Notas
 

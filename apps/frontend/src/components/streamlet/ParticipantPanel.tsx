@@ -156,7 +156,7 @@ export function ParticipantPanel({
         </div>
       ) : (
         <TooltipProvider delayDuration={250}>
-          <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1">
+          <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 pr-2 [scrollbar-gutter:stable]">
             {visibleParticipants.map((participant) => (
               <Tooltip key={participant.id}>
                 <TooltipTrigger asChild>
