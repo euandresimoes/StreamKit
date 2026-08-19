@@ -1,5 +1,8 @@
 module.exports = {
-  moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@streamlet/contracts$": "<rootDir>/../../packages/contracts/src/index.ts",
+  },
   testEnvironment: "node",
   testMatch: ["<rootDir>/tests/**/*.spec.ts?(x)"],
   transform: {
