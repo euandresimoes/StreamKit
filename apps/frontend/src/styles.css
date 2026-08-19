@@ -173,17 +173,17 @@
   }
 
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-thumb {
-    background: oklch(1 0 0 / 10%);
+    background: var(--border);
     border-radius: 999px;
-    border: 3px solid transparent;
+    border: 1px solid transparent;
     background-clip: content-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: oklch(1 0 0 / 18%);
+    background: var(--border-strong);
     background-clip: content-box;
   }
   ::-webkit-scrollbar-track {
@@ -192,6 +192,31 @@
   ::-webkit-scrollbar-corner {
     background: transparent;
   }
+}
+
+.compact-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.compact-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.compact-scrollbar::-webkit-scrollbar-track,
+.compact-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.compact-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border: 0;
+  border-radius: 999px;
+}
+
+.compact-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
 }
 
 @utility glass {

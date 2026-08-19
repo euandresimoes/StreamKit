@@ -1,8 +1,10 @@
-# Streamlet 0.1.0-beta.7
+# Streamlet 0.1.0-beta.8
 
 [EN-US]
 
 ## What's new
+
+- The main Electron window now opens at 1500×900.
 
 - The “What's new” section now shows the changelog for the installed version.
 - Fixed repeated Windows system sounds while the roulette is spinning in the background.
@@ -35,6 +37,8 @@
 
 ## Novidades
 
+- A janela principal do Electron agora abre em 1500×900.
+
 - A seção “Novidades” agora mostra o changelog da versão instalada.
 - Corrigido o spam de sons do Windows enquanto a roleta gira em segundo plano.
 - Notificações e sons nativos do ganhador agora funcionam com o Streamlet minimizado ou na bandeja.
@@ -65,6 +69,8 @@
 [ES]
 
 ## Novedades
+
+- La ventana principal de Electron ahora se abre en 1500×900.
 
 - La sección “Novedades” ahora muestra el changelog de la versión instalada.
 - Corregido el spam de sonidos de Windows mientras la ruleta gira en segundo plano.

@@ -93,7 +93,7 @@ export function ParticipantPanel({
     <aside
       className={cn(
         "flex shrink-0 flex-col overflow-x-hidden rounded-3xl border-r border-border p-3 transition-[width] duration-300",
-        expanded ? "w-72" : "w-14",
+        expanded ? "w-72" : "w-[70px]",
       )}
     >
       <div className={cn("flex gap-2 pb-3", expanded ? "items-center" : "flex-col items-center")}>
@@ -156,7 +156,7 @@ export function ParticipantPanel({
         </div>
       ) : (
         <TooltipProvider delayDuration={250}>
-          <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 pr-2 [scrollbar-gutter:stable]">
+          <div className="compact-scrollbar flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 pr-1">
             {visibleParticipants.map((participant) => (
               <Tooltip key={participant.id}>
                 <TooltipTrigger asChild>
@@ -164,7 +164,7 @@ export function ParticipantPanel({
                     type="button"
                     aria-label={`Expand participant ${participant.displayName}`}
                     onClick={onToggle}
-                    className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex size-7 min-w-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <ParticipantAvatar
                       displayName={participant.displayName}

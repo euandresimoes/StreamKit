@@ -525,7 +525,7 @@ export function TournamentsTab() {
                 <aside
                   className={cn(
                     "flex shrink-0 flex-col overflow-x-hidden rounded-3xl p-3 border-r border-border transition-[width] duration-300",
-                    participantsExpanded ? "w-60" : "w-14",
+                      participantsExpanded ? "w-60" : "w-[70px]",
                   )}
                 >
                   <div
@@ -708,7 +708,7 @@ export function TournamentsTab() {
             <aside
               className={cn(
                 "flex shrink-0 flex-col border-r border-border overflow-x-hidden rounded-3xl p-3 transition-[width] duration-300",
-                teamsExpanded ? (detail.tournament.mode === "team" ? "w-[380px]" : "w-72") : "w-14",
+                teamsExpanded ? (detail.tournament.mode === "team" ? "w-[380px]" : "w-72") : "w-[70px]",
               )}
             >
               <div
@@ -1224,7 +1224,7 @@ export function TournamentsTab() {
               )}
               {!teamsExpanded && (
                 <TooltipProvider delayDuration={250}>
-                  <div className="flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 pr-2 [scrollbar-gutter:stable]">
+                  <div className="compact-scrollbar flex min-h-0 w-full flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 pr-1">
                     {detail.tournament.mode === "team"
                       ? detail.teams.map((team) => {
                           const members = detail.teamMembers.filter(
@@ -1237,7 +1237,7 @@ export function TournamentsTab() {
                                   type="button"
                                   aria-label={`Expand team ${team.name}`}
                                   onClick={() => setTeamsExpanded(true)}
-                                  className="size-7 max-w-full shrink-0 rounded-full border-2 border-border-strong outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring"
+                                  className="size-7 min-w-7 shrink-0 rounded-full border-2 border-border-strong outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring"
                                   style={{ backgroundColor: team.color }}
                                 />
                               </TooltipTrigger>
@@ -1286,7 +1286,7 @@ export function TournamentsTab() {
                                 type="button"
                                 aria-label={`Expand participant ${participant.displayName}`}
                                 onClick={() => setTeamsExpanded(true)}
-                                className="flex size-7 max-w-full shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="flex size-7 min-w-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-[9px] font-semibold uppercase transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                               >
                                 <ParticipantAvatar
                                   displayName={participant.displayName}

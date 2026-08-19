@@ -116,7 +116,7 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
 
   mainWindow = new BrowserWindow({
     backgroundColor: '#1f1e1d',
-    height: 820,
+    height: 900,
     minHeight: 640,
     minWidth: 960,
     show: false,
@@ -134,7 +134,7 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
           },
     titleBarStyle: 'hidden',
     webPreferences: createSecureWebPreferences(preloadPath),
-    width: 1280,
+    width: 1500,
   })
   mainWindow.on('enter-full-screen', () => {
     mainWindow?.webContents.send('streamlet:fullscreen-state', true)
