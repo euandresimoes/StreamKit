@@ -172,8 +172,8 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
         await shell.openPath(logsDirectory)
       },
       showNativeNotification: (title, body) => {
-        if (mainWindow?.isFocused()) return
-        const notification = new Notification({ body, title })
+        if (mainWindow?.isFocused() || !Notification.isSupported()) return
+        const notification = new Notification({ body, title, silent: false })
         notification.on('click', () => {
           mainWindow?.show()
           mainWindow?.focus()

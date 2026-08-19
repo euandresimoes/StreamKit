@@ -103,7 +103,7 @@ export function GiveawaysTab() {
         }
         setWinner(selectedWinner);
         setDrawPhase("revealed");
-        if (selectedWinner && (document.hidden || !document.hasFocus())) {
+        if (selectedWinner) {
           void window.streamlet?.showNativeNotification?.(
             t("giveaway.winnerNotificationTitle"),
             t("giveaway.winnerNotificationBody", { name: selectedWinner }),

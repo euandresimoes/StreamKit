@@ -13,7 +13,6 @@ function playNativeFallback() {
 }
 
 export function playGiveawayTick() {
-  playNativeFallback();
   const audio = getContext();
   if (!audio) return;
   const oscillator = audio.createOscillator();

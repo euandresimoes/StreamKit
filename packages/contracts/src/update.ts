@@ -8,6 +8,7 @@ export const UpdateInfoSchema = z.object({
 })
 export const UpdateStateSchema = z.object({
   available: UpdateInfoSchema.nullable(),
+  currentChangelog: z.string(),
   channel: ReleaseChannelSchema,
   error: z.string().nullable(),
   progress: z.number().min(0).max(100).nullable(),

@@ -109,8 +109,11 @@ export function useSettings(active: boolean) {
     },
     updateState,
     appVersion,
-    localizedReleaseNotes: updateState?.available
-      ? getLocalizedReleaseNotes(updateState.available.changelog, settings?.locale ?? "en-US")
+    localizedReleaseNotes: updateState
+      ? getLocalizedReleaseNotes(
+          updateState.available?.changelog || updateState.currentChangelog,
+          settings?.locale ?? "en-US",
+        )
       : "",
     checkUpdates: () => getDesktopBridge().updateCommand({ action: "check", manual: true }),
     downloadUpdate: () => getDesktopBridge().updateCommand({ action: "download" }),

@@ -1,8 +1,12 @@
-# Streamlet 0.1.0-beta.6
+# Streamlet 0.1.0-beta.7
 
 [EN-US]
 
 ## What's new
+
+- The “What's new” section now shows the changelog for the installed version.
+- Fixed repeated Windows system sounds while the roulette is spinning in the background.
+- Giveaway winner notifications and native sounds now work when Streamlet is minimized or in the tray.
 
 - Release notes from GitHub are now displayed as readable text instead of raw HTML.
 - Windows updates now install silently after the user chooses to restart.
@@ -31,6 +35,10 @@
 
 ## Novidades
 
+- A seção “Novidades” agora mostra o changelog da versão instalada.
+- Corrigido o spam de sons do Windows enquanto a roleta gira em segundo plano.
+- Notificações e sons nativos do ganhador agora funcionam com o Streamlet minimizado ou na bandeja.
+
 - As notas da versão do GitHub agora aparecem como texto legível, sem HTML cru.
 - As atualizações do Windows agora são instaladas silenciosamente após o usuário escolher reiniciar.
 - A barra lateral de Atualizações agora mostra a versão instalada e o status real da atualização.
@@ -57,6 +65,10 @@
 [ES]
 
 ## Novedades
+
+- La sección “Novedades” ahora muestra el changelog de la versión instalada.
+- Corregido el spam de sonidos de Windows mientras la ruleta gira en segundo plano.
+- Las notificaciones y sonidos nativos del ganador ahora funcionan con Streamlet minimizado o en la bandeja.
 
 - Las notas de la versión de GitHub ahora se muestran como texto legible, sin HTML crudo.
 - Las actualizaciones de Windows ahora se instalan silenciosamente después de reiniciar.

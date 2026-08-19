@@ -12,7 +12,14 @@ export class UpdateManager {
     channel: 'stable' | 'beta',
     private readonly statePath?: string,
   ) {
-    this.state = { available: null, channel, error: null, progress: null, status: 'idle' }
+    this.state = {
+      available: null,
+      channel,
+      currentChangelog: '',
+      error: null,
+      progress: null,
+      status: 'idle',
+    }
     autoUpdater.autoDownload = false
     autoUpdater.channel = channel
     autoUpdater.allowPrerelease = channel === 'beta'
@@ -28,8 +35,12 @@ export class UpdateManager {
         status: 'available',
       })
     })
-    autoUpdater.on('update-not-available', () =>
-      this.set({ available: null, status: 'up-to-date' }),
+    autoUpdater.on('update-not-available', (info) =>
+      this.set({
+        available: null,
+        currentChangelog: typeof info.releaseNotes === 'string' ? info.releaseNotes : this.state.currentChangelog,
+        status: 'up-to-date',
+      }),
     )
     autoUpdater.on('download-progress', (progress) =>
       this.set({ progress: progress.percent, status: 'downloading' }),
