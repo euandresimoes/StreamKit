@@ -737,7 +737,7 @@ export function SettingsDialog({
                           : persisted.updateState?.status === "downloaded"
                             ? t("settings.readyToInstall")
                             : persisted.updateState?.status === "error"
-                              ? persisted.updateState.error
+                              ? t("settings.updateCheckFailed")
                               : persisted.updateState?.status === "up-to-date" || checked
                                 ? t("settings.upToDate")
                                 : t("settings.notChecked")}

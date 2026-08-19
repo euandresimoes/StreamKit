@@ -102,7 +102,7 @@ export function ProviderSetupWizard({
             </p>
             {guide.steps[step]?.imageUrl && (
               <img
-                src={guide.steps[step]!.imageUrl}
+                src={guide.steps[step]!.imageUrl.replace(/^\//, "./")}
                 alt=""
                 className="mt-4 block h-auto w-full rounded-md border border-border"
               />

@@ -116,7 +116,7 @@ function AppShellContent() {
             </Button>
 
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-2">
-              <img src="/assets/streamlet-icon.png" alt="" className="size-5 object-contain" />
+              <img src="./assets/streamlet-icon.png" alt="" className="size-5 object-contain" />
               <span className="text-xs font-semibold tracking-wide text-foreground">Streamlet</span>
             </div>
 

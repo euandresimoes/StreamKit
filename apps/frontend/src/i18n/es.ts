@@ -236,6 +236,7 @@ const es = {
     installUpdate: "Reiniciar e instalar",
     skipUpdate: "Omitir versión",
     releaseNotes: "Notas de la versión",
+    updateCheckFailed: "No se pudieron comprobar las actualizaciones ahora.",
     upToDate: "Estás actualizado.",
     lastChecked: "Última comprobación",
     daysAgo: "hace {{count}} días",

@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 export type BrandIconProvider = IntegrationProvider | "livepix";
 
 export const BRAND_ICON_SOURCES: Readonly<Record<BrandIconProvider, string>> = Object.freeze({
-  twitch: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/twitch.svg",
-  youtube: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/youtube.svg",
-  kick: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/kick.svg",
-  livepix: "/assets/livepix.png",
+  twitch: "./assets/twitch.svg",
+  youtube: "./assets/youtube.svg",
+  kick: "./assets/kick.svg",
+  livepix: "./assets/livepix.png",
 });
 
 const BRAND_NAMES: Readonly<Record<BrandIconProvider, string>> = Object.freeze({
@@ -35,6 +35,9 @@ export function BaseBrandIcon({
       alt={labelled ? name : ""}
       aria-hidden={labelled ? undefined : true}
       draggable={false}
+      onError={(event) => {
+        event.currentTarget.style.display = "none";
+      }}
     />
   );
 }

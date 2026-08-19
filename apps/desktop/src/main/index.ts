@@ -157,7 +157,9 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
   renderWindows.attachTo(mainWindow)
   updateManager = new UpdateManager(
     () => mainWindow,
-    process.env.STREAMLET_RELEASE_CHANNEL === 'beta' ? 'beta' : 'stable',
+    process.env.STREAMLET_RELEASE_CHANNEL === 'beta' || app.getVersion().includes('-')
+      ? 'beta'
+      : 'stable',
     join(app.getPath('userData'), 'update-state.json'),
   )
   registerNativeIpcHandlers(

@@ -1,4 +1,4 @@
-# Streamlet 0.1.0-beta.2
+# Streamlet 0.1.0-beta.3
 
 [EN-US]
 
@@ -8,6 +8,8 @@
 - Added the Electron auto updater flow for checking, downloading and installing updates.
 - Added localized release notes support for English, Portuguese and Spanish.
 - Improved team tournaments, participant capture and provider integrations.
+- Fixed the packaged Electron route, application icons and provider guide images.
+- Added local provider icons so the interface works without external image requests.
 
 ## Notes
 
@@ -23,6 +25,8 @@
 - Adicionado o fluxo de atualização automática do Electron para verificar, baixar e instalar versões.
 - Adicionado suporte a notas da versão em português, inglês e espanhol.
 - Melhorias nos campeonatos por equipes, captura de participantes e integrações dos providers.
+- Corrigidas a rota do Electron empacotado, os ícones do aplicativo e as imagens dos guias.
+- Adicionados ícones locais dos providers para a interface funcionar sem imagens externas.
 
 ## Observações
 
@@ -38,6 +42,8 @@
 - Añadido el flujo de actualización automática de Electron para comprobar, descargar e instalar versiones.
 - Añadido soporte para notas de versión en español, inglés y portugués.
 - Mejoras en los torneos por equipos, la captura de participantes y las integraciones de providers.
+- Corregidas la ruta de Electron empaquetado, los iconos de la aplicación y las imágenes de las guías.
+- Añadidos iconos locales de los providers para que la interfaz funcione sin imágenes externas.
 
 ## Notas
 
