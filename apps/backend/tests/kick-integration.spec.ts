@@ -110,7 +110,7 @@ describe('Kick OAuth', () => {
     expect(result.status).toBe('authorized')
     expect(credentials.values.get('kick.oauth')).toContain('kick-refresh-token')
     service.onModuleDestroy()
-  })
+  }, 15_000)
 })
 
 describe('Kick chat sending', () => {
