@@ -5,10 +5,10 @@ import { BaseBrandIcon, BRAND_ICON_SOURCES, brandName } from "@/components/base/
 describe("BaseBrandIcon", () => {
   it("centralizes the official provider assets", () => {
     expect(BRAND_ICON_SOURCES).toEqual({
-      kick: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/kick.svg",
-      livepix: "/assets/livepix.png",
-      twitch: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/twitch.svg",
-      youtube: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/youtube.svg",
+      kick: "./assets/kick.svg",
+      livepix: "./assets/livepix.png",
+      twitch: "./assets/twitch.svg",
+      youtube: "./assets/youtube.svg",
     });
   });
 
