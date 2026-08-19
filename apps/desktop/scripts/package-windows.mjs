@@ -24,6 +24,4 @@ const packaged = run('electron-builder', [
     : []),
   ...globalThis.process.argv.slice(2),
 ])
-const restored = run('pnpm', ['native:node'])
-if (restored.status !== 0) globalThis.process.exit(restored.status ?? 1)
 globalThis.process.exit(packaged.status ?? 1)
