@@ -38,7 +38,8 @@ export class UpdateManager {
     autoUpdater.on('update-not-available', (info) =>
       this.set({
         available: null,
-        currentChangelog: typeof info.releaseNotes === 'string' ? info.releaseNotes : this.state.currentChangelog,
+        currentChangelog:
+          typeof info.releaseNotes === 'string' ? info.releaseNotes : this.state.currentChangelog,
         status: 'up-to-date',
       }),
     )

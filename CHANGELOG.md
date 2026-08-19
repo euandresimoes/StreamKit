@@ -1,8 +1,10 @@
-# Streamlet 0.1.0-beta.8
+# Streamlet 0.1.0-beta.9
 
 [EN-US]
 
 ## What's new
+
+- Fixed release formatting checks for the latest desktop and tournament UI changes.
 
 - The main Electron window now opens at 1500×900.
 
@@ -37,6 +39,8 @@
 
 ## Novidades
 
+- Corrigidas as verificações de formatação da release para as alterações mais recentes do desktop e dos campeonatos.
+
 - A janela principal do Electron agora abre em 1500×900.
 
 - A seção “Novidades” agora mostra o changelog da versão instalada.
@@ -69,6 +73,8 @@
 [ES]
 
 ## Novedades
+
+- Corregidas las verificaciones de formato de la release para los cambios recientes del escritorio y los torneos.
 
 - La ventana principal de Electron ahora se abre en 1500×900.
 

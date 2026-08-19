@@ -708,7 +708,11 @@ export function TournamentsTab() {
             <aside
               className={cn(
                 "flex shrink-0 flex-col border-r border-border overflow-x-hidden rounded-3xl p-3 transition-[width] duration-300",
-                teamsExpanded ? (detail.tournament.mode === "team" ? "w-[380px]" : "w-72") : "w-[70px]",
+                teamsExpanded
+                  ? detail.tournament.mode === "team"
+                    ? "w-[380px]"
+                    : "w-72"
+                  : "w-[70px]",
               )}
             >
               <div
