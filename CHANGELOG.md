@@ -1,4 +1,4 @@
-# Streamlet 0.1.0-beta.3
+# Streamlet 0.1.0-beta.4
 
 [EN-US]
 
@@ -10,6 +10,8 @@
 - Improved team tournaments, participant capture and provider integrations.
 - Fixed the packaged Electron route, application icons and provider guide images.
 - Added local provider icons so the interface works without external image requests.
+- The initial guide now opens once on the first launch and records completion locally.
+- The Updates tab now displays the localized release notes instead of hardcoded entries.
 
 ## Notes
 
@@ -27,6 +29,8 @@
 - Melhorias nos campeonatos por equipes, captura de participantes e integrações dos providers.
 - Corrigidas a rota do Electron empacotado, os ícones do aplicativo e as imagens dos guias.
 - Adicionados ícones locais dos providers para a interface funcionar sem imagens externas.
+- O guia inicial agora abre uma vez no primeiro acesso e registra a conclusão localmente.
+- A aba Atualizações agora exibe as notas da versão localizadas em vez de itens fixos.
 
 ## Observações
 
@@ -44,6 +48,8 @@
 - Mejoras en los torneos por equipos, la captura de participantes y las integraciones de providers.
 - Corregidas la ruta de Electron empaquetado, los iconos de la aplicación y las imágenes de las guías.
 - Añadidos iconos locales de los providers para que la interfaz funcione sin imágenes externas.
+- La guía inicial ahora se abre una vez en el primer acceso y registra la finalización localmente.
+- La pestaña Actualizaciones ahora muestra las notas localizadas en lugar de elementos fijos.
 
 ## Notas
 

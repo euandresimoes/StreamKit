@@ -233,6 +233,7 @@ const ptBR = {
     installUpdate: "Reiniciar e instalar",
     skipUpdate: "Ignorar versão",
     releaseNotes: "Notas da versão",
+    noReleaseNotes: "Verifique atualizações para carregar as notas da versão mais recente.",
     updateCheckFailed: "Não foi possível verificar atualizações agora.",
     upToDate: "Você está atualizado.",
     lastChecked: "Última verificação",

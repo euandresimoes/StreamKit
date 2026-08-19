@@ -22,6 +22,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { NotificationsCenter } from "./NotificationsCenter";
 import { GuideModal } from "./GuideModal";
 import { GUIDE_CLOSE_MODALS_EVENT } from "@/modules/guide/guide-state";
+import { GUIDE_COMPLETED_STORAGE_KEY } from "@/modules/guide/guide-state";
 
 type Tab = "live" | "todo" | "giveaways" | "tournaments";
 
@@ -68,6 +69,9 @@ function AppShellContent() {
   const [launcherOpen, setLauncherOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  useEffect(() => {
+    if (!window.localStorage.getItem(GUIDE_COMPLETED_STORAGE_KEY)) setGuideOpen(true);
+  }, []);
   useEffect(() => {
     const closeModals = () => {
       setSettings(false);
@@ -180,7 +184,13 @@ function AppShellContent() {
       </div>
 
       <SettingsDialog open={settings} onOpenChange={setSettings} />
-      <GuideModal open={guideOpen} onOpenChange={setGuideOpen} />
+      <GuideModal
+        open={guideOpen}
+        onOpenChange={(nextOpen) => {
+          setGuideOpen(nextOpen);
+          if (!nextOpen) window.localStorage.setItem(GUIDE_COMPLETED_STORAGE_KEY, "true");
+        }}
+      />
       <Toaster position="bottom-right" />
       <Dialog open={launcherOpen} onOpenChange={setLauncherOpen}>
         <DialogContent

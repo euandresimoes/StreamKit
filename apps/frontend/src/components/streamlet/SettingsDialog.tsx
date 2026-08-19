@@ -814,11 +814,9 @@ export function SettingsDialog({
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t("settings.whatsNew")}
                 </p>
-                <ul className="mt-2 space-y-1.5 text-[12px] text-muted-foreground">
-                  <li>• {t("settings.adaptiveTeamBracket")}</li>
-                  <li>• {t("settings.physicsBoxMode")}</li>
-                  <li>• {t("settings.neutralBlackTheme")}</li>
-                </ul>
+                <div className="mt-2 whitespace-pre-wrap text-[12px] text-muted-foreground">
+                  {persisted.localizedReleaseNotes || t("settings.noReleaseNotes")}
+                </div>
               </div>
             )}
           </main>

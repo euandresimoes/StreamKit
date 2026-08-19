@@ -521,6 +521,7 @@ const enUS = {
     installUpdate: "Restart and install",
     skipUpdate: "Skip version",
     releaseNotes: "Release notes",
+    noReleaseNotes: "Check for updates to load the latest release notes.",
     updateCheckFailed: "Unable to check for updates right now.",
     lastChecked: "Last checked",
     daysAgo: "{{count}} days ago",
