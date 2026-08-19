@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { ParticipantPanel } from "@/components/streamkit/ParticipantPanel";
+import { ParticipantPanel } from "@/components/streamlet/ParticipantPanel";
 
 describe("ParticipantPanel", () => {
   it("renders LivePix amount before both provider badges and uses initials without an avatar", () => {

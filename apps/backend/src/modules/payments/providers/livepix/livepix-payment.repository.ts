@@ -8,7 +8,7 @@ import {
   paymentContributions,
   paymentProviderConnections,
 } from '../../../../infrastructure/database/schema'
-import { PaymentContributionSchema } from '@streamkit/contracts'
+import { PaymentContributionSchema } from '@streamlet/contracts'
 import type { SqliteDatabase } from '../../../../infrastructure/database/sqlite-database'
 
 @Injectable()

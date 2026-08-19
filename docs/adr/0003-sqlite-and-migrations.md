@@ -12,7 +12,7 @@ O produto local-first precisa de transações previsíveis, migrations versionad
 
 ## Decisão
 
-Usar um único `streamkit.db` com `better-sqlite3`, Drizzle ORM como query/schema layer e Drizzle Kit para gerar migrations versionadas. Repositories continuam sendo a única fronteira de persistência dos casos de uso.
+Usar um único `streamlet.db` com `better-sqlite3`, Drizzle ORM como query/schema layer e Drizzle Kit para gerar migrations versionadas. Repositories continuam sendo a única fronteira de persistência dos casos de uso.
 
 ## Consequências
 

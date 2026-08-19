@@ -1,4 +1,4 @@
-import type { ExternalEventProvider, ExternalEventRecord } from '@streamkit/contracts'
+import type { ExternalEventProvider, ExternalEventRecord } from '@streamlet/contracts'
 
 export type ExternalEventHandler = (event: ExternalEventRecord) => Promise<void> | void
 

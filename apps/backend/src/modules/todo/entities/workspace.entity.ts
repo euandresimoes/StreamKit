@@ -1,4 +1,4 @@
-import type { Workspace as WorkspaceContract } from '@streamkit/contracts'
+import type { Workspace as WorkspaceContract } from '@streamlet/contracts'
 
 export class WorkspaceEntity implements WorkspaceContract {
   public constructor(

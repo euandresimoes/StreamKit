@@ -44,6 +44,14 @@ export const ExternalTransportSnapshotSchema = z.object({
   lastErrorCode: z.string().nullable(),
   mode: ExternalTransportModeSchema.nullable(),
   publicUrl: z.url().nullable(),
+  webhookUrls: z
+    .object({
+      kick: z.url().nullable(),
+      livepix: z.url().nullable(),
+      twitch: z.url().nullable(),
+      youtube: z.url().nullable(),
+    })
+    .strict(),
   startedAt: z.iso.datetime().nullable(),
   state: ExternalTransportStateSchema,
 })

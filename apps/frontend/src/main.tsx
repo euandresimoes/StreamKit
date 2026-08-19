@@ -19,7 +19,7 @@ const router = getRouter();
 window.addEventListener("error", (event) => {
   publishNotification({
     level: "error",
-    message: event.message || "An unexpected application error occurred.",
+    message: event.message || i18n.t("errors.unexpectedApplicationError"),
     title: i18n.t("notifications.applicationError"),
   });
 });

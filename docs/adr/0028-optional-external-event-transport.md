@@ -2,7 +2,7 @@
 
 ## Contexto
 
-Providers de pagamento e outras integrações podem exigir um callback público, mas o StreamKit é um
+Providers de pagamento e outras integrações podem exigir um callback público, mas o Streamlet é um
 desktop local-first. O usuário não deve configurar DNS, portas, proxy, Cloudflare Tunnel ou ngrok, e o
 produto não deve manter um backend de negócio remoto.
 

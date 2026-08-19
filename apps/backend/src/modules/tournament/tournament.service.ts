@@ -4,7 +4,7 @@ import type {
   CreateTournamentRequest,
   TournamentDetail,
   UpdateTournamentRequest,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { ApiApplicationError } from '../../application/api-error'
 import { TournamentRepository } from './tournament.repository'
 

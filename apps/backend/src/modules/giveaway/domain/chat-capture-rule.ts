@@ -1,4 +1,4 @@
-import type { ChatMessageReceived, GiveawayCaptureRule } from '@streamkit/contracts'
+import type { ChatMessageReceived, GiveawayCaptureRule } from '@streamlet/contracts'
 
 import {
   matchesParticipantCaptureRule,

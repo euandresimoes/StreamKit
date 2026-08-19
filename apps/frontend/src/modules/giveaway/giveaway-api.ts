@@ -10,7 +10,7 @@ import {
   GiveawaySchema,
   type SaveGiveawayCaptureRuleRequest,
   type UpdateGiveawayRequest,
-} from "@streamkit/contracts";
+} from "@streamlet/contracts";
 
 import { apiClient } from "@/infrastructure/api-client";
 

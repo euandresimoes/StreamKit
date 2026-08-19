@@ -2,7 +2,7 @@
 
 ## Contexto
 
-A Batch 25 precisa oferecer acompanhamento operacional de uma transmissão sem transformar o StreamKit em compositor, capturador ou encoder. O aplicativo já possui conexões e adapters oficiais de chat para Twitch e YouTube, além de uma declaração explícita de indisponibilidade oficial da Kick no modo desktop local.
+A Batch 25 precisa oferecer acompanhamento operacional de uma transmissão sem transformar o Streamlet em compositor, capturador ou encoder. O aplicativo já possui conexões e adapters oficiais de chat para Twitch e YouTube, além de uma declaração explícita de indisponibilidade oficial da Kick no modo desktop local.
 
 ## Decisão
 

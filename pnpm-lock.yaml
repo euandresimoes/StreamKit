@@ -77,10 +77,10 @@ importers:
       '@scalar/nestjs-api-reference':
         specifier: 1.0.19
         version: 1.0.19
-      '@streamkit/config':
+      '@streamlet/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@streamkit/contracts':
+      '@streamlet/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
       better-sqlite3:
@@ -114,7 +114,7 @@ importers:
       '@nestjs/testing':
         specifier: 11.1.29
         version: 11.1.29(@nestjs/common@11.1.29(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.29(@nestjs/common@11.1.29(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
-      '@streamkit/test-utils':
+      '@streamlet/test-utils':
         specifier: workspace:*
         version: link:../../packages/test-utils
       '@types/better-sqlite3':
@@ -132,13 +132,13 @@ importers:
       '@renderizer/vue':
         specifier: 1.0.0-beta.0
         version: 1.0.0-beta.0(electron@39.8.10)(vue@3.5.27(typescript@5.9.3))
-      '@streamkit/backend':
+      '@streamlet/backend':
         specifier: workspace:*
         version: link:../backend
-      '@streamkit/config':
+      '@streamlet/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@streamkit/contracts':
+      '@streamlet/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
       better-sqlite3:
@@ -151,7 +151,7 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
     devDependencies:
-      '@streamkit/test-utils':
+      '@streamlet/test-utils':
         specifier: workspace:*
         version: link:../../packages/test-utils
       electron:
@@ -259,7 +259,7 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.8
         version: 1.2.16(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@streamkit/contracts':
+      '@streamlet/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
       '@tailwindcss/vite':
@@ -283,6 +283,9 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      country-flag-icons:
+        specifier: ^1.6.20
+        version: 1.6.20
       date-fns:
         specifier: ^4.1.0
         version: 4.4.0
@@ -3241,6 +3244,9 @@ packages:
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
+
+  country-flag-icons@1.6.20:
+    resolution: {integrity: sha512-py8JiEKzjhYw6HPJ0L7SxLgCYim36UPRTZX43/kqGueUCZLSvnrqAiwW8HtQibur7mdkFQUkjOgdK+o/9FBtaw==}
 
   create-jest@29.7.0:
     resolution: {integrity: sha512-Adz2bdH0Vq3F53KEMJOoftQFutWCukm6J24wbPWRO4k1kMY7gS7ds/uoJkNuV8wDCtWWnuwGcJwpWcih+zEW1Q==}
@@ -8892,6 +8898,8 @@ snapshots:
   cookiejar@2.1.4: {}
 
   core-util-is@1.0.3: {}
+
+  country-flag-icons@1.6.20: {}
 
   create-jest@29.7.0(@types/node@22.18.6):
     dependencies:

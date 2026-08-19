@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Inject, Param, Post } from '@nestjs/common'
-import { SelectYouTubeBroadcastRequestSchema } from '@streamkit/contracts'
+import { SelectYouTubeBroadcastRequestSchema } from '@streamlet/contracts'
 
 import { YouTubeAuthService } from './youtube-auth.service'
 import { YouTubeBroadcastService } from './youtube-broadcast.service'

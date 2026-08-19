@@ -1,8 +1,8 @@
 # Dados, backup e recuperação
 
-O SQLite é a fonte persistente de verdade do StreamKit. TODOs, torneios, partidas,
+O SQLite é a fonte persistente de verdade do Streamlet. TODOs, torneios, partidas,
 giveaways, configurações não sensíveis e seus históricos ficam no arquivo
-`<userData>/data/streamkit.db`; fechar o aplicativo não descarta esses dados. Pinia e
+`<userData>/data/streamlet.db`; fechar o aplicativo não descarta esses dados. Pinia e
 memória mantêm apenas estado temporário da interface.
 
 O diretório raiz é sempre obtido por `app.getPath('userData')`. O aplicativo cria
@@ -11,7 +11,7 @@ são gravados no SQLite.
 
 ## Backups automáticos
 
-Antes de uma migration classificada como destrutiva, o StreamKit conclui o checkpoint
+Antes de uma migration classificada como destrutiva, o Streamlet conclui o checkpoint
 do WAL e cria uma cópia em `<userData>/backups`. São mantidas as cinco cópias
 automáticas mais recentes. Essa retenção não afeta os dados normais do usuário e não
 transforma backups em versões editáveis.
@@ -22,7 +22,7 @@ Uma cópia só pode ser restaurada após passar pelo `PRAGMA quick_check`. A rec
 sempre grava em um caminho novo e falha se o destino já existir; ela nunca sobrescreve
 o único banco disponível. A troca do banco principal deve ocorrer apenas depois de:
 
-1. fechar completamente o StreamKit;
+1. fechar completamente o Streamlet;
 2. preservar o banco principal e seus arquivos `-wal`/`-shm`, se existirem;
 3. restaurar a cópia em um caminho novo;
 4. abrir e validar migrations, integridade e dados no arquivo restaurado;

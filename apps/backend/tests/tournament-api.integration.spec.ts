@@ -1,5 +1,5 @@
-import { TournamentDetailSchema, TournamentSchema } from '@streamkit/contracts'
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
+import { TournamentDetailSchema, TournamentSchema } from '@streamlet/contracts'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
 import { type LocalBackendHandle, startLocalBackend } from '../src/main'
 
 const token = 'd'.repeat(64)

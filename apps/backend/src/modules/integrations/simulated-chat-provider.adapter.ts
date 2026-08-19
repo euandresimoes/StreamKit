@@ -1,4 +1,4 @@
-import type { ChatMessageReceived, IntegrationProvider } from '@streamkit/contracts'
+import type { ChatMessageReceived, IntegrationProvider } from '@streamlet/contracts'
 
 import type {
   ChatProviderAdapter,

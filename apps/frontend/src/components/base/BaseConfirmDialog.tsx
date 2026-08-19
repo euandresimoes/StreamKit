@@ -1,4 +1,5 @@
 import { AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -26,6 +27,8 @@ export function BaseConfirmDialog({
   open,
   title,
 }: Props) {
+  const { t } = useTranslation();
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="glass-panel border-border-strong bg-popover/95">
@@ -38,10 +41,10 @@ export function BaseConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <Button variant="ghost" disabled={busy} onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button variant="destructive" loading={busy} onClick={() => void onConfirm()}>
-            Confirm deletion
+            {t("common.confirmDeletion")}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

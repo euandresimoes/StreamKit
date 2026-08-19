@@ -1,5 +1,5 @@
 {
-  "name": "@streamkit/test-utils",
+  "name": "@streamlet/test-utils",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",

@@ -15,7 +15,7 @@ import {
   type UpdateColumnRequest,
   type UpdateWorkspaceRequest,
   WorkspaceSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { and, asc, eq, max, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../../infrastructure/database/database.tokens'

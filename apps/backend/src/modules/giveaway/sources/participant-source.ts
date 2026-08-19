@@ -2,7 +2,7 @@ import type {
   DuplicatePolicy,
   ParticipantPreview,
   ParticipantSource as ParticipantSourceName,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { parseParticipants } from '../domain/participant-parser'
 
 export interface ParticipantSource {

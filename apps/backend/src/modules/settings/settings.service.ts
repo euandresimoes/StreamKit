@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import type { UpdateAppSettingsRequest } from '@streamkit/contracts'
+import type { UpdateAppSettingsRequest } from '@streamlet/contracts'
 import { ApiApplicationError } from '../../application/api-error'
 import {
   SECURE_CREDENTIAL_REPOSITORY,

@@ -1,4 +1,4 @@
-import type { UpdateCommand, UpdateState } from '@streamkit/contracts'
+import type { UpdateCommand, UpdateState } from '@streamlet/contracts'
 import type { BrowserWindow } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { readFile, writeFile } from 'node:fs/promises'
@@ -22,7 +22,7 @@ export class UpdateManager {
       this.set({
         available: {
           changelog: typeof info.releaseNotes === 'string' ? info.releaseNotes : '',
-          title: info.releaseName ?? `StreamKit ${info.version}`,
+          title: info.releaseName ?? `Streamlet ${info.version}`,
           version: info.version,
         },
         status: 'available',
@@ -90,6 +90,6 @@ export class UpdateManager {
   }
   private set(change: Partial<UpdateState>): void {
     this.state = { ...this.state, ...change }
-    this.window()?.webContents.send('streamkit:update-state', this.state)
+    this.window()?.webContents.send('streamlet:update-state', this.state)
   }
 }

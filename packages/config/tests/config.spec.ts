@@ -1,8 +1,8 @@
-import { STREAMKIT_APP_ID, STREAMKIT_APP_NAME } from '../src'
+import { STREAMLET_APP_ID, STREAMLET_APP_NAME } from '../src'
 
 describe('shared configuration', () => {
   it('exposes stable desktop identity values', () => {
-    expect(STREAMKIT_APP_NAME).toBe('StreamKit')
-    expect(STREAMKIT_APP_ID).toBe('com.euandresimoes.streamkit')
+    expect(STREAMLET_APP_NAME).toBe('Streamlet')
+    expect(STREAMLET_APP_ID).toBe('com.euandresimoes.streamlet')
   })
 })

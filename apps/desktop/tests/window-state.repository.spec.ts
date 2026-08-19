@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
 
 import { WindowStateRepository } from '../src/main/window-state.repository'
 

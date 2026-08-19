@@ -16,7 +16,7 @@ import {
   SetTournamentWinnerRequestSchema,
   UpdateTournamentCaptureStatusRequestSchema,
   UpdateTournamentRequestSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { TournamentChatCaptureService } from './tournament-chat-capture.service'
 import { TournamentService } from './tournament.service'
 

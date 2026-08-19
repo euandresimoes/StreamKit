@@ -4,7 +4,7 @@ import {
   ChatModerationRequestSchema,
   LiveStreamSchema,
   type YouTubeLiveBroadcast,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 
 import { ApiApplicationError } from '../../application/api-error'
 import { FocusedChatRepository } from './focused-chat.repository'

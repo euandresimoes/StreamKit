@@ -1,4 +1,4 @@
-import type { ErrorCode } from '@streamkit/contracts'
+import type { ErrorCode } from '@streamlet/contracts'
 
 export class ApiApplicationError extends Error {
   public constructor(

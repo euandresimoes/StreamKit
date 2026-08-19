@@ -2,7 +2,7 @@
 
 **Status:** aceita  
 **Data:** 2026-08-13  
-**Responsáveis:** StreamKit  
+**Responsáveis:** Streamlet  
 **Especificação:** seções 6, 8, 10 e 17  
 **Batches:** 20
 

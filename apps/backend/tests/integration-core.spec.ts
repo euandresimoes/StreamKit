@@ -1,4 +1,4 @@
-import type { ChatMessageReceived } from '@streamkit/contracts'
+import type { ChatMessageReceived } from '@streamlet/contracts'
 
 import { IntegrationEventBus } from '../src/modules/integrations/integration-event.bus'
 import { IntegrationRetryPolicy } from '../src/modules/integrations/integration-retry-policy'

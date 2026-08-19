@@ -2,7 +2,7 @@ import type {
   ChatMessageReceived,
   IntegrationCapability,
   IntegrationProvider,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 
 export type ChatProviderSession = {
   closed: Promise<void>

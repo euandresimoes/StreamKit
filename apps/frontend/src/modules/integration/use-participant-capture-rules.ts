@@ -3,7 +3,7 @@ import type {
   IntegrationConnection,
   SaveGiveawayCaptureRuleRequest,
   TournamentCaptureRule,
-} from "@streamkit/contracts";
+} from "@streamlet/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { giveawayApi } from "@/modules/giveaway/giveaway-api";

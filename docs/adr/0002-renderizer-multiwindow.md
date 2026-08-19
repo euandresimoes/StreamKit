@@ -12,7 +12,7 @@ Settings deve abrir em uma janela Electron nativa sem iniciar outro runtime do f
 
 ## Decisão
 
-Usar o framework [Renderizer](https://github.com/RRenderizer/renderizer), mantido pelo proprietário do StreamKit, por meio de `@renderizer/vue`, `RenderWindowManager`, `RenderWindow` e `RenderPortal`.
+Usar o framework [Renderizer](https://github.com/RRenderizer/renderizer), mantido pelo proprietário do Streamlet, por meio de `@renderizer/vue`, `RenderWindowManager`, `RenderWindow` e `RenderPortal`.
 
 Settings será uma superfície adicional do mesmo runtime Vue. Overlays, dropdowns e modais usarão o overlay root da janela proprietária, nunca um `document.body` global assumido.
 

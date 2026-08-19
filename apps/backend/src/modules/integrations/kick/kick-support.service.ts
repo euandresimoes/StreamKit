@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { KickIntegrationSupportSchema } from '@streamkit/contracts'
+import { KickIntegrationSupportSchema } from '@streamlet/contracts'
 
 @Injectable()
 export class KickSupportService {

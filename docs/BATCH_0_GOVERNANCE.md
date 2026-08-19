@@ -6,7 +6,7 @@ Este documento consolida a baseline aprovada de produto da Batch 0. Decisões t�
 
 ### Visão aprovada
 
-O StreamKit é um companion app desktop local-first para streamers. O primeiro marco é permitir organizar boards, executar torneios e giveaways durante uma live, fechar o aplicativo e retomar todo o trabalho persistido.
+O Streamlet é um companion app desktop local-first para streamers. O primeiro marco é permitir organizar boards, executar torneios e giveaways durante uma live, fechar o aplicativo e retomar todo o trabalho persistido.
 
 ### Personas aprovadas
 
@@ -16,7 +16,7 @@ O StreamKit é um companion app desktop local-first para streamers. O primeiro m
 
 ### Critérios de sucesso do MVP
 
-1. Instalar e abrir o StreamKit no Windows suportado.
+1. Instalar e abrir o Streamlet no Windows suportado.
 2. Criar e reutilizar um board Kanban.
 3. Criar torneio individual ou em equipes.
 4. Reorganizar participantes por drag and drop e por alternativa acessível.

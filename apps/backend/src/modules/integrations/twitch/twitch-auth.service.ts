@@ -10,7 +10,7 @@ import {
   TwitchAuthorizationStatusSchema,
   TwitchDeviceAuthorizationPollSchema,
   TwitchDeviceAuthorizationSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { z } from 'zod'
 
 import { ApiApplicationError } from '../../../application/api-error'
@@ -256,7 +256,7 @@ export class TwitchAuthService implements OnApplicationBootstrap, OnModuleDestro
     if (!clientId)
       throw new ApiApplicationError(
         'INTEGRATION_CLIENT_NOT_CONFIGURED',
-        'The StreamKit Twitch Client ID is not configured',
+        'The Streamlet Twitch Client ID is not configured',
         503,
       )
     return clientId

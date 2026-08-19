@@ -1,4 +1,4 @@
-import type { TodoBoard, TodoCard, TodoTemplate, Workspace } from "@streamkit/contracts";
+import type { TodoBoard, TodoCard, TodoTemplate, Workspace } from "@streamlet/contracts";
 import { useCallback, useEffect, useState } from "react";
 
 import { todoApi } from "./todo-api";

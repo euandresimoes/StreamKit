@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Inject, Param, Post } from '@nestjs/common'
-import { ResolvePaymentContributionRequestSchema } from '@streamkit/contracts'
+import { ResolvePaymentContributionRequestSchema } from '@streamlet/contracts'
 import { z } from 'zod'
 
 import { LivePixPaymentProvider } from './providers/livepix/livepix-payment.provider'

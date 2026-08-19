@@ -25,7 +25,7 @@
     "noUncheckedSideEffectImports": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@streamkit/contracts": ["../../packages/contracts/src/index.ts"]
+      "@streamlet/contracts": ["../../packages/contracts/src/index.ts"]
     }
   }
 }

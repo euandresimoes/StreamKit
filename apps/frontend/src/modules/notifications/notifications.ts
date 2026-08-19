@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 
 export type NotificationLevel = "error" | "info" | "success" | "warning";
 
@@ -31,9 +32,20 @@ export function publishNotification(input: {
   };
   records = [record, ...records].slice(0, 100);
   listeners.forEach((listener) => listener());
-  const showToast =
-    input.level === "error" ? toast.error : input.level === "warning" ? toast.warning : toast.info;
-  showToast(input.title, { description: input.message });
+  const unfocused = typeof document !== "undefined" && !document.hasFocus();
+  if (unfocused && typeof window !== "undefined" && window.streamlet?.showNativeNotification) {
+    void getDesktopBridge()
+      .showNativeNotification(input.title, input.message)
+      .catch(() => undefined);
+  } else {
+    const showToast =
+      input.level === "error"
+        ? toast.error
+        : input.level === "warning"
+          ? toast.warning
+          : toast.info;
+    showToast(input.title, { description: input.message });
+  }
   return record;
 }
 

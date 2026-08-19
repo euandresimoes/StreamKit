@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import i18n from "@/i18n";
-import { AppShell } from "@/components/streamkit/AppShell";
+import { AppShell } from "@/components/streamlet/AppShell";
 
 export const Route = createFileRoute("/")({
   head: () => ({

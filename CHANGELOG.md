@@ -4,7 +4,7 @@
 
 ### Summary
 
-StreamKit local-first MVP under active development.
+Streamlet local-first MVP under active development.
 
 ### Added
 

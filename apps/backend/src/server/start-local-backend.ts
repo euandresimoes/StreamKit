@@ -12,9 +12,9 @@ import { AppModule } from './app.module'
 import type { SecureCredentialRepository } from '../modules/settings/secure-credential.repository'
 import {
   RotatingFileLogger,
-  SilentStreamKitLogger,
-  type StreamKitLogger,
-} from '../infrastructure/logging/streamkit-logger'
+  SilentStreamletLogger,
+  type StreamletLogger,
+} from '../infrastructure/logging/streamlet-logger'
 import type { IntegrationRuntimeConfig } from '../modules/integrations/integration-runtime.config'
 import { ExternalTransportService } from '../modules/integrations/external-events/external-transport.service'
 
@@ -45,9 +45,9 @@ export async function startLocalBackend(
     genReqId: () => randomUUID(),
     logger: false,
   })
-  const logger: StreamKitLogger = options.logPath
+  const logger: StreamletLogger = options.logPath
     ? new RotatingFileLogger(options.logPath)
-    : new SilentStreamKitLogger()
+    : new SilentStreamletLogger()
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule.register(
       database,
@@ -91,8 +91,8 @@ export async function startLocalBackend(
     const openApi = SwaggerModule.createDocument(
       app,
       new DocumentBuilder()
-        .setTitle('StreamKit Local API')
-        .setDescription('Local-only API for the StreamKit desktop application.')
+        .setTitle('Streamlet Local API')
+        .setDescription('Local-only API for the Streamlet desktop application.')
         .setVersion('0.0.0')
         .addBearerAuth()
         .build(),
@@ -105,7 +105,14 @@ export async function startLocalBackend(
     environment: process.env.NODE_ENV ?? 'development',
   })
   const address = app.getHttpServer().address() as AddressInfo
-  app.get(ExternalTransportService).setLocalBaseUrl(`http://127.0.0.1:${address.port}`)
+  const externalTransport = app.get(ExternalTransportService)
+  externalTransport.setLocalBaseUrl(`http://127.0.0.1:${address.port}`)
+  // Allocate the provider ingress routes as soon as the backend is ready so
+  // Integrations can show the URLs without requiring a setup guide to open.
+  await Promise.allSettled([
+    externalTransport.register('kick'),
+    externalTransport.register('livepix'),
+  ])
 
   return {
     baseUrl: `http://127.0.0.1:${address.port}`,

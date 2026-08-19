@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
-export type StreamKitUserDataDirectories = {
+export type StreamletUserDataDirectories = {
   backups: string
   cache: string
   data: string
@@ -12,12 +12,12 @@ export type StreamKitUserDataDirectories = {
 
 export async function ensureUserDataDirectories(
   root: string,
-): Promise<StreamKitUserDataDirectories> {
+): Promise<StreamletUserDataDirectories> {
   const directories = {
     backups: join(root, 'backups'),
     cache: join(root, 'cache'),
     data: join(root, 'data'),
-    database: join(root, 'data', 'streamkit.db'),
+    database: join(root, 'data', 'streamlet.db'),
     logs: join(root, 'logs'),
     root,
   }

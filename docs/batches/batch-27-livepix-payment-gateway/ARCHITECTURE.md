@@ -25,7 +25,7 @@ type ContributionReceived = {
 ```
 
 `participantHandle` usa exatamente o nome escolhido pelo doador, sem tentar transformá-lo em nome de
-exibição. O vínculo com Twitch/Kick/YouTube é feito pelo fluxo de identidade do StreamKit, não pelo
+exibição. O vínculo com Twitch/Kick/YouTube é feito pelo fluxo de identidade do Streamlet, não pelo
 adapter LivePix.
 
 ## Fluxo confiável de evento
@@ -98,6 +98,6 @@ Incluído: conta autenticada, conexão/desconexão, webhook de pagamentos/mensag
 de detalhes, normalização, identidade exata, reconexão, troca de URL, deduplicação, diagnóstico e
 testes simulados.
 
-Fora do primeiro recorte: criar pagamentos pelo StreamKit, saque, alteração de controles do LivePix,
-regras financeiras, chargeback automático, cobrança recorrente criada pelo StreamKit e qualquer
+Fora do primeiro recorte: criar pagamentos pelo Streamlet, saque, alteração de controles do LivePix,
+regras financeiras, chargeback automático, cobrança recorrente criada pelo Streamlet e qualquer
 dependência obrigatória de rede para o modo manual.

@@ -20,9 +20,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@streamkit/config": ["packages/config/src/index.ts"],
-      "@streamkit/contracts": ["packages/contracts/src/index.ts"],
-      "@streamkit/test-utils": ["packages/test-utils/src/index.ts"]
+      "@streamlet/config": ["packages/config/src/index.ts"],
+      "@streamlet/contracts": ["packages/contracts/src/index.ts"],
+      "@streamlet/test-utils": ["packages/test-utils/src/index.ts"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,

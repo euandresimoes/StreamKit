@@ -8,7 +8,7 @@ import {
   TournamentListSchema,
   TournamentSchema,
   type UpdateTournamentRequest,
-} from "@streamkit/contracts";
+} from "@streamlet/contracts";
 
 import { apiClient } from "@/infrastructure/api-client";
 

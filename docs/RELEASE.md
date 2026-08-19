@@ -1,4 +1,4 @@
-# Release do StreamKit
+# Release do Streamlet
 
 Releases Windows são disparadas exclusivamente por tags SemVer (`vMAJOR.MINOR.PATCH` ou pre-release). Tags com sufixo publicam no canal `beta`; tags sem sufixo usam `stable`.
 
@@ -8,8 +8,8 @@ Antes de criar uma tag:
 
 1. Atualizar `CHANGELOG.md` com resumo, novidades, correções, breaking changes e instruções.
 2. Confirmar árvore Git limpa e CI da `main` verde.
-3. Executar `pnpm validate` e `pnpm --filter @streamkit/desktop package:win` no Windows.
-4. Executar `pnpm --filter @streamkit/desktop smoke:artifact`.
+3. Executar `pnpm validate` e `pnpm --filter @streamlet/desktop package:win` no Windows.
+4. Executar `pnpm --filter @streamlet/desktop smoke:artifact`.
 5. Obter autorização explícita para publicar.
 
 Nunca forneça token privado ao renderer. A publicação usa apenas o `GITHUB_TOKEN` efêmero do runner. Não oriente o usuário a desativar o SmartScreen globalmente; ele deve baixar apenas da release oficial e conferir o checksum publicado.

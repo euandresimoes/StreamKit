@@ -16,7 +16,7 @@ import {
   YouTubeAuthorizationStartSchema,
   YouTubeAuthorizationStatusSchema,
   YouTubeLiveBroadcastSchema,
-} from "@streamkit/contracts";
+} from "@streamlet/contracts";
 
 import { apiClient } from "@/infrastructure/api-client";
 

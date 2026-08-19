@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const StreamKitEventNameSchema = z.enum([
+export const StreamletEventNameSchema = z.enum([
   'giveaway.changed',
   'integration.changed',
   'settings.changed',
@@ -8,11 +8,11 @@ export const StreamKitEventNameSchema = z.enum([
   'tournament.changed',
 ])
 
-export const StreamKitEventSchema = z.object({
+export const StreamletEventSchema = z.object({
   aggregateId: z.string().min(1),
-  name: StreamKitEventNameSchema,
+  name: StreamletEventNameSchema,
   occurredAt: z.iso.datetime(),
 })
 
-export type StreamKitEvent = z.infer<typeof StreamKitEventSchema>
-export type StreamKitEventName = z.infer<typeof StreamKitEventNameSchema>
+export type StreamletEvent = z.infer<typeof StreamletEventSchema>
+export type StreamletEventName = z.infer<typeof StreamletEventNameSchema>

@@ -14,7 +14,7 @@ import {
   type IntegrationProvider,
   type ParsedParticipant,
   type UpdateGiveawayRequest,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { and, asc, desc, eq, inArray } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {

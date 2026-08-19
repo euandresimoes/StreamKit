@@ -1,5 +1,6 @@
 import { Pencil } from "lucide-react";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ const PRESET_COLORS = [
 type Props = { onChange(color: string): void; value: string | null };
 
 export function BaseColorPicker({ onChange, value }: Props) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const normalized = value?.toUpperCase() ?? PRESET_COLORS[0];
   const customSelected = !PRESET_COLORS.includes(normalized as (typeof PRESET_COLORS)[number]);
@@ -29,7 +31,7 @@ export function BaseColorPicker({ onChange, value }: Props) {
         <button
           key={color}
           type="button"
-          aria-label={`Select color ${color}`}
+          aria-label={t("common.selectColor", { color })}
           aria-pressed={normalized === color}
           onClick={() => onChange(color)}
           className={cn(
@@ -41,7 +43,7 @@ export function BaseColorPicker({ onChange, value }: Props) {
       ))}
       <button
         type="button"
-        aria-label="Choose custom color"
+        aria-label={t("common.chooseCustomColor")}
         aria-pressed={customSelected}
         onClick={() => inputRef.current?.click()}
         className={cn(

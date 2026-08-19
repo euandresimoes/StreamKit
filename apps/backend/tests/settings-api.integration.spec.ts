@@ -3,8 +3,8 @@ import {
   AppSettingsSchema,
   CredentialStatusSchema,
   DiagnosticInfoSchema,
-} from '@streamkit/contracts'
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
+} from '@streamlet/contracts'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
 import {
   type LocalBackendHandle,
   type SecureCredentialRepository,
@@ -45,7 +45,7 @@ describe('Settings API security', () => {
     backend = await startLocalBackend({
       authenticationToken: token,
       databasePath: environment.databasePath,
-      logPath: `${environment.userDataPath}/streamkit.log`,
+      logPath: `${environment.userDataPath}/streamlet.log`,
       secureCredentialRepository: credentials,
     })
     const call = (path: string, method = 'GET', body?: unknown) =>

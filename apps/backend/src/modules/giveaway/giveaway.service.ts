@@ -9,7 +9,7 @@ import type {
   IntegrationProvider,
   ParticipantPreview,
   UpdateGiveawayRequest,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { ApiApplicationError } from '../../application/api-error'
 import { GiveawayRepository } from './giveaway.repository'
 import { ManualParticipantSource } from './sources/participant-source'

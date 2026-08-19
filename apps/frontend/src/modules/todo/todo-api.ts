@@ -9,7 +9,7 @@ import {
   type UpdateWorkspaceRequest,
   WorkspaceListResponseSchema,
   WorkspaceSchema,
-} from "@streamkit/contracts";
+} from "@streamlet/contracts";
 
 import { apiClient } from "@/infrastructure/api-client";
 

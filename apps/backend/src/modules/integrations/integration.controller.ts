@@ -6,7 +6,7 @@ import {
   SendChatMessageRequestSchema,
   StartChatSimulationRequestSchema,
   UpdateIntegrationConnectionStateRequestSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 
 import { IntegrationService } from './integration.service'
 import { IntegrationConnectionManager } from './integration-connection.manager'
@@ -97,7 +97,7 @@ export class IntegrationController {
   }
 
   private requireDebug(): void {
-    if (process.env.NODE_ENV === 'production' && process.env.STREAMKIT_DEBUG !== 'true')
+    if (process.env.NODE_ENV === 'production' && process.env.STREAMLET_DEBUG !== 'true')
       throw new ApiApplicationError('HTTP_404', 'Resource not found', 404)
   }
 

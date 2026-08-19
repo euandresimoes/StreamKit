@@ -8,9 +8,9 @@
 
 ## Decisão
 
-- Licenciar o StreamKit sob PolyForm Noncommercial License 1.0.0.
+- Licenciar o Streamlet sob PolyForm Noncommercial License 1.0.0.
 - Classificar o projeto como source-available, não open-source.
-- Manter o código no repositório público `https://github.com/euandresimoes/StreamKit`.
+- Manter o código no repositório público `https://github.com/euandresimoes/Streamlet`.
 - Distribuir binários oficiais por GitHub Releases.
 - Usos comerciais exigem autorização/licença separada do licensor.
 

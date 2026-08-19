@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import type { WorkspaceListResponse } from '@streamkit/contracts'
+import type { WorkspaceListResponse } from '@streamlet/contracts'
 
 import {
   WORKSPACE_REPOSITORY,

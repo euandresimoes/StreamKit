@@ -5,7 +5,7 @@ import {
   ExternalTransportEndpointSchema,
   PaymentConnectionStatusSchema,
   type UpdateAppSettingsRequest,
-} from "@streamkit/contracts";
+} from "@streamlet/contracts";
 
 import { apiClient } from "@/infrastructure/api-client";
 

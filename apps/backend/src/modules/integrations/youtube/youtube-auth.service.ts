@@ -6,7 +6,7 @@ import {
   YouTubeAuthorizationPollSchema,
   YouTubeAuthorizationStartSchema,
   YouTubeAuthorizationStatusSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { z } from 'zod'
 
 import { ApiApplicationError } from '../../../application/api-error'
@@ -179,7 +179,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
     response: ServerResponse,
   ): Promise<void> {
     const url = new URL(requestUrl, flow.redirectUri)
-    const responseText = 'Autorização recebida. Você pode fechar esta janela e voltar ao StreamKit.'
+    const responseText = 'Autorização recebida. Você pode fechar esta janela e voltar ao Streamlet.'
     const state = url.searchParams.get('state')
     const code = url.searchParams.get('code')
     const providerError = url.searchParams.get('error')
@@ -281,7 +281,7 @@ export class YouTubeAuthService implements OnModuleDestroy {
     if (!clientId)
       throw new ApiApplicationError(
         'INTEGRATION_CLIENT_NOT_CONFIGURED',
-        'The StreamKit YouTube Client ID is not configured',
+        'The Streamlet YouTube Client ID is not configured',
         503,
       )
     return clientId

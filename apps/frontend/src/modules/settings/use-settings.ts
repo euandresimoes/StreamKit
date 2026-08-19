@@ -1,9 +1,10 @@
-import type { AppSettings, UpdateAppSettingsRequest } from "@streamkit/contracts";
+import type { AppSettings, UpdateAppSettingsRequest, UpdateState } from "@streamlet/contracts";
 import { useCallback, useEffect, useState } from "react";
 
 import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
 import { settingsApi } from "./settings-api";
 import i18n from "@/i18n";
+import { getLocalizedReleaseNotes } from "./release-notes";
 
 function applyTheme(theme: AppSettings["theme"]) {
   const resolved =
@@ -21,6 +22,7 @@ export function useSettings(active: boolean) {
   const [credentialConfigured, setCredentialConfigured] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [updateState, setUpdateState] = useState<UpdateState | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -30,6 +32,7 @@ export function useSettings(active: boolean) {
         settingsApi.credentialStatus(),
       ]);
       setSettings(nextSettings);
+      void i18n.changeLanguage(nextSettings.locale);
       applyTheme(nextSettings.theme);
       document.documentElement.dataset["reduceMotion"] = String(nextSettings["reduceMotion"]);
       setCredentialConfigured(credential.configured);
@@ -41,6 +44,15 @@ export function useSettings(active: boolean) {
     if (active) void load();
   }, [active, load]);
 
+  useEffect(() => {
+    if (!active || !window.streamlet?.onUpdateState) return;
+    const bridge = getDesktopBridge();
+    void bridge.updateState().then((state) => {
+      if (state) setUpdateState(state);
+    });
+    return bridge.onUpdateState(setUpdateState);
+  }, [active]);
+
   const update = async (patch: Partial<UpdateAppSettingsRequest>) => {
     if (!settings) return;
     setBusy(true);
@@ -51,6 +63,7 @@ export function useSettings(active: boolean) {
         minimizeToTray: settings.minimizeToTray,
         openAtLogin: settings.openAtLogin,
         reduceMotion: settings.reduceMotion,
+        locale: settings.locale,
         theme: settings.theme,
         updatePreference: settings.updatePreference,
         ...patch,
@@ -58,6 +71,7 @@ export function useSettings(active: boolean) {
       const saved = await settingsApi.update(input);
       await getDesktopBridge().applySettings(input);
       setSettings(saved);
+      void i18n.changeLanguage(saved.locale);
       applyTheme(saved.theme);
       document.documentElement.dataset["reduceMotion"] = String(saved["reduceMotion"]);
     } catch (cause) {
@@ -91,7 +105,14 @@ export function useSettings(active: boolean) {
         setBusy(false);
       }
     },
+    updateState,
+    localizedReleaseNotes: updateState?.available
+      ? getLocalizedReleaseNotes(updateState.available.changelog, settings?.locale ?? "en-US")
+      : "",
     checkUpdates: () => getDesktopBridge().updateCommand({ action: "check", manual: true }),
+    downloadUpdate: () => getDesktopBridge().updateCommand({ action: "download" }),
+    installUpdate: () => getDesktopBridge().updateCommand({ action: "install" }),
+    skipUpdate: (version: string) => getDesktopBridge().updateCommand({ action: "skip", version }),
     openLogsDirectory: () => getDesktopBridge().openLogsDirectory(),
     exportDiagnostics: async () => {
       const diagnostic = await settingsApi.diagnostics();
@@ -99,7 +120,7 @@ export function useSettings(active: boolean) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `streamkit-diagnostics-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = `streamlet-diagnostics-${new Date().toISOString().slice(0, 10)}.json`;
       link.click();
       URL.revokeObjectURL(url);
     },

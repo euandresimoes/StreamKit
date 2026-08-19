@@ -3,7 +3,7 @@ import {
   ExternalEventIngressSchema,
   ExternalEventProviderSchema,
   LivePixWebhookEnvelopeSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { z } from 'zod'
 
 import { ApiApplicationError } from '../../../application/api-error'
@@ -37,7 +37,7 @@ export class ExternalEventController {
   public receive(
     @Param('provider') provider: unknown,
     @Param('endpointId') endpointId: string,
-    @Headers('x-streamkit-ingress-key') secret: string | undefined,
+    @Headers('x-streamlet-ingress-key') secret: string | undefined,
     @Headers('kick-event-type') kickEventType: string | undefined,
     @Query('token') token: string | undefined,
     @Body() body: unknown,

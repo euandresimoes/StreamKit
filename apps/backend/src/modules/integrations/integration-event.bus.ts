@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import type { ChatMessageReceived } from '@streamkit/contracts'
+import type { ChatMessageReceived } from '@streamlet/contracts'
 
 export type IntegrationEventHandler = (event: ChatMessageReceived) => Promise<void> | void
 

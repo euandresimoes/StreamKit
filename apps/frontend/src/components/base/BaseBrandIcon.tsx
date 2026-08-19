@@ -1,4 +1,4 @@
-import type { IntegrationProvider } from "@streamkit/contracts";
+import type { IntegrationProvider } from "@streamlet/contracts";
 
 import { cn } from "@/lib/utils";
 

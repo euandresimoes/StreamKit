@@ -6,7 +6,7 @@
 
 ## Contexto
 
-O StreamKit é um desktop local-first e não possui backend público. A API oficial atual da Kick exige
+O Streamlet é um desktop local-first e não possui backend público. A API oficial atual da Kick exige
 `client_secret` na troca e renovação OAuth. A leitura de chat está disponível por assinatura do evento
 `chat.message.sent`, cujo único método oficial documentado é webhook público HTTPS.
 
@@ -14,7 +14,7 @@ O StreamKit é um desktop local-first e não possui backend público. A API ofic
 
 1. Embutir o client secret e usar um túnel/webhook temporário no desktop.
 2. Consumir endpoints ou WebSockets privados usados pelo site da Kick.
-3. Criar agora um relay hospedado do StreamKit.
+3. Criar agora um relay hospedado do Streamlet.
 4. Expor a ausência de capacidades e adiar o relay para uma decisão de produto/infraestrutura.
 
 ## Decisão histórica

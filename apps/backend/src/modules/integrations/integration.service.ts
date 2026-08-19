@@ -3,7 +3,7 @@ import {
   ChatMessageReceivedSchema,
   type IntegrationConnectionStatus,
   type SaveIntegrationConnectionRequest,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 
 import { IntegrationEventBus } from './integration-event.bus'
 import { IntegrationRepository } from './integration.repository'

@@ -1,6 +1,6 @@
 import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { SecureCredentialRepository, SecureCredentialStatus } from '@streamkit/backend'
+import type { SecureCredentialRepository, SecureCredentialStatus } from '@streamlet/backend'
 import { safeStorage } from 'electron'
 
 export class ElectronSecureCredentialRepository implements SecureCredentialRepository {

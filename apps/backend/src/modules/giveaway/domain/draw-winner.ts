@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomInt } from 'node:crypto'
-import type { GiveawayRoundEntry } from '@streamkit/contracts'
+import type { GiveawayRoundEntry } from '@streamlet/contracts'
 
 export type DrawSelection = {
   randomProof: string

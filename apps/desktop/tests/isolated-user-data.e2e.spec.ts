@@ -1,4 +1,4 @@
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
 import {
   AppSettingsSchema,
   GiveawayDetailSchema,
@@ -12,8 +12,8 @@ import {
   TournamentSchema,
   WorkspaceListResponseSchema,
   WorkspaceSchema,
-} from '@streamkit/contracts'
-import { type LocalBackendHandle, startLocalBackend } from '@streamkit/backend'
+} from '@streamlet/contracts'
+import { type LocalBackendHandle, startLocalBackend } from '@streamlet/backend'
 
 const token = 'b'.repeat(64)
 
@@ -25,11 +25,11 @@ function headers(): HeadersInit {
 }
 
 describe('desktop E2E harness', () => {
-  it('never points at the real StreamKit user data directory', async () => {
+  it('never points at the real Streamlet user data directory', async () => {
     const environment = await createIsolatedTestEnvironment()
 
-    expect(environment.userDataPath).toContain('streamkit-test-')
-    expect(environment.databasePath).toContain('streamkit.test.db')
+    expect(environment.userDataPath).toContain('streamlet-test-')
+    expect(environment.databasePath).toContain('streamlet.test.db')
 
     await environment.cleanup()
   })

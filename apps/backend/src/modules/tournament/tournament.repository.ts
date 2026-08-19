@@ -8,7 +8,7 @@ import {
   TournamentListSchema,
   TournamentSchema,
   type UpdateTournamentRequest,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import {

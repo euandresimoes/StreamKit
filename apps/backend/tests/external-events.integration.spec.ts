@@ -1,4 +1,4 @@
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
 
 import { SqliteDatabase } from '../src/infrastructure/database/sqlite-database'
 import { ExternalEventBus } from '../src/modules/integrations/external-events/external-event.bus'

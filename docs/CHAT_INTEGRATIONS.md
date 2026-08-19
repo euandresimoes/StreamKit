@@ -2,7 +2,7 @@
 
 ## Dados locais e privacidade
 
-O StreamKit guarda conexões sem credenciais no SQLite. Access tokens e refresh tokens ficam somente
+O Streamlet guarda conexões sem credenciais no SQLite. Access tokens e refresh tokens ficam somente
 no cofre seguro do sistema operacional. Mensagens necessárias ao chat focado são mantidas localmente
 por no máximo 24 horas e o buffer global é limitado a 10.000 mensagens. Avatares retornados pelos
 providers são baixados com limite de tamanho, convertidos em `data:` base64 e persistidos uma única
@@ -11,7 +11,7 @@ Excluir uma credencial não remove participantes ou resultados já persistidos.
 
 ## Twitch
 
-O Client ID do aplicativo Twitch é configurado pelo usuário no guia de integração do StreamKit.
+O Client ID do aplicativo Twitch é configurado pelo usuário no guia de integração do Streamlet.
 Tokens e credenciais do usuário nunca devem ser embutidos. A conexão
 usa Device Authorization, EventSub WebSocket e os escopos mínimos de leitura/escrita de chat.
 
@@ -19,15 +19,15 @@ usa Device Authorization, EventSub WebSocket e os escopos mínimos de leitura/es
 
 1. Crie um projeto no Google Cloud, habilite **YouTube Data API v3** e configure uma credencial OAuth
    do tipo aplicativo para computador.
-2. Configure `STREAMKIT_YOUTUBE_CLIENT_ID` apenas como fallback de desenvolvimento. No desktop,
+2. Configure `STREAMLET_YOUTUBE_CLIENT_ID` apenas como fallback de desenvolvimento. No desktop,
    o Client ID é configurado pelo usuário no guia. Para clientes do Google que
-   exigem autenticação na troca do code, defina também `STREAMKIT_YOUTUBE_CLIENT_SECRET` com o valor
+   exigem autenticação na troca do code, defina também `STREAMLET_YOUTUBE_CLIENT_SECRET` com o valor
    baixado no JSON do cliente desktop. Ele permanece somente no processo principal e nunca é enviado
    ao renderer, SQLite ou logs.
 3. Em Configurações > Integrações, conecte o YouTube, autorize no navegador e escolha uma transmissão
    ativa pelo título. O usuário não precisa copiar `videoId` ou `liveChatId`.
 
-A autorização usa PKCE, `state` aleatório e callback loopback IPv4 em porta efêmera. O StreamKit pede
+A autorização usa PKCE, `state` aleatório e callback loopback IPv4 em porta efêmera. O Streamlet pede
 acesso offline e guarda o refresh token somente no cofre. A API oficial oferece `streamList` por
 server-streaming; o runtime desktop atual não inclui transporte gRPC, portanto o adapter usa o
 fallback oficial `liveChatMessages.list`, respeitando `pollingIntervalMillis`. Erros de quota,
@@ -49,7 +49,7 @@ estado sanitizado do aplicativo e as linhas recentes de log. O arquivo não incl
 refresh tokens nem cabeçalhos de autorização. Revise-o antes de compartilhar, pois nomes locais de
 recursos e códigos operacionais ainda podem ser relevantes para a privacidade do streamer.
 
-Depois de perda de rede ou suspensão do Windows, o StreamKit reinicia as conexões que estavam ativas.
+Depois de perda de rede ou suspensão do Windows, o Streamlet reinicia as conexões que estavam ativas.
 Se uma conexão continuar com erro, desconecte e autorize o provider novamente. TODO, sorteios e
 campeonatos manuais não dependem dos providers e permanecem disponíveis offline.
 
@@ -61,7 +61,7 @@ campeonatos manuais não dependem dos providers e permanecem disponíveis offlin
 ## Kick
 
 A API pública atual da Kick oferece OAuth 2.1 com PKCE, subscriptions oficiais por webhook HTTPS,
-envio e exclusão de mensagens, além de endpoints de moderação. O StreamKit utiliza o túnel HTTPS
+envio e exclusão de mensagens, além de endpoints de moderação. O Streamlet utiliza o túnel HTTPS
 temporário local para cumprir o requisito de webhook público sem criar um backend hospedado.
 
 O `client_secret` é informado pelo usuário no guia da Kick e armazenado apenas no cofre seguro do

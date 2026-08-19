@@ -1,5 +1,5 @@
 {
-  "name": "@streamkit/backend",
+  "name": "@streamlet/backend",
   "version": "0.0.0",
   "private": true,
   "main": "dist/main.js",
@@ -28,8 +28,8 @@
     "@nestjs/platform-fastify": "11.1.29",
     "@nestjs/swagger": "11.4.6",
     "@scalar/nestjs-api-reference": "1.0.19",
-    "@streamkit/config": "workspace:*",
-    "@streamkit/contracts": "workspace:*",
+    "@streamlet/config": "workspace:*",
+    "@streamlet/contracts": "workspace:*",
     "better-sqlite3": "12.11.1",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.2",
@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "11.1.29",
-    "@streamkit/test-utils": "workspace:*",
+    "@streamlet/test-utils": "workspace:*",
     "@types/better-sqlite3": "9.6.0",
     "@types/supertest": "7.2.1",
     "supertest": "7.2.2"

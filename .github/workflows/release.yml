@@ -10,8 +10,8 @@ jobs:
     timeout-minutes: 45
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      STREAMKIT_PIPELINE_GREEN: 'true'
-      STREAMKIT_RELEASE_CHANNEL: ${{ contains(github.ref_name, '-') && 'beta' || 'stable' }}
+      STREAMLET_PIPELINE_GREEN: 'true'
+      STREAMLET_RELEASE_CHANNEL: ${{ contains(github.ref_name, '-') && 'beta' || 'stable' }}
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -21,9 +21,15 @@ jobs:
         with: { node-version: 22.12.0, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm validate
+      - name: Verify tag and package version
+        shell: pwsh
+        run: |
+          $tagVersion = $env:GITHUB_REF_NAME.Substring(1)
+          $packageVersion = (Get-Content apps/desktop/package.json | ConvertFrom-Json).version
+          if ($packageVersion -ne $tagVersion) { throw "Desktop package version $packageVersion does not match tag $env:GITHUB_REF_NAME" }
       - name: Package configured release repository
-        run: pnpm --filter @streamkit/desktop release -- --config.publish.provider=github --config.publish.owner=${{ github.repository_owner }} --config.publish.repo=${{ github.event.repository.name }}
-      - run: pnpm --filter @streamkit/desktop smoke:artifact
+        run: pnpm --filter @streamlet/desktop release -- --config.publish.provider=github --config.publish.owner=${{ github.repository_owner }} --config.publish.repo=${{ github.event.repository.name }}
+      - run: pnpm --filter @streamlet/desktop smoke:artifact
       - name: Generate SHA-256 checksums
         shell: pwsh
         run: Get-ChildItem apps/desktop/release -File | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)" } | Set-Content apps/desktop/release/SHA256SUMS.txt

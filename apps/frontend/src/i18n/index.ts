@@ -1,6 +1,8 @@
 import * as i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import enUS from "./en-US";
+import ptBR from "./pt-BR";
+import es from "./es";
 
 export const defaultNS = "translation";
 
@@ -15,6 +17,8 @@ void i18n.use(initReactI18next).init({
   ns: [defaultNS],
   resources: {
     "en-US": { [defaultNS]: enUS },
+    "pt-BR": { [defaultNS]: ptBR },
+    es: { [defaultNS]: es },
   },
 });
 

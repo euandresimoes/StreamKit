@@ -9,7 +9,7 @@ export default defineConfig({
   base: "./",
   resolve: {
     alias: {
-      "@streamkit/contracts": fileURLToPath(
+      "@streamlet/contracts": fileURLToPath(
         new URL("../../packages/contracts/src/index.ts", import.meta.url),
       ),
     },

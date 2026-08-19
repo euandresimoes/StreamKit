@@ -1,5 +1,5 @@
 import { Inject, Injectable, type OnApplicationBootstrap } from '@nestjs/common'
-import { ChatMessageReceivedSchema } from '@streamkit/contracts'
+import { ChatMessageReceivedSchema } from '@streamlet/contracts'
 import { z } from 'zod'
 
 import type {
@@ -206,7 +206,7 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
     })
     const connected = new Promise<void>((resolve, reject) => {
       const onAbort = () => {
-        socket.close(1000, 'StreamKit connection stopped')
+        socket.close(1000, 'Streamlet connection stopped')
         reject(new Error('INTEGRATION_CONNECTION_ABORTED'))
       }
       context.signal.addEventListener('abort', onAbort, { once: true })
@@ -241,7 +241,7 @@ export class TwitchChatAdapter implements ChatProviderAdapter, OnApplicationBoot
       closed,
       close: async () => {
         if (socket.readyState < WebSocket.CLOSING)
-          socket.close(1000, 'StreamKit connection stopped')
+          socket.close(1000, 'Streamlet connection stopped')
       },
     }
   }

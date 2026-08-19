@@ -1,6 +1,6 @@
-# Regras de desenvolvimento do StreamKit
+# Regras de desenvolvimento do Streamlet
 
-Este documento é obrigatório para todo trabalho no StreamKit. Ele complementa a [especificação do projeto](./STREAMKIT_PROJECT_SPEC.md); em caso de conflito, a especificação define o produto e este documento define o processo de execução. Uma alteração deliberada de produto deve atualizar a especificação, registrar a decisão e ajustar os batches antes da implementação.
+Este documento é obrigatório para todo trabalho no Streamlet. Ele complementa a [especificação do projeto](./STREAMLET_PROJECT_SPEC.md); em caso de conflito, a especificação define o produto e este documento define o processo de execução. Uma alteração deliberada de produto deve atualizar a especificação, registrar a decisão e ajustar os batches antes da implementação.
 
 ## 1. Princípios inegociáveis
 
@@ -14,7 +14,7 @@ Este documento é obrigatório para todo trabalho no StreamKit. Ele complementa 
 
 ## 2. Fonte de verdade e rastreabilidade
 
-- `docs/STREAMKIT_PROJECT_SPEC.md` é a fonte de verdade do produto e da arquitetura planejada.
+- `docs/STREAMLET_PROJECT_SPEC.md` é a fonte de verdade do produto e da arquitetura planejada.
 - `docs/IMPLEMENTATION_BATCHES.md` é a fonte de verdade do progresso de implementação.
 - Toda feature, correção estrutural ou decisão deve apontar para a seção relevante da especificação.
 - Decisões arquiteturais relevantes devem ser registradas em `docs/adr/` com contexto, opções, decisão e consequências.
@@ -112,7 +112,7 @@ Regras do gate:
 ## 8. Persistência, migrações e dados
 
 - Usar o diretório retornado por `app.getPath('userData')`; nunca montar manualmente o caminho de AppData.
-- Usar um banco principal `streamkit.db`, foreign keys, WAL, busy timeout e timestamps UTC.
+- Usar um banco principal `streamlet.db`, foreign keys, WAL, busy timeout e timestamps UTC.
 - Usar queries parametrizadas e transações para operações com múltiplas escritas.
 - Persistir explicitamente posições de colunas, cards, seeds e slots.
 - Versionar migrações e testar upgrade a partir de banco anterior.

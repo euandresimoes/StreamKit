@@ -7,7 +7,7 @@ import {
   GiveawayCaptureRuleListSchema,
   GiveawayCaptureRuleSchema,
   type SaveGiveawayCaptureRuleRequest,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { and, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'

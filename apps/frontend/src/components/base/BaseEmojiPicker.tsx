@@ -1,30 +1,31 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
 const EMOJI_GROUPS = [
   {
-    label: "Organization",
+    labelKey: "common.organization",
     emojis: ["📋", "✅", "📝", "📌", "📁", "🗂️", "📅", "⏰", "💡", "🎯", "⭐", "🔥"],
   },
   {
-    label: "Entretenimento",
+    labelKey: "common.entertainment",
     emojis: ["🎮", "🕹️", "🎲", "🏆", "🎬", "🍿", "📺", "🎧", "🎵", "🎤", "📚", "🎨"],
   },
   {
-    label: "Comunidade",
+    labelKey: "common.community",
     emojis: ["👥", "💬", "❤️", "🎉", "🎁", "🤝", "👑", "💎", "🚀", "⚡", "🌟", "✨"],
   },
   {
-    label: "Games",
+    labelKey: "common.games",
     emojis: ["⚔️", "🛡️", "🏹", "🧙", "🐉", "👾", "🤖", "💀", "🔫", "🏎️", "⚽", "🏀"],
   },
   {
-    label: "Objetos",
+    labelKey: "common.objects",
     emojis: ["💻", "🖥️", "📱", "⌨️", "🖱️", "📷", "🔔", "🔑", "🔒", "🧰", "🧪", "🔧"],
   },
   {
-    label: "Natureza",
+    labelKey: "common.nature",
     emojis: ["🌙", "☀️", "🌈", "☁️", "🌊", "🌲", "🌸", "🍀", "🐱", "🐶", "🦊", "🐼"],
   },
 ] as const;
@@ -32,6 +33,7 @@ const EMOJI_GROUPS = [
 type Props = { onSelect(emoji: string): void; value: string };
 
 export function BaseEmojiPicker({ onSelect, value }: Props) {
+  const { t } = useTranslation();
   const [group, setGroup] = useState(0);
   const selectedGroup = EMOJI_GROUPS[group] ?? EMOJI_GROUPS[0];
   return (
@@ -39,15 +41,15 @@ export function BaseEmojiPicker({ onSelect, value }: Props) {
       <div
         className="flex gap-1 overflow-x-auto border-b border-border p-2"
         role="tablist"
-        aria-label="Emoji categories"
+        aria-label={t("common.emojiCategories")}
       >
         {EMOJI_GROUPS.map((item, index) => (
           <button
-            key={item.label}
+            key={item.labelKey}
             type="button"
             role="tab"
             aria-selected={group === index}
-            title={item.label}
+            title={t(item.labelKey)}
             onClick={() => setGroup(index)}
             className={cn(
               "flex size-8 shrink-0 items-center justify-center rounded-lg text-base transition-colors",
@@ -60,14 +62,14 @@ export function BaseEmojiPicker({ onSelect, value }: Props) {
       </div>
       <div className="max-h-52 overflow-y-auto overscroll-contain p-3" tabIndex={0}>
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {selectedGroup.label}
+          {t(selectedGroup.labelKey)}
         </p>
         <div className="grid grid-cols-6 gap-1">
           {selectedGroup.emojis.map((emoji) => (
             <button
               key={emoji}
               type="button"
-              aria-label={`Selecionar ${emoji}`}
+              aria-label={`${t("common.selectEmoji")} ${emoji}`}
               aria-pressed={value === emoji}
               onClick={() => onSelect(emoji)}
               className={cn(

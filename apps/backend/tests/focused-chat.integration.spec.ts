@@ -1,5 +1,5 @@
-import type { ChatMessageReceived, TournamentDetail } from '@streamkit/contracts'
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
+import type { ChatMessageReceived, TournamentDetail } from '@streamlet/contracts'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
 
 import { SqliteDatabase } from '../src/infrastructure/database/sqlite-database'
 import { chatMessageBuffer } from '../src/infrastructure/database/schema'

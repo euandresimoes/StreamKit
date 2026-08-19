@@ -4,7 +4,7 @@
 
 LivePix expõe OAuth2, endpoints para consultar mensagens/pagamentos e uma API de webhooks. O webhook
 envia apenas dados básicos; os detalhes precisam ser consultados na API. O provider também pode
-reenviar um evento quando não recebe HTTP 200, e a URL do StreamKit muda quando o túnel local é
+reenviar um evento quando não recebe HTTP 200, e a URL do Streamlet muda quando o túnel local é
 recriado.
 
 Pagamentos são uma área crítica: uma duplicata pode inserir participantes duas vezes, uma perda pode
@@ -24,7 +24,7 @@ notificações** do aplicativo em Settings > API no LivePix. O provider não cha
 `DELETE /v2/webhooks`; esses endpoints apresentaram `429` persistente mesmo entre janelas de reset e
 são desnecessários quando a URL já está vinculada ao aplicativo.
 
-Depois de reiniciar o StreamKit, a URL temporária muda. O estado local anterior é invalidado sem
+Depois de reiniciar o Streamlet, a URL temporária muda. O estado local anterior é invalidado sem
 chamar o LivePix, e o guia exige que o usuário atualize a URL de notificações antes de conectar de
 novo.
 
@@ -68,5 +68,5 @@ o avatar da plataforma. Giveaway e Tournament apresentam esses dados pelo mesmo 
 - Substituir webhook por polling contínuo: aumenta quota/latência e não resolve a entrega push.
 - Reconciliar e rotacionar webhooks pela API: os endpoints de gerenciamento retornaram `429`
   persistente e tornaram a conexão imprevisível no aplicativo local.
-- Consultar ou limpar webhooks automaticamente: pode tocar configurações externas que o StreamKit não
+- Consultar ou limpar webhooks automaticamente: pode tocar configurações externas que o Streamlet não
   consegue atribuir com segurança a uma instalação específica.

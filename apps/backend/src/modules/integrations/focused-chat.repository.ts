@@ -6,7 +6,7 @@ import {
   FocusedChatThreadSchema,
   type IntegrationConnectionStatus,
   type IntegrationProvider,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { and, desc, eq, isNotNull, lt, or, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'

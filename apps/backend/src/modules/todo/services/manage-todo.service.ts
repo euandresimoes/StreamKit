@@ -13,7 +13,7 @@ import type {
   UpdateColumnRequest,
   UpdateWorkspaceRequest,
   Workspace,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { ApiApplicationError } from '../../../application/api-error'
 import {
   WORKSPACE_REPOSITORY,

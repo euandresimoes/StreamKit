@@ -41,11 +41,11 @@ export async function restoreDatabaseBackup(
   backupPath: string,
   destinationPath: string,
 ): Promise<void> {
-  if (extname(backupPath) !== '.backup') throw new Error('Invalid StreamKit backup file')
+  if (extname(backupPath) !== '.backup') throw new Error('Invalid Streamlet backup file')
   const backup = new Database(backupPath, { fileMustExist: true, readonly: true })
   try {
     if (backup.pragma('quick_check', { simple: true }) !== 'ok') {
-      throw new Error('StreamKit backup failed its integrity check')
+      throw new Error('Streamlet backup failed its integrity check')
     }
   } finally {
     backup.close()

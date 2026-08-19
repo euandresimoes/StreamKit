@@ -16,7 +16,7 @@ import {
   UpdateWorkspaceRequestSchema,
   type Workspace,
   type WorkspaceListResponse,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { CreateWorkspaceService } from '../services/create-workspace.service'
 import { ListWorkspacesService } from '../services/list-workspaces.service'
 import { ManageTodoService } from '../services/manage-todo.service'

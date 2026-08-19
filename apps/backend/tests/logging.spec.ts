@@ -1,7 +1,7 @@
 import { mkdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
-import { redactSensitive, RotatingFileLogger } from '../src/infrastructure/logging/streamkit-logger'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
+import { redactSensitive, RotatingFileLogger } from '../src/infrastructure/logging/streamlet-logger'
 
 describe('secure logging', () => {
   it('redacts tokens, authorization headers and sensitive payload fields', () => {
@@ -20,7 +20,7 @@ describe('secure logging', () => {
   it('rotates bounded JSON logs without persisting secrets', async () => {
     const environment = await createIsolatedTestEnvironment(),
       directory = join(environment.userDataPath, 'logs'),
-      path = join(directory, 'streamkit.log')
+      path = join(directory, 'streamlet.log')
     await mkdir(directory, { recursive: true })
     const logger = new RotatingFileLogger(path, 100)
     await logger.log('trace', 'first', { token: 'never-write-me' })

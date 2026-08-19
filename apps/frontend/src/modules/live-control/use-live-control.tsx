@@ -1,4 +1,4 @@
-import type { LiveStream } from "@streamkit/contracts";
+import type { LiveStream } from "@streamlet/contracts";
 import {
   createContext,
   useCallback,
@@ -12,7 +12,7 @@ import {
 import { liveControlApi } from "./live-control-api";
 import i18n from "@/i18n";
 
-const SELECTED_LIVE_STORAGE_KEY = "streamkit:selected-live-connection";
+const SELECTED_LIVE_STORAGE_KEY = "streamlet:selected-live-connection";
 
 type LiveSelectionContextValue = {
   error: string | null;

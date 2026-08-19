@@ -6,4 +6,4 @@ Os logs usam JSON Lines, níveis `trace`, `debug`, `info`, `warn`, `error` e `fa
 
 Preferências não sensíveis ficam na tabela `app_settings`. A credencial LivePix nunca é gravada no SQLite: no aplicativo Electron ela é cifrada pelo `safeStorage` do sistema operacional e o backend expõe apenas salvar, consultar status e remover. A API nunca devolve o valor da credencial.
 
-Em builds de desenvolvimento, a documentação Scalar está disponível automaticamente. Em builds empacotados, use `STREAMKIT_DEBUG=true` ou o argumento `--debug` para habilitar a documentação local. As rotas de Settings ficam sob `/api/v1/settings` e o diagnóstico sob `/api/v1/system/diagnostics`.
+Em builds de desenvolvimento, a documentação Scalar está disponível automaticamente. Em builds empacotados, use `STREAMLET_DEBUG=true` ou o argumento `--debug` para habilitar a documentação local. As rotas de Settings ficam sob `/api/v1/settings` e o diagnóstico sob `/api/v1/system/diagnostics`.

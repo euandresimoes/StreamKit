@@ -1,6 +1,6 @@
 # Temporary directories created during local repository inspection
 .codex-tmp-renderizer/
-.codex-tmp-streamkit-remote/
+.codex-tmp-streamlet-remote/
 
 # Dependencies and build output
 node_modules/

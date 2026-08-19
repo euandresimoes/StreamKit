@@ -11,10 +11,10 @@ import { GiveawayChatCaptureService } from '../modules/giveaway/giveaway-chat-ca
 import { DatabaseStatusController } from '../modules/system/controllers/database-status.controller'
 import { DiagnosticsController } from '../modules/system/controllers/diagnostics.controller'
 import {
-  SilentStreamKitLogger,
-  STREAMKIT_LOGGER,
-  type StreamKitLogger,
-} from '../infrastructure/logging/streamkit-logger'
+  SilentStreamletLogger,
+  STREAMLET_LOGGER,
+  type StreamletLogger,
+} from '../infrastructure/logging/streamlet-logger'
 import { WorkspaceController } from '../modules/todo/controllers/workspace.controller'
 import { SqliteWorkspaceRepository } from '../modules/todo/repositories/sqlite-workspace.repository'
 import { WORKSPACE_REPOSITORY } from '../modules/todo/repositories/workspace.repository'
@@ -81,7 +81,7 @@ export class AppModule {
   public static register(
     database: SqliteDatabase,
     secureCredentials: SecureCredentialRepository = new UnavailableSecureCredentialRepository(),
-    logger: StreamKitLogger = new SilentStreamKitLogger(),
+    logger: StreamletLogger = new SilentStreamletLogger(),
     integrationConfig: IntegrationRuntimeConfig = DEFAULT_INTEGRATION_RUNTIME_CONFIG,
     cloudflaredBinaryPath?: string,
   ): DynamicModule {
@@ -105,7 +105,7 @@ export class AppModule {
       module: AppModule,
       providers: [
         { provide: SQLITE_DATABASE, useValue: database },
-        { provide: STREAMKIT_LOGGER, useValue: logger },
+        { provide: STREAMLET_LOGGER, useValue: logger },
         { provide: WORKSPACE_REPOSITORY, useClass: SqliteWorkspaceRepository },
         CreateWorkspaceService,
         ListWorkspacesService,

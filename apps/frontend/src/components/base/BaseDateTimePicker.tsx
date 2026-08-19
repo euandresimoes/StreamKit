@@ -1,4 +1,5 @@
 import { CalendarDays, Clock3, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -18,6 +19,7 @@ export function BaseDateTimePicker({
   value,
   onChange,
 }: BaseDateTimePickerProps) {
+  const { t } = useTranslation();
   const selected = parseLocalDateTime(value);
   const hours = selected ? pad(selected.getHours()) : "00";
   const minutes = selected ? pad(selected.getMinutes()) : "00";
@@ -88,7 +90,7 @@ export function BaseDateTimePicker({
             variant="ghost"
             size="icon-sm"
             className="ml-auto"
-            aria-label={`Clear ${ariaLabel.toLocaleLowerCase("en-US")}`}
+            aria-label={`${t("common.clear")} ${ariaLabel.toLocaleLowerCase("en-US")}`}
             disabled={!value}
             onClick={() => onChange("")}
           >

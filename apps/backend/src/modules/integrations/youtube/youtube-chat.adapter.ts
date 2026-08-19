@@ -19,14 +19,14 @@ message LiveChatMessage { optional string id = 101; optional LiveChatMessageSnip
 message LiveChatMessageSnippet { optional string type = 1; optional string published_at = 4; optional string display_message = 16; }
 message LiveChatMessageAuthorDetails { optional string channel_id = 10101; optional string display_name = 103; optional string profile_image_url = 104; optional bool is_chat_owner = 5; optional bool is_chat_sponsor = 6; optional bool is_chat_moderator = 7; }`
 
-import type { ChatMessageReceived } from '@streamkit/contracts'
+import type { ChatMessageReceived } from '@streamlet/contracts'
 import type { z } from 'zod'
 
 import {
-  SilentStreamKitLogger,
-  STREAMKIT_LOGGER,
-  type StreamKitLogger,
-} from '../../../infrastructure/logging/streamkit-logger'
+  SilentStreamletLogger,
+  STREAMLET_LOGGER,
+  type StreamletLogger,
+} from '../../../infrastructure/logging/streamlet-logger'
 import type {
   ChatProviderAdapter,
   ChatProviderConnectionContext,
@@ -63,8 +63,8 @@ export class YouTubeChatAdapter
   public constructor(
     @Inject(YouTubeAuthService) private readonly auth: YouTubeAuthService,
     @Inject(ChatProviderRegistry) private readonly registry: ChatProviderRegistry,
-    @Inject(STREAMKIT_LOGGER)
-    private readonly logger: StreamKitLogger = new SilentStreamKitLogger(),
+    @Inject(STREAMLET_LOGGER)
+    private readonly logger: StreamletLogger = new SilentStreamletLogger(),
   ) {}
 
   public async connect(context: ChatProviderConnectionContext): Promise<ChatProviderSession> {
@@ -166,7 +166,7 @@ export class YouTubeChatAdapter
       rejectClosed = reject
     })
     const run = async () => {
-      const directory = mkdtempSync(join(tmpdir(), 'streamkit-youtube-'))
+      const directory = mkdtempSync(join(tmpdir(), 'streamlet-youtube-'))
       const protoPath = join(directory, 'stream_list.proto')
       writeFileSync(protoPath, protoSource, 'utf8')
       try {

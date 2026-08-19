@@ -8,7 +8,7 @@ import {
   IntegrationConnectionSchema,
   type IntegrationConnectionStatus,
   type SaveIntegrationConnectionRequest,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { and, eq, inArray, lte, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'

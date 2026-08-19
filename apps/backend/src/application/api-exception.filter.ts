@@ -1,4 +1,4 @@
-import { type ApiError, ErrorCodeSchema } from '@streamkit/contracts'
+import { type ApiError, ErrorCodeSchema } from '@streamlet/contracts'
 import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException } from '@nestjs/common'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { ZodError } from 'zod'

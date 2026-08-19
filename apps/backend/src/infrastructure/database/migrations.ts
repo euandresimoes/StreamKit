@@ -8,7 +8,7 @@ export type DatabaseMigration = {
 export const DATABASE_MIGRATIONS: readonly DatabaseMigration[] = [
   {
     destructive: false,
-    name: 'initial_streamkit_schema',
+    name: 'initial_streamlet_schema',
     version: 1,
     sql: `
       CREATE TABLE IF NOT EXISTS todo_workspaces (

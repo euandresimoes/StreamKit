@@ -9,7 +9,7 @@ import {
   LivePixPaymentDetailsSchema,
   LivePixWebhookEnvelopeSchema,
   PaymentConnectionStatusSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 
 import { ApiApplicationError } from '../../../../application/api-error'
 import { ExternalEventBus } from '../../../integrations/external-events/external-event.bus'

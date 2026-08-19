@@ -9,7 +9,7 @@ import type {
   UpdateCardRequest,
   UpdateColumnRequest,
   UpdateWorkspaceRequest,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import type { WorkspaceEntity } from '../entities/workspace.entity'
 
 export const WORKSPACE_REPOSITORY = Symbol('WORKSPACE_REPOSITORY')

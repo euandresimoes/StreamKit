@@ -1,6 +1,6 @@
-# Plano de implementação por batches — StreamKit
+# Plano de implementação por batches — Streamlet
 
-Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md) em unidades de entrega verificáveis. As regras obrigatórias de execução estão em [PROJECT_RULES.md](./PROJECT_RULES.md).
+Este checklist transforma a [especificação mestre](./STREAMLET_PROJECT_SPEC.md) em unidades de entrega verificáveis. As regras obrigatórias de execução estão em [PROJECT_RULES.md](./PROJECT_RULES.md).
 
 ## Como usar este documento
 
@@ -113,7 +113,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 **Referências:** seções 8.2, 10.1, 11, 12, 17.3, 20.3 e 24.
 
 - [x] Resolver `userData` pelo Electron e criar diretórios `data`, `logs`, `backups` e `cache`.
-- [x] Criar `streamkit.db` com foreign keys, WAL, busy timeout e timestamps UTC.
+- [x] Criar `streamlet.db` com foreign keys, WAL, busy timeout e timestamps UTC.
 - [x] Implementar runner de migrations versionadas e tabela `schema_migrations`.
 - [x] Criar backup automático antes de migrations destrutivas e política de retenção.
 - [x] Implementar recuperação que nunca sobrescreva o único banco válido.
@@ -186,7 +186,7 @@ Este checklist transforma a [especificação mestre](./STREAMKIT_PROJECT_SPEC.md
 - [x] Criar fluxo de importação, preview, política de duplicatas e preparação.
 - [x] Implementar roleta com ponteiro, aceleração, rotação, desaceleração e destaque.
 - [x] Implementar opção de remover vencedor da rodada seguinte.
-- [x] Implementar case opening horizontal com marcador central e celebração própria do StreamKit.
+- [x] Implementar case opening horizontal com marcador central e celebração própria do Streamlet.
 - [x] Garantir que ambos os modos representem exatamente o vencedor já persistido.
 - [x] Tornar o destino final independente de FPS e duração.
 - [x] Usar transformações adequadas à GPU e virtualizar/limitar itens visuais.
@@ -357,7 +357,7 @@ de todos os workspaces no comando `pnpm validate`.
 
 **Evidência registrada em 2026-08-13:** Device Authorization, cofre multi-provider,
 validação/refresh, EventSub, escrita de chat, UI e adapters passaram no gate completo com 30 testes
-unitários do backend, 25 integrações, 18 testes do desktop e 8 E2E. O aplicativo público do StreamKit
+unitários do backend, 25 integrações, 18 testes do desktop e 8 E2E. O aplicativo público do Streamlet
 foi cadastrado na Twitch e o teste real controlado concluiu autorização, conexão EventSub e captura por
 `!join`: a conta principal conectada e uma conta secundária em outro navegador foram persistidas como
 participantes distintos no giveaway de roleta. A Batch 13 está concluída.
@@ -519,7 +519,7 @@ sanitizado. Estados de loading/vazio/erro e redução de movimento foram revisad
 
 **Evidência de qualidade:** `pnpm validate` passou com format, lint, typecheck, builds, 2 testes de
 frontend, 39 unitários do backend, 33 integrações, 19 testes desktop e 8 E2E offline. O instalador
-Windows unsigned `StreamKit-0.0.0-x64-setup.exe` foi gerado e passou no smoke de integridade com
+Windows unsigned `Streamlet-0.0.0-x64-setup.exe` foi gerado e passou no smoke de integridade com
 SHA-256 `47c0dd961074b0e8b27c53a05549bc650b77af6539cd4891bb33348c564dee2d`.
 
 ## Batch 20 — Operação de torneios, bracket e simulação de chat
@@ -687,7 +687,7 @@ eventos LivePix usam a plataforma/live global selecionada e uma identidade exata
 Twitch/Kick usam handle; YouTube usa `channelId`. O `providerUserId` oficial é associado quando a
 mensagem chega e passa a ser usado pelo chat focado.
 
-**Escopo aprovado:** criar uma área de controle da transmissão que complemente OBS/Streamlabs. O StreamKit não fará captura, composição ou encoding da live nesta batch; essas responsabilidades continuam no OBS/Streamlabs. O preview deve utilizar exclusivamente os players oficiais de Twitch, YouTube e Kick, sem capturar a janela do OBS e sem implementar OBS WebSocket nesta batch.
+**Escopo aprovado:** criar uma área de controle da transmissão que complemente OBS/Streamlabs. O Streamlet não fará captura, composição ou encoding da live nesta batch; essas responsabilidades continuam no OBS/Streamlabs. O preview deve utilizar exclusivamente os players oficiais de Twitch, YouTube e Kick, sem capturar a janela do OBS e sem implementar OBS WebSocket nesta batch.
 
 **Referências:** seções 2.2, 4, 9.2, 9.5, 12, 13, 17, 19, 20, 21 e 28 da especificação.
 
@@ -763,16 +763,16 @@ mensagem chega e passa a ser usado pelo chat focado.
 
 ## Batch 26 — Infraestrutura opcional de eventos externos locais
 
-**Objetivo:** implementar uma infraestrutura reutilizável para receber eventos externos no StreamKit
+**Objetivo:** implementar uma infraestrutura reutilizável para receber eventos externos no Streamlet
 Desktop somente quando um provider exigir webhook ou callback público. O processamento, a fila, os
 tokens e as regras de negócio permanecem locais. Esta batch não implementa LivePix, Kick ou qualquer
 provider específico; ela entrega o transporte e o contrato que essas integrações poderão reutilizar.
 
 **Princípio de produto:** o usuário não deve conhecer túnel, DNS, porta, proxy ou configuração de rede.
 O transporte externo deve ser iniciado, autenticado, monitorado e encerrado automaticamente pelo
-StreamKit, sem expor o restante da API local.
+Streamlet, sem expor o restante da API local.
 
-**Restrições:** não criar um backend de negócio do StreamKit, não persistir tokens no frontend ou na
+**Restrições:** não criar um backend de negócio do Streamlet, não persistir tokens no frontend ou na
 fila de eventos, não deixar uma rota pública permanente e não usar polling como substituto universal de
 eventos push. Providers que já oferecem WebSocket/streaming continuam usando seus adapters atuais.
 
@@ -889,7 +889,7 @@ Games e Torneios deve continuar funcionando sem rede, LivePix ou qualquer outro 
 - [ ] Documentar que webhooks de URLs temporárias antigas podem exigir limpeza manual na conta LivePix.
 - [ ] Cobrir timeout e resposta ambígua sem iniciar retries automáticos ou loops de criação.
 
-### 27.5 Campanhas e identidade do StreamKit
+### 27.5 Campanhas e identidade do Streamlet
 
 - [ ] Associar contribuição ao `participantHandle` exato e à plataforma global selecionada.
 - [ ] Usar Twitch/Kick por handle e YouTube exclusivamente por `channelId`, conforme ADR 0027.

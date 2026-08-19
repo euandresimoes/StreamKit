@@ -3,7 +3,7 @@ import { z } from 'zod'
 import {
   type SelectYouTubeBroadcastRequestSchema,
   YouTubeLiveBroadcastSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 
 import { ApiApplicationError } from '../../../application/api-error'
 import { IntegrationRepository } from '../integration.repository'

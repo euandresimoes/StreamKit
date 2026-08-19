@@ -8,7 +8,7 @@
 
 ## Contexto
 
-O StreamKit precisa de backend local estruturado em classes/casos de uso, API documentada, frontend Vue e build Electron com hot reload, empacotamento e auto update.
+O Streamlet precisa de backend local estruturado em classes/casos de uso, API documentada, frontend Vue e build Electron com hot reload, empacotamento e auto update.
 
 ## Opções consideradas
 

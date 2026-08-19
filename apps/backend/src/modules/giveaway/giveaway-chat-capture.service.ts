@@ -4,7 +4,7 @@ import {
   type OnApplicationBootstrap,
   type OnModuleDestroy,
 } from '@nestjs/common'
-import type { GiveawayCaptureRule, SaveGiveawayCaptureRuleRequest } from '@streamkit/contracts'
+import type { GiveawayCaptureRule, SaveGiveawayCaptureRuleRequest } from '@streamlet/contracts'
 
 import { ApiApplicationError } from '../../application/api-error'
 import { IntegrationEventBus } from '../integrations/integration-event.bus'

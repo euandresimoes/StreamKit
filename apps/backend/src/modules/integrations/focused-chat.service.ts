@@ -22,7 +22,9 @@ export class FocusedChatService implements OnApplicationBootstrap, OnModuleDestr
     @Inject(IntegrationEventBus) private readonly events: IntegrationEventBus,
     @Inject(GiveawayRepository) private readonly giveaways: GiveawayRepository,
     @Inject(TournamentRepository) private readonly tournaments: TournamentRepository,
-    @Optional() @Inject(IntegrationRepository) private readonly integrations?: IntegrationRepository,
+    @Optional()
+    @Inject(IntegrationRepository)
+    private readonly integrations?: IntegrationRepository,
   ) {}
 
   public onApplicationBootstrap(): void {

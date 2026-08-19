@@ -1,10 +1,10 @@
-# StreamKit
+# Streamlet
 
-StreamKit é uma toolbox desktop local-first para streamers, com TODO/Kanban, torneios, giveaways e configurações multiwindow. O projeto é source-available sob a [PolyForm Noncommercial License 1.0.0](./LICENSE.md), não open-source.
+Streamlet é uma toolbox desktop local-first para streamers, com TODO/Kanban, torneios, giveaways e configurações multiwindow. O projeto é source-available sob a [PolyForm Noncommercial License 1.0.0](./LICENSE.md), não open-source.
 
 ## Estado atual
 
-O repositório está na fase de fundação. A especificação completa está em [docs/STREAMKIT_PROJECT_SPEC.md](./docs/STREAMKIT_PROJECT_SPEC.md) e o progresso por batches em [docs/IMPLEMENTATION_BATCHES.md](./docs/IMPLEMENTATION_BATCHES.md).
+O repositório está na fase de fundação. A especificação completa está em [docs/STREAMLET_PROJECT_SPEC.md](./docs/STREAMLET_PROJECT_SPEC.md) e o progresso por batches em [docs/IMPLEMENTATION_BATCHES.md](./docs/IMPLEMENTATION_BATCHES.md).
 
 ## Requisitos
 
@@ -38,7 +38,7 @@ packages/
 | Comando                 | Finalidade                                                      |
 | ----------------------- | --------------------------------------------------------------- |
 | `pnpm dev`              | Inicia os três workspaces principais com processos coordenados. |
-| `pnpm debug`            | Inicia desenvolvimento com `STREAMKIT_DEBUG=true`.              |
+| `pnpm debug`            | Inicia desenvolvimento com `STREAMLET_DEBUG=true`.              |
 | `pnpm format`           | Formata arquivos suportados.                                    |
 | `pnpm format:check`     | Verifica formatação sem editar.                                 |
 | `pnpm lint`             | Executa ESLint com zero warnings permitido.                     |
@@ -60,7 +60,7 @@ A preferência **Reduzir movimento** é compartilhada imediatamente entre a jane
 
 ## Segurança dos testes
 
-Testes que precisam de dados locais devem usar `@streamkit/test-utils`. O helper cria um diretório temporário com banco `streamkit.test.db` e oferece limpeza explícita. Nunca aponte testes para `app.getPath('userData')` real.
+Testes que precisam de dados locais devem usar `@streamlet/test-utils`. O helper cria um diretório temporário com banco `streamlet.test.db` e oferece limpeza explícita. Nunca aponte testes para `app.getPath('userData')` real.
 
 ## Contribuição
 

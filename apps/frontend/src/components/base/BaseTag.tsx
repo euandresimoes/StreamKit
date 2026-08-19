@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export function BaseTag({
@@ -11,6 +12,7 @@ export function BaseTag({
   onRemove?: () => void;
   className?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <span
       className={cn(
@@ -20,7 +22,7 @@ export function BaseTag({
     >
       {children}
       {onRemove && (
-        <button type="button" onClick={onRemove} aria-label="Remove tag">
+        <button type="button" onClick={onRemove} aria-label={t("common.removeTag")}>
           <X className="size-3" />
         </button>
       )}

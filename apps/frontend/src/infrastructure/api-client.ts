@@ -1,9 +1,9 @@
-import { ApiErrorSchema } from "@streamkit/contracts";
+import { ApiErrorSchema } from "@streamlet/contracts";
 
 import { getBackendConnection } from "./desktop-bridge";
 import { publishNotification } from "@/modules/notifications/notifications";
 
-export class StreamKitApiError extends Error {
+export class StreamletApiError extends Error {
   public constructor(
     message: string,
     public readonly code: string,
@@ -12,7 +12,7 @@ export class StreamKitApiError extends Error {
     public readonly details?: unknown,
   ) {
     super(message);
-    this.name = "StreamKitApiError";
+    this.name = "StreamletApiError";
   }
 }
 
@@ -49,7 +49,7 @@ export class ApiClient {
             ? { details: JSON.stringify(parsed.data.error.details, null, 2) }
             : {}),
         });
-        throw new StreamKitApiError(
+        throw new StreamletApiError(
           formatApiError(
             parsed.data.error.code,
             parsed.data.error.message,
@@ -68,7 +68,7 @@ export class ApiClient {
         message: `The API returned status ${response.status}.`,
         title: "Request failed",
       });
-      throw new StreamKitApiError(`The API returned status ${response.status}.`, "HTTP_ERROR");
+      throw new StreamletApiError(`The API returned status ${response.status}.`, "HTTP_ERROR");
     }
 
     if (response.status === 204 || !options.schema) return undefined as T;

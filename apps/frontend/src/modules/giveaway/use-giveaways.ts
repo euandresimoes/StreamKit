@@ -3,7 +3,7 @@ import type {
   Giveaway,
   GiveawayDetail,
   GiveawayRound,
-} from "@streamkit/contracts";
+} from "@streamlet/contracts";
 import { useCallback, useEffect, useState } from "react";
 
 import { giveawayApi } from "./giveaway-api";

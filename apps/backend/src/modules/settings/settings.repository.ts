@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { AppSettingsSchema, type UpdateAppSettingsRequest } from '@streamkit/contracts'
+import { AppSettingsSchema, type UpdateAppSettingsRequest } from '@streamlet/contracts'
 import { eq } from 'drizzle-orm'
 import { SQLITE_DATABASE } from '../../infrastructure/database/database.tokens'
 import { appSettings } from '../../infrastructure/database/schema'
@@ -13,6 +13,7 @@ const defaults: UpdateAppSettingsRequest = {
   minimizeToTray: false,
   openAtLogin: false,
   reduceMotion: false,
+  locale: 'en-US',
   theme: 'system',
   updatePreference: 'notify',
 }
@@ -33,7 +34,12 @@ export class SettingsRepository {
       } catch {
         throw new ApiApplicationError('DATABASE_INCOMPATIBLE', 'Stored settings are invalid', 500)
       }
-      const parsed = AppSettingsSchema.omit({ updatedAt: true }).safeParse(decoded)
+      const stored =
+        typeof decoded === 'object' && decoded !== null ? (decoded as Record<string, unknown>) : {}
+      const parsed = AppSettingsSchema.omit({ updatedAt: true }).safeParse({
+        ...defaults,
+        ...stored,
+      })
       if (!parsed.success)
         throw new ApiApplicationError('DATABASE_INCOMPATIBLE', 'Stored settings are invalid', 500)
       value = parsed.data

@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Este diretório registra decisões arquiteturais e de produto duradouras do StreamKit.
+Este diretório registra decisões arquiteturais e de produto duradouras do Streamlet.
 
 ## Convenção
 

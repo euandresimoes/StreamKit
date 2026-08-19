@@ -10,7 +10,7 @@ type PanelMode = "vertical" | "horizontal";
 type ResizeEdge = "top" | "left" | "bottom" | "right";
 type ResizeOption = ResizeEdge | "both-horizontal";
 
-const STORAGE_PREFIX = "streamkit.panel-size.";
+const STORAGE_PREFIX = "streamlet.panel-size.";
 const SNAP_STEP = 8;
 const SNAP_THRESHOLD = 12;
 

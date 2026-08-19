@@ -1,4 +1,4 @@
-import type { ChatMessageReceived } from '@streamkit/contracts'
+import type { ChatMessageReceived } from '@streamlet/contracts'
 
 export interface ParticipantCaptureRule {
   endsAt: string | null

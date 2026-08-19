@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { PaymentConnectionStatusSchema } from '@streamkit/contracts'
+import { PaymentConnectionStatusSchema } from '@streamlet/contracts'
 import { z } from 'zod'
 
 import { ApiApplicationError } from '../../../../application/api-error'

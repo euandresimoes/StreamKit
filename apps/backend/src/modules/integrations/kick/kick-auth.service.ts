@@ -7,7 +7,7 @@ import {
   KickAuthorizationSetupSchema,
   KickAuthorizationStartSchema,
   KickAuthorizationStatusSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { z } from 'zod'
 
 import { ApiApplicationError } from '../../../application/api-error'
@@ -36,12 +36,14 @@ const StoredSchema = z.object({
   scopes: z.array(z.string()),
 })
 const CurrentUserSchema = z.object({
-  data: z.array(
-    z.object({
-      name: z.string().min(1),
-      user_id: z.union([z.string(), z.number()]),
-    }),
-  ).min(1),
+  data: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        user_id: z.union([z.string(), z.number()]),
+      }),
+    )
+    .min(1),
 })
 type Pending = {
   codeVerifier: string
@@ -181,13 +183,13 @@ export class KickAuthService implements OnModuleDestroy {
     if (flow.token) {
       response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
       response.end(
-        '<h1>Kick authorization complete</h1><p>You can close this tab and return to StreamKit.</p>',
+        '<h1>Kick authorization complete</h1><p>You can close this tab and return to Streamlet.</p>',
       )
       return
     }
     if (flow.error) {
       response.writeHead(400, { 'content-type': 'text/html; charset=utf-8' })
-      response.end('<h1>Kick authorization failed</h1><p>Return to StreamKit and try again.</p>')
+      response.end('<h1>Kick authorization failed</h1><p>Return to Streamlet and try again.</p>')
       return
     }
     const code = url.searchParams.get('code')
@@ -216,8 +218,8 @@ export class KickAuthService implements OnModuleDestroy {
     response.writeHead(flow.error ? 400 : 200, { 'content-type': 'text/html; charset=utf-8' })
     response.end(
       flow.error
-        ? '<h1>Kick authorization failed</h1><p>Return to StreamKit and try again.</p>'
-        : '<h1>Kick authorization complete</h1><p>You can close this tab and return to StreamKit.</p>',
+        ? '<h1>Kick authorization failed</h1><p>Return to Streamlet and try again.</p>'
+        : '<h1>Kick authorization complete</h1><p>You can close this tab and return to Streamlet.</p>',
     )
   }
 

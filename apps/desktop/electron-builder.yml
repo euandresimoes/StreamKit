@@ -1,6 +1,6 @@
-appId: com.euandresimoes.streamkit
-productName: StreamKit
-artifactName: StreamKit-${version}-${arch}-setup.${ext}
+appId: com.euandresimoes.streamlet
+productName: Streamlet
+artifactName: Streamlet-${version}-${arch}-setup.${ext}
 directories:
   output: release
 files:
@@ -29,4 +29,4 @@ nsis:
 publish:
   provider: github
   owner: euandresimoes
-  repo: StreamKit
+  repo: Streamlet

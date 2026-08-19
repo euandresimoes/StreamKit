@@ -4,8 +4,8 @@ import {
   TodoColumnSchema,
   TodoTemplateSchema,
   WorkspaceSchema,
-} from '@streamkit/contracts'
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
+} from '@streamlet/contracts'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
 import { type LocalBackendHandle, startLocalBackend } from '../src/main'
 
 const token = 'b'.repeat(64)

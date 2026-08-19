@@ -5,7 +5,7 @@ import {
   type CreateWorkspaceRequest,
   CreateWorkspaceRequestSchema,
   type Workspace,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 
 import {
   WORKSPACE_REPOSITORY,

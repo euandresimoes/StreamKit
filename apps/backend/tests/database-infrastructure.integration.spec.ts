@@ -2,7 +2,7 @@ import { access, mkdir, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import Database from 'better-sqlite3'
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
 
 import {
   AUTOMATIC_BACKUP_RETENTION,
@@ -195,7 +195,7 @@ describe('SQLite infrastructure', () => {
     expect(await readdir(backups)).toHaveLength(AUTOMATIC_BACKUP_RETENTION)
 
     const [backupName] = await readdir(backups)
-    const restoredPath = join(environment.userDataPath, 'restored', 'streamkit.db')
+    const restoredPath = join(environment.userDataPath, 'restored', 'streamlet.db')
     await restoreDatabaseBackup(join(backups, backupName!), restoredPath)
     await expect(access(restoredPath)).resolves.toBeUndefined()
     await expect(restoreDatabaseBackup(join(backups, backupName!), restoredPath)).rejects.toThrow()

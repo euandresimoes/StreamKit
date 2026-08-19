@@ -1,4 +1,4 @@
-import type { CreateTournamentRequest, Tournament, TournamentDetail } from "@streamkit/contracts";
+import type { CreateTournamentRequest, Tournament, TournamentDetail } from "@streamlet/contracts";
 import { useCallback, useEffect, useState } from "react";
 
 import { tournamentApi } from "./tournament-api";
@@ -159,11 +159,7 @@ export function useTournaments(autoSelect = true) {
       detail
         ? mutate(() => tournamentApi.update(detail.tournament.id, { name, description }))
         : undefined,
-    updateStructure: (
-      mode: "individual" | "team",
-      bracketSize: number,
-      teamCapacity?: number,
-    ) =>
+    updateStructure: (mode: "individual" | "team", bracketSize: number, teamCapacity?: number) =>
       detail
         ? mutate(() =>
             tournamentApi.update(detail.tournament.id, {

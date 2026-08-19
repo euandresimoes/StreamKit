@@ -6,7 +6,7 @@ import {
   ExternalEventProviderSchema,
   type ExternalEventRecord,
   ExternalEventRecordSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { and, asc, eq, inArray, isNull, lte, or, sql } from 'drizzle-orm'
 
 import { SQLITE_DATABASE } from '../../../infrastructure/database/database.tokens'

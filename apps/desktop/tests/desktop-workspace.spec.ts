@@ -11,8 +11,8 @@ describe('desktop workspace', () => {
   })
 
   it('only allows validated HTTPS external links', () => {
-    expect(isAllowedExternalUrl('https://streamkit.example/docs')).toBe(true)
-    expect(isAllowedExternalUrl('http://streamkit.example/docs')).toBe(false)
+    expect(isAllowedExternalUrl('https://streamlet.example/docs')).toBe(true)
+    expect(isAllowedExternalUrl('http://streamlet.example/docs')).toBe(false)
     expect(isAllowedExternalUrl('file:///C:/secret.txt')).toBe(false)
   })
 })

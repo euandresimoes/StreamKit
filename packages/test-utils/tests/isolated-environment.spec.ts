@@ -8,7 +8,7 @@ describe('createIsolatedTestEnvironment', () => {
     const environment = await createIsolatedTestEnvironment()
 
     expect(environment.userDataPath.startsWith(tmpdir())).toBe(true)
-    expect(environment.databasePath).toContain('streamkit.test.db')
+    expect(environment.databasePath).toContain('streamlet.test.db')
 
     await environment.cleanup()
     await expect(access(environment.userDataPath)).rejects.toBeDefined()

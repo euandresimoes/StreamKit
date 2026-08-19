@@ -9,7 +9,7 @@ import {
   ExternalEventIngressSchema,
   type ExternalEventProvider,
   type ExternalEventRecord,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { ZodError } from 'zod'
 
 import { ApiApplicationError } from '../../../application/api-error'

@@ -4,7 +4,7 @@ import {
   type OnApplicationBootstrap,
   type OnModuleDestroy,
 } from '@nestjs/common'
-import { ChatMessageReceivedSchema } from '@streamkit/contracts'
+import { ChatMessageReceivedSchema } from '@streamlet/contracts'
 import { z } from 'zod'
 
 import { ExternalEventBus } from '../external-events/external-event.bus'
@@ -111,7 +111,11 @@ export class KickChatAdapter
   public async sendMessage(channelId: string, message: string): Promise<void> {
     const token = await this.auth.getAccessToken()
     const response = await fetch('https://api.kick.com/public/v1/chat', {
-      body: JSON.stringify({ broadcaster_user_id: Number(channelId), content: message }),
+      body: JSON.stringify({
+        broadcaster_user_id: Number(channelId),
+        content: message,
+        type: 'user',
+      }),
       headers: { authorization: `Bearer ${token.accessToken}`, 'content-type': 'application/json' },
       method: 'POST',
     })

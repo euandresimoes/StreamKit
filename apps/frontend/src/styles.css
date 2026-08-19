@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * StreamKit design system — warm neutral graphite, macOS 2026 inspired.
+ * Streamlet design system — warm neutral graphite, macOS 2026 inspired.
  * All colors are oklch tokens. Never hardcode colors in components.
  */
 
@@ -208,31 +208,31 @@
   box-shadow: var(--shadow-panel);
 }
 
-.streamkit-titlebar {
+.streamlet-titlebar {
   -webkit-app-region: drag;
   app-region: drag;
   user-select: none;
 }
 
-.streamkit-titlebar__content {
+.streamlet-titlebar__content {
   margin-left: env(titlebar-area-x, 0px);
   width: env(titlebar-area-width, 100%);
 }
 
-.streamkit-titlebar__content--fullscreen {
+.streamlet-titlebar__content--fullscreen {
   margin-left: 0;
   width: 100%;
 }
 
-.streamkit-titlebar__interactive,
-.streamkit-titlebar button,
-.streamkit-titlebar a,
-.streamkit-titlebar input {
+.streamlet-titlebar__interactive,
+.streamlet-titlebar button,
+.streamlet-titlebar a,
+.streamlet-titlebar input {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
 
-.streamkit-toast[data-sonner-toast] {
+.streamlet-toast[data-sonner-toast] {
   border: 1px solid var(--border-strong) !important;
   border-radius: 0 !important;
   background: color-mix(in oklab, var(--popover) 92%, transparent) !important;
@@ -242,14 +242,14 @@
   padding: 14px 16px;
   backdrop-filter: blur(32px) saturate(135%);
   -webkit-backdrop-filter: blur(32px) saturate(135%);
-  animation: streamkit-toast-in 220ms var(--ease-mac) both;
+  animation: streamlet-toast-in 220ms var(--ease-mac) both;
 }
 
-.streamkit-toast[data-sonner-toast][data-removed="true"] {
-  animation: streamkit-toast-out 180ms var(--ease-mac) both;
+.streamlet-toast[data-sonner-toast][data-removed="true"] {
+  animation: streamlet-toast-out 180ms var(--ease-mac) both;
 }
 
-@keyframes streamkit-toast-in {
+@keyframes streamlet-toast-in {
   from {
     opacity: 0;
     transform: translate3d(24px, 0, 0) scale(0.98);
@@ -260,7 +260,7 @@
   }
 }
 
-@keyframes streamkit-toast-out {
+@keyframes streamlet-toast-out {
   from {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
@@ -271,15 +271,15 @@
   }
 }
 
-.streamkit-focused-chat-in {
-  animation: streamkit-focused-chat-in 180ms var(--ease-mac) both;
+.streamlet-focused-chat-in {
+  animation: streamlet-focused-chat-in 180ms var(--ease-mac) both;
 }
 
-.streamkit-focused-chat-out {
-  animation: streamkit-focused-chat-out 180ms var(--ease-mac) both;
+.streamlet-focused-chat-out {
+  animation: streamlet-focused-chat-out 180ms var(--ease-mac) both;
 }
 
-@keyframes streamkit-focused-chat-in {
+@keyframes streamlet-focused-chat-in {
   from {
     opacity: 0;
     transform: translate3d(24px, 0, 0);
@@ -290,7 +290,7 @@
   }
 }
 
-@keyframes streamkit-focused-chat-out {
+@keyframes streamlet-focused-chat-out {
   from {
     opacity: 1;
     transform: translate3d(0, 0, 0);
@@ -302,8 +302,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .streamkit-focused-chat-in,
-  .streamkit-focused-chat-out {
+  .streamlet-focused-chat-in,
+  .streamlet-focused-chat-out {
     animation-duration: 1ms;
   }
 }

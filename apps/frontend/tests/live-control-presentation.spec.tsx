@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import type { LiveStream } from "@streamkit/contracts";
+import type { LiveStream } from "@streamlet/contracts";
 
-import { LivePreview } from "@/components/streamkit/LivePreview";
+import { LivePreview } from "@/components/streamlet/LivePreview";
 
 const stream = (overrides: Partial<LiveStream> = {}): LiveStream => ({
   capabilities: ["chat.read", "chat.write", "live.read"],

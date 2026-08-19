@@ -1,4 +1,4 @@
-# StreamKit — Design System (macOS 2026, Warm/Neutral Dark)
+# Streamlet — Design System (macOS 2026, Warm/Neutral Dark)
 
 Documento de implementação. Copie os tokens, classes e estruturas exatamente como estão.
 Stack de referência é irrelevante: use Vue 3 (SFC) + Tailwind CSS v4. Ícones: `lucide-vue-next`.

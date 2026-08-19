@@ -2,6 +2,7 @@ import { get } from 'node:http'
 
 import type { SecureCredentialRepository, SecureCredentialStatus } from '../src/main'
 import { KickAuthService } from '../src/modules/integrations/kick/kick-auth.service'
+import { KickChatAdapter } from '../src/modules/integrations/kick/kick-chat.adapter'
 import { KickSupportService } from '../src/modules/integrations/kick/kick-support.service'
 
 class MemoryCredentials implements SecureCredentialRepository {
@@ -66,7 +67,7 @@ describe('Kick OAuth', () => {
         ),
       )
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ data: [{ user_id: 123, name: 'StreamKit User' }] }), {
+        new Response(JSON.stringify({ data: [{ user_id: 123, name: 'Streamlet User' }] }), {
           status: 200,
         }),
       )
@@ -109,5 +110,34 @@ describe('Kick OAuth', () => {
     expect(result.status).toBe('authorized')
     expect(credentials.values.get('kick.oauth')).toContain('kick-refresh-token')
     service.onModuleDestroy()
+  })
+})
+
+describe('Kick chat sending', () => {
+  afterEach(() => jest.restoreAllMocks())
+
+  it('sends as the connected user through the official chat endpoint', async () => {
+    const fetchMock = jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(JSON.stringify({ data: { is_sent: true } }), { status: 200 }))
+    const adapter = new KickChatAdapter(
+      { getAccessToken: jest.fn().mockResolvedValue({ accessToken: 'kick-token' }) } as never,
+      { register: jest.fn() } as never,
+      { register: jest.fn() } as never,
+      { subscribe: jest.fn() } as never,
+    )
+
+    await adapter.sendMessage('123', 'Hello from Streamlet')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.kick.com/public/v1/chat',
+      expect.objectContaining({
+        body: JSON.stringify({
+          broadcaster_user_id: 123,
+          content: 'Hello from Streamlet',
+          type: 'user',
+        }),
+      }),
+    )
   })
 })

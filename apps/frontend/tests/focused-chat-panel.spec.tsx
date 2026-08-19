@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { FocusedChatPanel } from "@/components/streamkit/FocusedChatPanel";
+import { FocusedChatPanel } from "@/components/streamlet/FocusedChatPanel";
 
 describe("FocusedChatPanel accessibility", () => {
   it("exposes the panel, live log and labelled controls without depending on color", () => {

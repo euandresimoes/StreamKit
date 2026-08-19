@@ -1,4 +1,4 @@
-import type { ContributionReceived, PaymentConnectionStatus } from '@streamkit/contracts'
+import type { ContributionReceived, PaymentConnectionStatus } from '@streamlet/contracts'
 
 export interface ContributionProvider {
   connect(): Promise<PaymentConnectionStatus>

@@ -7,7 +7,7 @@ import {
   ExternalEventProviderSchema,
   type ExternalTransportSnapshot,
   ExternalTransportSnapshotSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 
 import { ApiApplicationError } from '../../../application/api-error'
 import { ExternalEventService } from './external-event.service'
@@ -32,6 +32,7 @@ export class ExternalTransportService implements OnModuleDestroy {
     lastErrorCode: null,
     mode: null,
     publicUrl: null,
+    webhookUrls: { kick: null, livepix: null, twitch: null, youtube: null },
     startedAt: null,
     state: 'disabled',
   })
@@ -52,6 +53,7 @@ export class ExternalTransportService implements OnModuleDestroy {
     return ExternalTransportSnapshotSchema.parse({
       ...this.state,
       endpointCount: this.endpoints.size,
+      webhookUrls: this.webhookUrls(),
     })
   }
 
@@ -75,9 +77,7 @@ export class ExternalTransportService implements OnModuleDestroy {
     await this.ensureStarted()
     return {
       callbackPath: `/api/v1/external-events/${provider}/${endpoint.id}`,
-      callbackUrl: this.state.publicUrl
-        ? `${this.state.publicUrl}/api/v1/external-events/${provider}/${endpoint.id}${provider === 'livepix' ? `?token=${encodeURIComponent(endpoint.secret)}` : ''}`
-        : null,
+      callbackUrl: this.state.publicUrl ? this.callbackUrl(endpoint) : null,
       secret: endpoint.secret,
     }
   }
@@ -167,9 +167,28 @@ export class ExternalTransportService implements OnModuleDestroy {
       ...this.state,
       mode: null,
       publicUrl: null,
+      webhookUrls: { kick: null, livepix: null, twitch: null, youtube: null },
       startedAt: null,
       state: this.endpoints.size ? 'error' : 'disabled',
     }
+  }
+
+  private webhookUrls(): ExternalTransportSnapshot['webhookUrls'] {
+    return {
+      kick: this.endpointUrl('kick'),
+      livepix: this.endpointUrl('livepix'),
+      twitch: this.endpointUrl('twitch'),
+      youtube: this.endpointUrl('youtube'),
+    }
+  }
+
+  private endpointUrl(provider: ExternalEventProvider): string | null {
+    const endpoint = [...this.endpoints.values()].find((item) => item.provider === provider)
+    return endpoint && this.state.publicUrl ? this.callbackUrl(endpoint) : null
+  }
+
+  private callbackUrl(endpoint: Endpoint): string {
+    return `${this.state.publicUrl}/api/v1/external-events/${endpoint.provider}/${endpoint.id}${endpoint.provider === 'livepix' ? `?token=${encodeURIComponent(endpoint.secret)}` : ''}`
   }
 
   private allow(endpointId: string): boolean {

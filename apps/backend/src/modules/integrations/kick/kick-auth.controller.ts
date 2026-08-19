@@ -9,7 +9,8 @@ export class KickAuthController {
   public constructor(
     @Inject(KickAuthService) private readonly auth: KickAuthService,
     @Inject(IntegrationService) private readonly integrations: IntegrationService,
-    @Inject(IntegrationConnectionManager) private readonly connections: IntegrationConnectionManager,
+    @Inject(IntegrationConnectionManager)
+    private readonly connections: IntegrationConnectionManager,
   ) {}
   @Post() public begin() {
     return this.auth.begin()

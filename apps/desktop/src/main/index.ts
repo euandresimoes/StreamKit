@@ -2,19 +2,20 @@ import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 
 import { RenderWindowManager } from '@renderizer/vue/electron'
-import { type LocalBackendHandle, startLocalBackend } from '@streamkit/backend'
-import { STREAMKIT_APP_ID, STREAMKIT_APP_NAME } from '@streamkit/config'
+import { type LocalBackendHandle, startLocalBackend } from '@streamlet/backend'
+import { STREAMLET_APP_ID, STREAMLET_APP_NAME } from '@streamlet/config'
 import {
   type BackendConnection,
   BackendConnectionSchema,
   type UpdateAppSettingsRequest,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import {
   app,
   BrowserWindow,
   Menu,
   nativeImage,
   nativeTheme,
+  Notification,
   powerMonitor,
   session,
   shell,
@@ -44,6 +45,7 @@ let desktopSettings: UpdateAppSettingsRequest = {
   minimizeToTray: false,
   openAtLogin: false,
   reduceMotion: false,
+  locale: 'en-US',
   theme: 'system',
   updatePreference: 'notify',
 }
@@ -80,11 +82,11 @@ function applyDesktopSettings(settings: UpdateAppSettingsRequest): void {
       getAppAssetPath(process.platform === 'win32' ? 'windows.ico' : 'linux.png'),
     )
     tray = new Tray(icon)
-    tray.setToolTip(STREAMKIT_APP_NAME)
+    tray.setToolTip(STREAMLET_APP_NAME)
     tray.setContextMenu(
       Menu.buildFromTemplate([
         {
-          label: 'Abrir StreamKit',
+          label: 'Abrir Streamlet',
           click: () => {
             mainWindow?.show()
             mainWindow?.focus()
@@ -121,7 +123,7 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
     ...(process.platform === 'win32' || process.platform === 'linux'
       ? { icon: getAppAssetPath(process.platform === 'win32' ? 'windows.ico' : 'linux.png') }
       : {}),
-    title: STREAMKIT_APP_NAME,
+    title: STREAMLET_APP_NAME,
     titleBarOverlay:
       process.platform === 'darwin'
         ? true
@@ -135,14 +137,14 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
     width: 1280,
   })
   mainWindow.on('enter-full-screen', () => {
-    mainWindow?.webContents.send('streamkit:fullscreen-state', true)
+    mainWindow?.webContents.send('streamlet:fullscreen-state', true)
   })
   mainWindow.on('leave-full-screen', () => {
-    mainWindow?.webContents.send('streamkit:fullscreen-state', false)
+    mainWindow?.webContents.send('streamlet:fullscreen-state', false)
   })
 
   renderWindows = new RenderWindowManager({
-    appId: STREAMKIT_APP_ID,
+    appId: STREAMLET_APP_ID,
     defaultWindowOptions: {
       ...(savedSettingsBounds ?? {}),
       webPreferences: createSecureWebPreferences(preloadPath),
@@ -155,7 +157,7 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
   renderWindows.attachTo(mainWindow)
   updateManager = new UpdateManager(
     () => mainWindow,
-    process.env.STREAMKIT_RELEASE_CHANNEL === 'beta' ? 'beta' : 'stable',
+    process.env.STREAMLET_RELEASE_CHANNEL === 'beta' ? 'beta' : 'stable',
     join(app.getPath('userData'), 'update-state.json'),
   )
   registerNativeIpcHandlers(
@@ -166,6 +168,14 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
       openDevTools: () => mainWindow?.webContents.openDevTools({ mode: 'detach' }),
       openLogsDirectory: async () => {
         await shell.openPath(logsDirectory)
+      },
+      showNativeNotification: (title, body) => {
+        if (mainWindow?.isFocused()) return
+        const notification = new Notification({ body, title })
+        notification.on('click', () => {
+          mainWindow?.show()
+          mainWindow?.focus()
+        })
       },
     },
     updateManager,
@@ -198,8 +208,8 @@ async function createMainWindow(connection: BackendConnection): Promise<void> {
     }
   })
 
-  if (process.env.STREAMKIT_RENDERER_URL) {
-    await mainWindow.loadURL(process.env.STREAMKIT_RENDERER_URL)
+  if (process.env.STREAMLET_RENDERER_URL) {
+    await mainWindow.loadURL(process.env.STREAMLET_RENDERER_URL)
   } else {
     await mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
@@ -210,9 +220,9 @@ async function bootstrap(): Promise<void> {
   logsDirectory = directories.logs
   const token = randomBytes(32).toString('hex')
   backend = await startLocalBackend({
-    ...(process.env.STREAMKIT_RENDERER_URL
+    ...(process.env.STREAMLET_RENDERER_URL
       ? {
-          allowedOrigins: [LocalRendererUrlSchema.parse(process.env.STREAMKIT_RENDERER_URL).origin],
+          allowedOrigins: [LocalRendererUrlSchema.parse(process.env.STREAMLET_RENDERER_URL).origin],
         }
       : {}),
     authenticationToken: token,
@@ -223,13 +233,13 @@ async function bootstrap(): Promise<void> {
     ),
     databasePath: directories.database,
     enableDocumentation:
-      !app.isPackaged || process.env.STREAMKIT_DEBUG === 'true' || process.argv.includes('--debug'),
+      !app.isPackaged || process.env.STREAMLET_DEBUG === 'true' || process.argv.includes('--debug'),
     secureCredentialRepository: new ElectronSecureCredentialRepository(directories.data),
-    logPath: join(directories.logs, 'streamkit.log'),
+    logPath: join(directories.logs, 'streamlet.log'),
     integrationConfig: {
-      twitchClientId: process.env.STREAMKIT_TWITCH_CLIENT_ID?.trim() || null,
-      youtubeClientId: process.env.STREAMKIT_YOUTUBE_CLIENT_ID?.trim() || null,
-      youtubeClientSecret: process.env.STREAMKIT_YOUTUBE_CLIENT_SECRET?.trim() || null,
+      twitchClientId: process.env.STREAMLET_TWITCH_CLIENT_ID?.trim() || null,
+      youtubeClientId: process.env.STREAMLET_YOUTUBE_CLIENT_ID?.trim() || null,
+      youtubeClientSecret: process.env.STREAMLET_YOUTUBE_CLIENT_SECRET?.trim() || null,
     },
   })
   const connection = BackendConnectionSchema.parse({ baseUrl: backend.baseUrl, token })

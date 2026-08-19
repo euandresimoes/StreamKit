@@ -10,7 +10,7 @@ import type {
   TwitchDeviceAuthorization,
   YouTubeAuthorizationStatus,
   YouTubeLiveBroadcast,
-} from "@streamkit/contracts";
+} from "@streamlet/contracts";
 import { useCallback, useEffect, useState } from "react";
 
 import { getDesktopBridge } from "@/infrastructure/desktop-bridge";
@@ -99,6 +99,7 @@ export function useIntegrations(active: boolean) {
     busy,
     connections,
     error,
+    reload: load,
     twitchAuth,
     twitchDevice,
     youtubeAuth,

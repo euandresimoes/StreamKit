@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Inject, Put } from '@nestjs/common'
-import { SaveCredentialRequestSchema, UpdateAppSettingsRequestSchema } from '@streamkit/contracts'
+import { SaveCredentialRequestSchema, UpdateAppSettingsRequestSchema } from '@streamlet/contracts'
 import { SettingsService } from './settings.service'
 
 @Controller('api/v1/settings')

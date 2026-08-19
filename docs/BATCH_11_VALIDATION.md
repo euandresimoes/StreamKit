@@ -4,7 +4,7 @@
 
 **Plataforma:** Windows 11 x64
 
-**Artefato:** `StreamKit-0.0.0-x64-setup.exe`
+**Artefato:** `Streamlet-0.0.0-x64-setup.exe`
 
 ## Instalador e integridade
 

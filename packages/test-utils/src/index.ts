@@ -9,8 +9,8 @@ export type IsolatedTestEnvironment = {
 }
 
 export async function createIsolatedTestEnvironment(): Promise<IsolatedTestEnvironment> {
-  const userDataPath = await mkdtemp(join(tmpdir(), 'streamkit-test-'))
-  const databasePath = join(userDataPath, 'data', 'streamkit.test.db')
+  const userDataPath = await mkdtemp(join(tmpdir(), 'streamlet-test-'))
+  const databasePath = join(userDataPath, 'data', 'streamlet.test.db')
 
   return {
     cleanup: async () => rm(userDataPath, { force: true, recursive: true }),

@@ -1,4 +1,4 @@
-import { type TodoCard, TodoCardSchema } from '@streamkit/contracts'
+import { type TodoCard, TodoCardSchema } from '@streamlet/contracts'
 
 export class TodoCardEntity implements TodoCard {
   public readonly columnId

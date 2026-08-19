@@ -1,4 +1,4 @@
-import { type TodoColumn, TodoColumnSchema } from '@streamkit/contracts'
+import { type TodoColumn, TodoColumnSchema } from '@streamlet/contracts'
 
 export class TodoColumnEntity implements TodoColumn {
   public readonly color

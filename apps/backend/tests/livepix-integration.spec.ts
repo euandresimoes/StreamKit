@@ -147,7 +147,7 @@ describe('LivePix integration', () => {
     }
     const transport = {
       register: jest.fn().mockResolvedValue({
-        callbackUrl: 'https://streamkit.example/livepix',
+        callbackUrl: 'https://streamlet.example/livepix',
       }),
       snapshot: jest.fn().mockReturnValue({ state: 'ready' }),
     }

@@ -3,7 +3,7 @@ import {
   ChatModerationRequestSchema,
   FocusedChatThreadSchema,
   LiveStreamSchema,
-} from "@streamkit/contracts";
+} from "@streamlet/contracts";
 
 import { apiClient } from "@/infrastructure/api-client";
 

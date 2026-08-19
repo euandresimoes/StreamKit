@@ -8,7 +8,7 @@ import {
   SaveGiveawayCaptureRuleRequestSchema,
   UpdateGiveawayCaptureStatusRequestSchema,
   UpdateGiveawayRequestSchema,
-} from '@streamkit/contracts'
+} from '@streamlet/contracts'
 import { GiveawayService } from './giveaway.service'
 import { GiveawayChatCaptureService } from './giveaway-chat-capture.service'
 

@@ -1,4 +1,4 @@
-import { ChatMessageReceivedSchema } from '@streamkit/contracts'
+import { ChatMessageReceivedSchema } from '@streamlet/contracts'
 
 import { downloadAvatarDataUrl } from '../src/modules/integrations/avatar-data-url'
 

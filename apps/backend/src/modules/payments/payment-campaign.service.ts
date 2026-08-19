@@ -15,7 +15,7 @@ import {
   tournaments,
 } from '../../infrastructure/database/schema'
 import type { SqliteDatabase } from '../../infrastructure/database/sqlite-database'
-import type { ContributionReceived, ResolvePaymentContributionRequest } from '@streamkit/contracts'
+import type { ContributionReceived, ResolvePaymentContributionRequest } from '@streamlet/contracts'
 import { LivePixPaymentRepository } from './providers/livepix/livepix-payment.repository'
 import { ApiApplicationError } from '../../application/api-error'
 

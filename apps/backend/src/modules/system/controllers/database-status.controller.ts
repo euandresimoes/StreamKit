@@ -1,5 +1,5 @@
 import { Controller, Get, Inject } from '@nestjs/common'
-import type { DatabaseStatus } from '@streamkit/contracts'
+import type { DatabaseStatus } from '@streamlet/contracts'
 
 import { SQLITE_DATABASE } from '../../../infrastructure/database/database.tokens'
 import type { SqliteDatabase } from '../../../infrastructure/database/sqlite-database'

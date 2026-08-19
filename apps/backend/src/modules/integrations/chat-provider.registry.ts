@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import type { IntegrationProvider } from '@streamkit/contracts'
+import type { IntegrationProvider } from '@streamlet/contracts'
 
 import type { ChatProviderAdapter } from './chat-provider.adapter'
 

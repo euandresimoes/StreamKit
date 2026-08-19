@@ -1,4 +1,4 @@
-import type { DuplicatePolicy, ParsedParticipant, ParticipantPreview } from '@streamkit/contracts'
+import type { DuplicatePolicy, ParsedParticipant, ParticipantPreview } from '@streamlet/contracts'
 
 export function normalizeParticipantName(value: string): string {
   return value.trim().toLocaleLowerCase()

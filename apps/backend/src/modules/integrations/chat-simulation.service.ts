@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { Inject, Injectable } from '@nestjs/common'
-import { ChatSimulationStatusSchema, type StartChatSimulationRequest } from '@streamkit/contracts'
+import { ChatSimulationStatusSchema, type StartChatSimulationRequest } from '@streamlet/contracts'
 import { IntegrationService } from './integration.service'
 
 @Injectable()

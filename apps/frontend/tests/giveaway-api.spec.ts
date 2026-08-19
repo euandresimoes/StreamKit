@@ -1,4 +1,4 @@
-import { GiveawayRoundSchema } from "@streamkit/contracts";
+import { GiveawayRoundSchema } from "@streamlet/contracts";
 
 import { apiClient } from "@/infrastructure/api-client";
 import { giveawayApi } from "@/modules/giveaway/giveaway-api";

@@ -1,5 +1,5 @@
 {
-  "name": "@streamkit/contracts",
+  "name": "@streamlet/contracts",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",

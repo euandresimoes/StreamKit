@@ -6,7 +6,7 @@ jest.mock('electron', () => ({
   },
 }))
 
-import { createIsolatedTestEnvironment } from '@streamkit/test-utils'
+import { createIsolatedTestEnvironment } from '@streamlet/test-utils'
 
 import { ElectronSecureCredentialRepository } from '../src/main/electron-secure-credential.repository'
 
