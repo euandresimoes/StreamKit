@@ -12,6 +12,8 @@ declare global {
       getBackendConnection(): Promise<BackendConnection>;
       copyText(text: string): Promise<void>;
       showNativeNotification(title: string, body: string): Promise<void>;
+      getAppVersion(): Promise<string>;
+      playSystemSound(): Promise<void>;
       applySettings(settings: UpdateAppSettingsRequest): Promise<void>;
       openExternalAuth(url: string): Promise<void>;
       openLogsDirectory(): Promise<void>;

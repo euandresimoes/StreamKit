@@ -275,7 +275,23 @@ export function SettingsDialog({
                   <n.icon className="size-4" />
                   <span className="flex-1">
                     <span className="block text-[12.5px] font-medium">{t(n.labelKey)}</span>
-                    <span className="block text-[10.5px] opacity-70">{t(n.hintKey)}</span>
+                    <span className="block text-[10.5px] opacity-70">
+                      {n.id === "settings-tab-updates"
+                        ? persisted.updateState?.status === "available"
+                          ? t("settings.updateAvailable", {
+                              version: persisted.updateState.available?.version,
+                            })
+                          : persisted.updateState?.status === "downloading"
+                            ? t("settings.downloading", {
+                                progress: Math.round(persisted.updateState.progress ?? 0),
+                              })
+                            : persisted.updateState?.status === "downloaded"
+                              ? t("settings.readyToInstall")
+                              : persisted.updateState?.status === "up-to-date"
+                                ? t("settings.upToDate")
+                                : t("settings.notChecked")
+                        : t(n.hintKey)}
+                    </span>
                   </span>
                 </button>
               ))}
@@ -723,7 +739,8 @@ export function SettingsDialog({
                   </div>
                   <div className="flex-1">
                     <p className="text-[13px] font-semibold">
-                      {persisted.updateState?.available?.title ?? t("settings.currentVersion")}
+                      {persisted.updateState?.available?.title ??
+                        t("settings.version", { version: persisted.appVersion || "—" })}
                     </p>
                     <p className="text-[11.5px] text-muted-foreground">
                       {persisted.updateState?.status === "available"

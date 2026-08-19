@@ -11,7 +11,7 @@ export function getLocalizedReleaseNotes(notes: string, locale: Locale): string 
     locale: normalizeLocale(match[1] ?? ""),
     content: (match[2] ?? "").trim(),
   }));
-  if (blocks.length === 0) return notes.trim();
+  if (blocks.length === 0) return normalizeReleaseNotesMarkup(notes);
   const requested = normalizeLocale(locale);
   const base = requested.split("-")[0];
   const selected =
@@ -19,5 +19,18 @@ export function getLocalizedReleaseNotes(notes: string, locale: Locale): string 
     blocks.find((block) => block.locale === base) ??
     blocks.find((block) => block.locale === "en-us") ??
     blocks.find((block) => block.locale === "en");
-  return selected?.content ?? blocks[0]?.content ?? "";
+  return normalizeReleaseNotesMarkup(selected?.content ?? blocks[0]?.content ?? "");
+}
+
+function normalizeReleaseNotesMarkup(value: string): string {
+  if (!/<[a-z][\s\S]*>/i.test(value)) return value.trim();
+  const prepared = value
+    .replace(/<br\s*\/?\s*>/gi, "\n")
+    .replace(/<li\b[^>]*>/gi, "• ")
+    .replace(/<\/(p|h[1-6]|li|ul|ol|div|section)>/gi, "\n");
+  const document = new DOMParser().parseFromString(prepared, "text/html");
+  return (document.body.textContent ?? "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }

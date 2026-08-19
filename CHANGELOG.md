@@ -1,8 +1,13 @@
-# Streamlet 0.1.0-beta.5
+# Streamlet 0.1.0-beta.6
 
 [EN-US]
 
 ## What's new
+
+- Release notes from GitHub are now displayed as readable text instead of raw HTML.
+- Windows updates now install silently after the user chooses to restart.
+- The Updates sidebar now shows the installed version and live update status.
+- Giveaway sounds use a native system fallback when Streamlet is minimized, and winners trigger an OS notification.
 
 - Fixed the Windows startup issue caused by an incompatible `better-sqlite3` native module.
 - Added the Electron auto updater flow for checking, downloading and installing updates.
@@ -26,6 +31,11 @@
 
 ## Novidades
 
+- As notas da versão do GitHub agora aparecem como texto legível, sem HTML cru.
+- As atualizações do Windows agora são instaladas silenciosamente após o usuário escolher reiniciar.
+- A barra lateral de Atualizações agora mostra a versão instalada e o status real da atualização.
+- Os sons dos sorteios usam um fallback nativo quando o Streamlet está minimizado, e o ganhador gera uma notificação do sistema.
+
 - Corrigido o problema de inicialização do Windows causado por um módulo nativo incompatível do `better-sqlite3`.
 - Adicionado o fluxo de atualização automática do Electron para verificar, baixar e instalar versões.
 - Adicionado suporte a notas da versão em português, inglês e espanhol.
@@ -47,6 +57,11 @@
 [ES]
 
 ## Novedades
+
+- Las notas de la versión de GitHub ahora se muestran como texto legible, sin HTML crudo.
+- Las actualizaciones de Windows ahora se instalan silenciosamente después de reiniciar.
+- La barra lateral de Actualizaciones ahora muestra la versión instalada y el estado real.
+- Los sonidos de los sorteos usan un fallback nativo cuando Streamlet está minimizado y el ganador genera una notificación del sistema.
 
 - Corregido el problema de inicio de Windows causado por un módulo nativo incompatible de `better-sqlite3`.
 - Añadido el flujo de actualización automática de Electron para comprobar, descargar e instalar versiones.

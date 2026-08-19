@@ -85,7 +85,7 @@ export class UpdateManager {
       return this.snapshot()
     }
     if (this.activityActive) throw new Error('ACTIVE_OPERATION_CONFIRMATION_REQUIRED')
-    autoUpdater.quitAndInstall(false, true)
+    autoUpdater.quitAndInstall(true, true)
     return this.snapshot()
   }
   private set(change: Partial<UpdateState>): void {

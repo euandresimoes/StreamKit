@@ -7,7 +7,13 @@ function getContext() {
   return context;
 }
 
+function playNativeFallback() {
+  if (typeof document !== "undefined" && !document.hidden && document.hasFocus()) return;
+  void window.streamlet?.playSystemSound?.();
+}
+
 export function playGiveawayTick() {
+  playNativeFallback();
   const audio = getContext();
   if (!audio) return;
   const oscillator = audio.createOscillator();
@@ -22,6 +28,7 @@ export function playGiveawayTick() {
 }
 
 export function playGiveawayWinner() {
+  playNativeFallback();
   const audio = getContext();
   if (!audio) return;
   const now = audio.currentTime;

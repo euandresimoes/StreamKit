@@ -5,7 +5,7 @@ import {
 } from '@streamlet/contracts'
 import type { UpdateManager } from './update-manager'
 import type { RenderWindowManager } from '@renderizer/vue/electron'
-import { clipboard, ipcMain, type IpcMainInvokeEvent, shell } from 'electron'
+import { app, clipboard, ipcMain, type IpcMainInvokeEvent, shell } from 'electron'
 import { z } from 'zod'
 
 const EmptyArgumentsSchema = z.tuple([])
@@ -54,6 +54,14 @@ export function registerNativeIpcHandlers(
       )
     },
   )
+  ipcMain.handle('streamlet:get-app-version', (_event, ...rest: unknown[]) => {
+    EmptyArgumentsSchema.parse(rest)
+    return app.getVersion()
+  })
+  ipcMain.handle('streamlet:play-system-sound', (_event, ...rest: unknown[]) => {
+    EmptyArgumentsSchema.parse(rest)
+    shell.beep()
+  })
   ipcMain.handle('streamlet:update-command', (_event, input: unknown, ...rest: unknown[]) => {
     EmptyArgumentsSchema.parse(rest)
     if (!updates) throw new Error('Updater unavailable')
@@ -134,6 +142,8 @@ export function removeNativeIpcHandlers(): void {
   for (const channel of [
     'streamlet:copy-text',
     'streamlet:show-native-notification',
+    'streamlet:get-app-version',
+    'streamlet:play-system-sound',
     'streamlet:get-backend-connection',
     'streamlet:get-platform',
     'streamlet:apply-settings',

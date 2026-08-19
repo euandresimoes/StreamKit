@@ -23,6 +23,7 @@ export function useSettings(active: boolean) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updateState, setUpdateState] = useState<UpdateState | null>(null);
+  const [appVersion, setAppVersion] = useState("");
 
   const load = useCallback(async () => {
     setError(null);
@@ -47,6 +48,7 @@ export function useSettings(active: boolean) {
   useEffect(() => {
     if (!active || !window.streamlet?.onUpdateState) return;
     const bridge = getDesktopBridge();
+    void bridge.getAppVersion().then(setAppVersion);
     void bridge.updateState().then((state) => {
       if (state) setUpdateState(state);
     });
@@ -106,6 +108,7 @@ export function useSettings(active: boolean) {
       }
     },
     updateState,
+    appVersion,
     localizedReleaseNotes: updateState?.available
       ? getLocalizedReleaseNotes(updateState.available.changelog, settings?.locale ?? "en-US")
       : "",
